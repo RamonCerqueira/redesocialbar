@@ -1,0 +1,173 @@
+{
+  "screen": {
+    "id": "publish-post",
+    "title": "Publicar",
+    "theme": {
+      "background": "#0B0B0B",
+      "surface": "#151515",
+      "surfaceSecondary": "#1C1C1C",
+      "border": "#333333",
+      "primary": "#FF9800",
+      "text": "#FFFFFF",
+      "textSecondary": "#A5A5A5",
+      "success": "#4CAF50"
+    },
+    "header": {
+      "backButton": {
+        "icon": "arrow-left",
+        "action": "goBack"
+      },
+      "title": "Publicar",
+      "checkin": {
+        "active": true,
+        "icon": "map-pin",
+        "title": "Você está no Pirambeira",
+        "subtitle": "Check-in ativo",
+        "statusIcon": "check-circle"
+      }
+    },
+    "locationCard": {
+      "type": "venue",
+      "id": "pirambeira",
+      "name": "Pirambeira",
+      "city": "Salvador - BA",
+      "image": "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=400&q=80",
+      "stats": {
+        "peopleHere": 128,
+        "isLive": true
+      },
+      "actions": {
+        "openVenue": true
+      }
+    },
+    "media": {
+      "type": "photo",
+      "required": true,
+      "preview": {
+        "enabled": false,
+        "url": null
+      },
+      "actions": [
+        {
+          "id": "camera",
+          "label": "Tirar foto",
+          "icon": "camera",
+          "action": "openCamera",
+          "variant": "primary"
+        },
+        {
+          "id": "gallery",
+          "label": "Escolher da galeria",
+          "icon": "image",
+          "action": "openGallery",
+          "variant": "secondary"
+        }
+      ],
+      "mediaTypes": [
+        {
+          "id": "photo",
+          "label": "Foto",
+          "icon": "camera"
+        },
+        {
+          "id": "video",
+          "label": "Vídeo",
+          "icon": "video"
+        }
+      ]
+    },
+    "author": {
+      "id": "current-user",
+      "username": "@voce.piramba",
+      "avatar": "/images/avatar.jpg",
+      "actions": {
+        "tagFriends": {
+          "label": "Marcar amigos",
+          "icon": "users",
+          "action": "openFriendSelector"
+        }
+      }
+    },
+    "caption": {
+      "label": "O que está rolando?",
+      "placeholder": "Conta pra galera o que está acontecendo no Pirambeira...",
+      "maxLength": 280,
+      "currentLength": 0
+    },
+    "quickTags": [
+      {
+        "id": "friends",
+        "label": "Amigos",
+        "emoji": "🍻",
+        "selected": false
+      },
+      {
+        "id": "party",
+        "label": "Festa",
+        "emoji": "🎉",
+        "selected": false
+      },
+      {
+        "id": "today",
+        "label": "Hoje",
+        "emoji": "🔥",
+        "selected": false
+      },
+      {
+        "id": "music",
+        "label": "Música",
+        "emoji": "🎵",
+        "selected": false
+      },
+      {
+        "id": "flirt",
+        "label": "Paquera",
+        "emoji": "❤️",
+        "selected": false
+      }
+    ],
+    "metadata": {
+      "location": {
+        "id": "pirambeira",
+        "name": "Pirambeira",
+        "label": "Sua localização",
+        "icon": "map-pin",
+        "action": "changeLocation"
+      },
+      "taggedPeople": {
+        "count": 0,
+        "label": "Marcar pessoas",
+        "description": "Mencione seus amigos",
+        "icon": "users",
+        "action": "openFriendSelector"
+      }
+    },
+    "visibility": {
+      "title": "Compartilhar em",
+      "options": [
+        {
+          "id": "bar-feed",
+          "label": "Feed do Bar",
+          "description": "Todo mundo no Piramba vê",
+          "icon": "home",
+          "selected": true,
+          "type": "multiple"
+        },
+        {
+          "id": "flirt-wall",
+          "label": "Mural da Paquera",
+          "description": "Mostre que você está aqui",
+          "icon": "heart",
+          "selected": false,
+          "type": "multiple"
+        }
+      ]
+    },
+    "publish": {
+      "label": "PUBLICAR",
+      "icon": "send",
+      "enabled": false,
+      "action": "publishPost"
+    }
+  }
+}

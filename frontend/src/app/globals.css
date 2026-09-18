@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: #080706;
+    --foreground: #fbf8f5;
+    --card: #13100e;
+    --card-foreground: #faf7f2;
+    --primary: #f59e0b;
+    --primary-foreground: #080706;
+    --secondary: #1e1814;
+    --secondary-foreground: #f5efe6;
+    --muted: #1a1512;
+    --muted-foreground: #a89f96;
+    --accent: #ea580c;
+    --accent-foreground: #ffffff;
+    --destructive: #ef4444;
+    --border: #2c221a;
+    --input: #1a1512;
+    --ring: #f59e0b;
+
+    /* Custom tokens */
+    --piramba-night: #080706;
+    --piramba-surface: #13100e;
+    --piramba-elevated: #1e1814;
+    --piramba-highlight: #2c221a;
+    --piramba-amber: #f59e0b;
+    --piramba-amber-glow: #fbbf24;
+    --piramba-amber-deep: #b45309;
+    --piramba-copper: #ea580c;
+    --piramba-emerald: #10b981;
+    --piramba-rose: #f43f5e;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    padding-bottom: 5.5rem;
+    background-image: 
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(245, 158, 11, 0.07), transparent 70%),
+      radial-gradient(circle at 100% 30%, rgba(234, 88, 12, 0.04), transparent 50%);
+    background-attachment: fixed;
+  }
+
+  @media (min-width: 1024px) {
+    body {
+      padding-bottom: 0;
+    }
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display), var(--font-sans), -apple-system, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Superfícies & Materialidade */
+.surface-ambient {
+  background: #13100e;
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5);
+}
+
+.surface-elevated {
+  background: #1c1714;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.7);
+}
+
+.surface-floating {
+  background: rgba(19, 16, 14, 0.88);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  box-shadow: 0 12px 36px -6px rgba(0, 0, 0, 0.85);
+}
+
+/* Iluminação de Bar & Efeitos */
+.glow-amber-sm {
+  box-shadow: 0 0 15px -3px rgba(245, 158, 11, 0.35);
+}
+
+.glow-amber-lg {
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.45);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 16px -2px rgba(16, 185, 129, 0.5);
+}
+
+.glow-rose {
+  box-shadow: 0 0 24px -4px rgba(244, 63, 94, 0.4);
+}
+
+.amber-gradient {
+  background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+}
+
+.amber-gradient-gold {
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+}
+
+/* Indicador de tempo real vivo */
+.indicator-pulse-emerald {
+  position: relative;
+}
+.indicator-pulse-emerald::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: #10b981;
+  opacity: 0.75;
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Bilhete de guardanapo sutil (Mural da Paquera) */
+.kraft-note {
+  background: linear-gradient(145deg, #241a14 0%, #1a130f 100%);
+  border: 1px solid rgba(244, 63, 94, 0.25);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.65);
+}
+
+/* Efeito de comanda picotada */
+.comanda-border {
+  border-left: 2px dashed rgba(245, 158, 11, 0.3);
+}
+
+/* Scrollbar Customizada */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #080706;
+}
+::-webkit-scrollbar-thumb {
+  background: #2c221a;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #f59e0b;
+}

@@ -1,0 +1,24 @@
+import { IsArray, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { PostType } from '@prisma/client';
+
+export class CreatePostDto {
+  @IsString()
+  @IsNotEmpty({ message: 'Conteúdo da publicação é obrigatório' })
+  content!: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'Identificador do restaurante é obrigatório' })
+  restaurantSlug!: string;
+
+  @IsEnum(PostType)
+  @IsOptional()
+  type?: PostType;
+
+  @IsString()
+  @IsOptional()
+  flirtContext?: string;
+
+  @IsArray()
+  @IsOptional()
+  mediaUrls?: string[];
+}

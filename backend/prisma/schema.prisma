@@ -1,0 +1,587 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  RESTAURANT_ADMIN
+  SUPERADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum RestaurantRole {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum CheckInStatus {
+  ACTIVE
+  EXPIRED
+  CHECKED_OUT
+}
+
+enum PostType {
+  FEED
+  FLIRT
+  SPONSORED
+}
+
+enum ReactionType {
+  LIKE
+  HEART
+  CHEERS
+  FIRE
+}
+
+enum InterestStatus {
+  PENDING
+  MATCHED
+  EXPIRED
+  DECLINED
+}
+
+enum EventRsvpStatus {
+  GOING
+  INTERESTED
+}
+
+enum CouponStatus {
+  CLAIMED
+  USED
+  EXPIRED
+}
+
+enum MeetupStatus {
+  SCHEDULED
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+enum ReportTargetType {
+  POST
+  COMMENT
+  USER
+}
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+enum AdType {
+  BANNER
+  SPONSORED_POST
+  SIDEBAR
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  role          Role           @default(USER)
+  status        UserStatus     @default(ACTIVE)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  profile       Profile?
+  restaurantMembers RestaurantMember[]
+  checkIns      CheckIn[]
+  posts         Post[]
+  comments      Comment[]
+  reactions     Reaction[]
+  
+  following     Follow[]       @relation("UserFollows")
+  followers     Follow[]       @relation("UserFollowers")
+  
+  sentInterests     Interest[] @relation("SentInterests")
+  receivedInterests Interest[] @relation("ReceivedInterests")
+  
+  matchesAsUser1 Match[]       @relation("User1Matches")
+  matchesAsUser2 Match[]       @relation("User2Matches")
+  
+  eventRsvps    EventParticipant[]
+  coupons       Coupon[]
+  createdMeetups Meetup[]
+  meetupRsvps   MeetupParticipant[]
+  
+  messages      Message[]
+  conversations ConversationParticipant[]
+  notifications Notification[]
+  
+  submittedReports Report[]    @relation("UserReports")
+  targetedReports  Report[]    @relation("TargetedReports")
+  
+  blockedUsers  Block[]        @relation("UserBlocks")
+  blockedByUsers Block[]       @relation("UserBlockedBy")
+  
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model Profile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  name            String
+  username        String   @unique
+  bio             String?
+  avatarUrl       String?
+  coverUrl        String?
+  city            String   @default("Salvador, BA")
+  interests       String[] @default([])
+  checkInCount    Int      @default(0)
+  
+  // Privacy & Flirt Settings
+  isPrivate       Boolean  @default(false)
+  showInFlirtRadar Boolean @default(true)
+  allowFlirtFrom  String   @default("EVERYONE") // EVERYONE, FOLLOWERS, NONE
+  invisibleMode   Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([username])
+  @@index([city])
+}
+
+model Restaurant {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  tagline         String?
+  description     String?
+  address         String
+  neighborhood    String   @default("Pituba")
+  city            String   @default("Salvador")
+  state           String   @default("BA")
+  phone           String?
+  instagram       String?
+  logoUrl         String?
+  coverUrl        String?
+  rating          Float    @default(4.9)
+  approxLatitude  Float?
+  approxLongitude Float?
+  openingHours    Json?
+  menuCategories  Json?
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  members         RestaurantMember[]
+  checkIns        CheckIn[]
+  posts           Post[]
+  events          Event[]
+  promotions      Promotion[]
+  meetups         Meetup[]
+  interests       Interest[]
+  matches         Match[]
+  conversations   Conversation[]
+  advertisements  Advertisement[]
+
+  @@index([slug])
+  @@index([city])
+}
+
+model RestaurantMember {
+  id           String         @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         RestaurantRole @default(STAFF)
+  createdAt    DateTime       @default(now())
+
+  @@unique([restaurantId, userId])
+  @@index([restaurantId])
+  @@index([userId])
+}
+
+model CheckIn {
+  id           String        @id @default(uuid())
+  userId       String
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  
+  status       CheckInStatus @default(ACTIVE)
+  startedAt    DateTime      @default(now())
+  expiresAt    DateTime
+  endedAt      DateTime?
+  approxDistanceMeters Float?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([restaurantId])
+  @@index([status, expiresAt])
+}
+
+model Post {
+  id           String      @id @default(uuid())
+  type         PostType    @default(FEED)
+  content      String
+  flirtContext String?
+  restaurantId String
+  restaurant   Restaurant  @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  likesCount    Int        @default(0)
+  commentsCount Int        @default(0)
+  isPinned      Boolean    @default(false)
+  isDeleted     Boolean    @default(false)
+  
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  media         PostMedia[]
+  comments      Comment[]
+  reactions     Reaction[]
+  reports       Report[]
+
+  @@index([restaurantId, createdAt])
+  @@index([authorId])
+  @@index([type])
+}
+
+model PostMedia {
+  id        String   @id @default(uuid())
+  postId    String
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  url       String
+  type      String   @default("IMAGE") // IMAGE, VIDEO
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([postId])
+}
+
+model Comment {
+  id        String    @id @default(uuid())
+  postId    String
+  post      Post      @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  parentId  String?
+  parent    Comment?  @relation("NestedComments", fields: [parentId], references: [id], onDelete: Cascade)
+  replies   Comment[] @relation("NestedComments")
+  
+  isDeleted Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  reports   Report[]
+
+  @@index([postId])
+  @@index([authorId])
+}
+
+model Reaction {
+  id        String       @id @default(uuid())
+  postId    String
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReactionType @default(LIKE)
+  createdAt DateTime     @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  follower    User     @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}
+
+model Interest {
+  id           String         @id @default(uuid())
+  fromUserId   String
+  fromUser     User           @relation("SentInterests", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUserId     String
+  toUser       User           @relation("ReceivedInterests", fields: [toUserId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  status       InterestStatus @default(PENDING)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@unique([fromUserId, toUserId, restaurantId])
+  @@index([fromUserId])
+  @@index([toUserId])
+  @@index([restaurantId])
+}
+
+model Match {
+  id             String        @id @default(uuid())
+  user1Id        String
+  user1          User          @relation("User1Matches", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id        String
+  user2          User          @relation("User2Matches", fields: [user2Id], references: [id], onDelete: Cascade)
+  restaurantId   String
+  restaurant     Restaurant    @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  conversationId String?       @unique
+  conversation   Conversation? @relation(fields: [conversationId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@unique([user1Id, user2Id, restaurantId])
+  @@index([user1Id])
+  @@index([user2Id])
+  @@index([restaurantId])
+}
+
+model Event {
+  id           String             @id @default(uuid())
+  title        String
+  category     String             @default("MÚSICA AO VIVO")
+  description  String
+  date         DateTime
+  startTime    String
+  coverImageUrl String?
+  restaurantId String
+  restaurant   Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  participants EventParticipant[]
+
+  @@index([restaurantId, date])
+}
+
+model EventParticipant {
+  id        String          @id @default(uuid())
+  eventId   String
+  event     Event           @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    EventRsvpStatus @default(GOING)
+  createdAt DateTime        @default(now())
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+  @@index([userId])
+}
+
+model Promotion {
+  id             String    @id @default(uuid())
+  title          String
+  discountText   String
+  description    String
+  validUntil     DateTime
+  terms          String?
+  totalCoupons   Int       @default(50)
+  redeemedCount  Int       @default(0)
+  badge          String?
+  restaurantId   String
+  restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  coupons        Coupon[]
+
+  @@index([restaurantId])
+}
+
+model Coupon {
+  id          String       @id @default(uuid())
+  code        String       @unique
+  promotionId String
+  promotion   Promotion    @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status      CouponStatus @default(CLAIMED)
+  claimedAt   DateTime     @default(now())
+  usedAt      DateTime?
+
+  @@index([promotionId])
+  @@index([userId])
+  @@index([code])
+}
+
+model Meetup {
+  id           String              @id @default(uuid())
+  title        String
+  description  String
+  scheduledFor DateTime
+  status       MeetupStatus        @default(SCHEDULED)
+  creatorId    String
+  creator      User                @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+  restaurantId String
+  restaurant   Restaurant          @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  participants MeetupParticipant[]
+
+  @@index([restaurantId])
+  @@index([creatorId])
+}
+
+model MeetupParticipant {
+  id        String   @id @default(uuid())
+  meetupId  String
+  meetup    Meetup   @relation(fields: [meetupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([meetupId, userId])
+  @@index([meetupId])
+  @@index([userId])
+}
+
+model Conversation {
+  id           String                    @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant                @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  type         String                    @default("DIRECT") // DIRECT, MATCH, MEETUP
+  createdAt    DateTime                  @default(now())
+  updatedAt    DateTime                  @updatedAt
+
+  match        Match?
+  participants ConversationParticipant[]
+  messages     Message[]
+
+  @@index([restaurantId])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt       DateTime     @default(now())
+
+  @@unique([conversationId, userId])
+  @@index([conversationId])
+  @@index([userId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  conversationId String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  senderId       String
+  sender         User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  content        String
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // LIKE, COMMENT, MATCH, MEETUP, COUPON, EVENT, FOLLOW
+  title     String
+  body      String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model Report {
+  id           String           @id @default(uuid())
+  reporterId   String
+  reporter     User             @relation("UserReports", fields: [reporterId], references: [id], onDelete: Cascade)
+  targetType   ReportTargetType
+  targetId     String
+  reason       String
+  status       ReportStatus     @default(PENDING)
+  notes        String?
+  
+  postId       String?
+  post         Post?            @relation(fields: [postId], references: [id], onDelete: SetNull)
+  commentId    String?
+  comment      Comment?         @relation(fields: [commentId], references: [id], onDelete: SetNull)
+  targetedUserId String?
+  targetedUser User?            @relation("TargetedReports", fields: [targetedUserId], references: [id], onDelete: SetNull)
+  
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([reporterId])
+  @@index([status])
+  @@index([targetType, targetId])
+}
+
+model Block {
+  id        String   @id @default(uuid())
+  blockerId String
+  blocker   User     @relation("UserBlocks", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("UserBlockedBy", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+  @@index([blockedId])
+}
+
+model Advertisement {
+  id           String     @id @default(uuid())
+  title        String
+  description  String?
+  imageUrl     String
+  targetUrl    String?
+  type         AdType     @default(SPONSORED_POST)
+  sponsorName  String
+  isActive     Boolean    @default(true)
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  impressions  Int        @default(0)
+  clicks       Int        @default(0)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([restaurantId, isActive])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action    String
+  entity    String
+  entityId  String?
+  details   Json?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entity, entityId])
+}

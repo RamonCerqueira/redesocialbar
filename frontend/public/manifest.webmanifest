@@ -1,0 +1,21 @@
+{
+  "name": "Tô no Piramba",
+  "short_name": "Piramba",
+  "description": "Rede social e comunidade exclusiva dos frequentadores do Pirambeira Bar",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0a09",
+  "theme_color": "#f59e0b",
+  "icons": [
+    {
+      "src": "/LogoPirambeiraSemFundo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/LogoPirambeira.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
