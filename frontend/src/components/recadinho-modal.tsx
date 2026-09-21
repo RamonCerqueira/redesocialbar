@@ -21,19 +21,6 @@ interface RecadinhoModalProps {
   restaurantSlug?: string;
 }
 
-const PRESET_LOCATIONS = [
-  'Mesa 1',
-  'Mesa 2',
-  'Mesa 3',
-  'Mesa 5',
-  'Mesa 8',
-  'Mesa 12',
-  'Mesa 15',
-  'Balcão Principal',
-  'Deck Externo',
-  'Perto da Pista',
-];
-
 export function RecadinhoModal({
   isOpen,
   onClose,
@@ -42,17 +29,13 @@ export function RecadinhoModal({
 }: RecadinhoModalProps) {
   const { user } = useAuth();
   const [content, setContent] = useState('');
-  const [selectedLocation, setSelectedLocation] = useState('Mesa 5');
-  const [customLocation, setCustomLocation] = useState('');
-  const [isCustomLoc, setIsCustomLoc] = useState(false);
+  const [location, setLocation] = useState('Mesa 5');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
-  const finalLocation = isCustomLoc
-    ? customLocation.trim() || 'No Piramba'
-    : selectedLocation;
+  const finalLocation = location.trim() || 'No Piramba';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,53 +153,20 @@ export function RecadinhoModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 1. Seleção de Mesa / Localização */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-[#E5DDD5] flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-[#F5A623]" />
-                <span>Onde você está sentado?</span>
-              </label>
-              <button
-                type="button"
-                onClick={() => setIsCustomLoc(!isCustomLoc)}
-                className="text-[11px] text-amber-400 hover:text-amber-300 font-bold transition-colors cursor-pointer"
-              >
-                {isCustomLoc ? 'Escolher da lista' : 'Outro local'}
-              </button>
-            </div>
-
-            {!isCustomLoc ? (
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto scrollbar-none py-1">
-                {PRESET_LOCATIONS.map((loc) => {
-                  const isSelected = selectedLocation === loc;
-                  return (
-                    <button
-                      key={loc}
-                      type="button"
-                      onClick={() => setSelectedLocation(loc)}
-                      className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer ${
-                        isSelected
-                          ? 'bg-[#F5A623] text-[#080706] shadow-sm font-black'
-                          : 'bg-[#18130F] text-[#C4BCB3] hover:text-white border border-[#2A221C] hover:border-amber-500/40'
-                      }`}
-                    >
-                      {loc}
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <input
-                type="text"
-                value={customLocation}
-                onChange={(e) => setCustomLocation(e.target.value)}
-                placeholder="Ex: Mesa 9, Sofá da entrada, Lounge..."
-                className="w-full bg-[#18130F] border border-[#2C221A] focus:border-[#F5A623] rounded-2xl px-3.5 py-2 text-xs text-white placeholder-[#6E655D] focus:outline-none transition-colors"
-                maxLength={40}
-                autoFocus
-              />
-            )}
+          {/* 1. Localização / Mesa - Sempre aberto para digitar */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-[#E5DDD5] flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-[#F5A623]" />
+              <span>Onde você está sentado?</span>
+            </label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Ex: Mesa 5, Mesa 8, Balcão..."
+              className="w-full bg-[#18130F] border border-[#2C221A] focus:border-[#F5A623] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors"
+              maxLength={40}
+            />
           </div>
 
           {/* 2. Campo de Texto do Recadinho */}
@@ -243,7 +193,7 @@ export function RecadinhoModal({
                 rows={4}
                 placeholder="Ex: Vi você de blusa preta na mesa ao lado rindo com as amigas... Um brinde discreto! 🥂"
                 className="w-full bg-[#18130F] border border-[#2C221A] focus:border-rose-500/70 rounded-2xl p-3.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors resize-none leading-relaxed"
-                autoFocus={!isCustomLoc}
+                autoFocus
               />
             </div>
           </div>

@@ -250,68 +250,89 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
 
       {/* 3. Mídia Dominante (1 foto ou vídeo curto de 30s exclusivo do bar) */}
       {post.isVideo && post.videoUrl ? (
-        /* VÍDEO CURTO DE 30s (EXCLUSIVO DO BAR) */
-        <div
-          onClick={togglePlay}
-          className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-black cursor-pointer group"
-        >
-          <video
-            ref={videoRef}
-            src={post.videoUrl}
-            poster={post.media?.[0]}
-            autoPlay
-            playsInline
-            loop
-            muted={isMuted}
-            onTimeUpdate={handleTimeUpdate}
-            onPlay={() => setIsPlaying(true)}
-            onPause={() => setIsPlaying(false)}
-            className="w-full h-full object-cover"
-          />
+        /* VÍDEO DO BAR COM CONTROLES INTEGRADOS NO PLAYER (NÃO NA FRENTE DO VÍDEO) */
+        <div className="w-full overflow-hidden bg-black">
+          {/* Tela do Vídeo (Totalmente limpa, sem sobreposições) */}
+          <div
+            onClick={togglePlay}
+            className="relative w-full aspect-[4/3] sm:aspect-[16/10] bg-black cursor-pointer group overflow-hidden"
+          >
+            <video
+              ref={videoRef}
+              src={post.videoUrl}
+              poster={post.media?.[0]}
+              autoPlay
+              playsInline
+              loop
+              muted={isMuted}
+              onTimeUpdate={handleTimeUpdate}
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              className="w-full h-full object-cover"
+            />
 
-          {/* Badge de 30s e Exclusivo Bar Oficial */}
-          <div className="absolute top-3 left-3 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-amber-500/40 flex items-center gap-1.5 shadow-lg z-10">
-            <Video className="w-3.5 h-3.5 text-[#F5A623]" />
-            <span className="text-[10px] font-black text-[#F5A623] tracking-wide">
-              {post.videoDuration || '0:30'} • VÍDEO DO BAR
-            </span>
+            {/* Play/Pause center overlay button - só aparece se o usuário pausar manualmente */}
+            {!isPlaying && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] transition-opacity">
+                <div className="w-14 h-14 rounded-full bg-black/75 border-2 border-[#F5A623] flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl shadow-amber-500/30">
+                  <Play className="w-6 h-6 text-[#F5A623] fill-[#F5A623] ml-1" />
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Mute/Unmute toggle button com rótulo amigável */}
-          <button
-            type="button"
-            onClick={toggleMute}
-            className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-white/20 text-white flex items-center gap-1.5 hover:bg-black/90 transition-all z-10 shadow-lg active:scale-95"
-            title={isMuted ? 'Ativar som' : 'Desativar som'}
-          >
-            {isMuted ? (
-              <>
-                <VolumeX className="w-3.5 h-3.5 text-white/80" />
-                <span className="text-[10px] font-bold text-white/90">Mudo</span>
-              </>
-            ) : (
-              <>
-                <Volume2 className="w-3.5 h-3.5 text-[#F5A623]" />
-                <span className="text-[10px] font-bold text-[#F5A623]">Com som</span>
-              </>
-            )}
-          </button>
-
-          {/* Play/Pause center overlay button - só aparece se o usuário pausar manualmente */}
-          {!isPlaying && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px] transition-opacity">
-              <div className="w-14 h-14 rounded-full bg-black/75 border-2 border-[#F5A623] flex items-center justify-center group-hover:scale-110 transition-transform shadow-xl shadow-amber-500/30">
-                <Play className="w-6 h-6 text-[#F5A623] fill-[#F5A623] ml-1" />
-              </div>
-            </div>
-          )}
-
-          {/* Barra de progresso do vídeo na borda inferior */}
-          <div className="absolute bottom-0 inset-x-0 h-1 bg-black/50">
+          {/* Barra de progresso do vídeo */}
+          <div className="h-1 bg-[#1A1512] w-full">
             <div
               className="h-full bg-[#F5A623] transition-all duration-100"
               style={{ width: `${videoProgress}%` }}
             />
+          </div>
+
+          {/* Barra de Controles do Player: Faz parte do player e não fica na frente do vídeo */}
+          <div className="bg-[#0E0B09] px-4 py-2.5 flex items-center justify-between border-t border-[#1C1714]">
+            {/* Esquerda: Play/Pause + Badge 30s Vídeo do Bar */}
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={togglePlay}
+                className="w-7 h-7 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-[#F5A623] flex items-center justify-center transition-all active:scale-90 cursor-pointer"
+                title={isPlaying ? 'Pausar vídeo' : 'Reproduzir vídeo'}
+              >
+                {isPlaying ? (
+                  <Pause className="w-3.5 h-3.5 fill-[#F5A623]" />
+                ) : (
+                  <Play className="w-3.5 h-3.5 fill-[#F5A623] ml-0.5" />
+                )}
+              </button>
+
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#18130F] border border-amber-500/30">
+                <Video className="w-3.5 h-3.5 text-[#F5A623]" />
+                <span className="text-[10px] font-black text-[#F5A623] tracking-wide">
+                  {post.videoDuration || '0:30'} • VÍDEO DO BAR
+                </span>
+              </div>
+            </div>
+
+            {/* Direita: Controle de Áudio (Mudo / Com som) */}
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-xl bg-[#18130F] hover:bg-[#221B16] border border-[#2C221A] text-white transition-all active:scale-95 cursor-pointer shadow-sm"
+              title={isMuted ? 'Ativar som' : 'Desativar som'}
+            >
+              {isMuted ? (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 text-[#A89F96]" />
+                  <span className="text-[11px] font-bold text-[#A89F96]">Mudo</span>
+                </>
+              ) : (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 text-[#F5A623]" />
+                  <span className="text-[11px] font-bold text-[#F5A623]">Com som</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       ) : post.media && post.media.length > 0 ? (

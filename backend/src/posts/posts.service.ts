@@ -136,7 +136,96 @@ export class PostsService {
     });
   }
 
+  async getBarOfficialPosts(restaurantSlug: string, currentUserId?: string) {
+    const restaurant = await this.prisma.restaurant.findUnique({
+      where: { slug: restaurantSlug },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Estabelecimento "${restaurantSlug}" não encontrado.`);
+    }
+
+    const posts = await this.prisma.post.findMany({
+      where: {
+        restaurantId: restaurant.id,
+        isDeleted: false,
+        OR: [
+          { author: { role: { in: ['RESTAURANT_ADMIN', 'SUPERADMIN'] } } },
+          { author: { restaurantMembers: { some: { restaurantId: restaurant.id } } } },
+          { author: { profile: { username: { contains: 'pirambeira' } } } },
+        ],
+      },
+      include: {
+        author: {
+          include: { profile: true },
+        },
+        media: {
+          orderBy: { sortOrder: 'asc' },
+        },
+        reactions: true,
+        comments: {
+          where: { isDeleted: false },
+          include: {
+            author: { include: { profile: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+          take: 5,
+        },
+        _count: {
+          select: { comments: true, reactions: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    return posts.map((post) => {
+      const userReaction = currentUserId
+        ? post.reactions.find((r) => r.userId === currentUserId)?.type || null
+        : null;
+
+      const isVideo = post.media.some((m) => m.type === 'VIDEO' || m.url.endsWith('.mp4'));
+      const videoMedia = isVideo ? post.media.find((m) => m.type === 'VIDEO' || m.url.endsWith('.mp4')) : null;
+
+      return {
+        id: post.id,
+        content: post.content,
+        type: post.type,
+        flirtContext: post.flirtContext,
+        createdAt: post.createdAt,
+        likesCount: post._count.reactions,
+        commentsCount: post._count.comments,
+        userReaction,
+        media: post.media.map((m) => m.url),
+        isVideo,
+        videoUrl: videoMedia?.url,
+        videoDuration: '0:30',
+        isBarOfficial: true,
+        author: {
+          id: post.author.id,
+          name: post.author.profile?.name || 'Pirambeira Bar',
+          username: post.author.profile?.username || 'pirambeira.bar',
+          avatarUrl: post.author.profile?.avatarUrl || '/LogoPirambeiraSemFundo.png',
+          checkInCount: post.author.profile?.checkInCount || 100,
+          isOfficial: true,
+        },
+        comments: post.comments.map((c) => ({
+          id: c.id,
+          content: c.content,
+          createdAt: c.createdAt,
+          author: {
+            id: c.author.id,
+            name: c.author.profile?.name || 'Frequentador',
+            username: c.author.profile?.username || 'usuario',
+            avatarUrl: c.author.profile?.avatarUrl,
+          },
+        })),
+      };
+    });
+  }
+
   async toggleReaction(postId: string, userId: string, type: ReactionType = ReactionType.CHEERS) {
+
     const post = await this.prisma.post.findUnique({
       where: { id: postId },
     });

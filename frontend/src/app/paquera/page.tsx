@@ -34,6 +34,10 @@ export default function MuralDaPaqueraPage() {
 
   useEffect(() => {
     loadNotes();
+
+    const handleOpenRecadinho = () => setShowRecadinhoModal(true);
+    window.addEventListener('open-recadinho-modal', handleOpenRecadinho);
+    return () => window.removeEventListener('open-recadinho-modal', handleOpenRecadinho);
   }, []);
 
   const handleNoteCreated = (newNote: FlirtNote) => {

@@ -210,3 +210,19 @@ export interface AppNotification {
   isRead: boolean;
   createdAt: string;
 }
+
+export interface Story {
+  id: string;
+  mediaUrl: string;
+  mediaType?: 'IMAGE' | 'VIDEO';
+  caption?: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    username: string;
+    avatarUrl?: string;
+    isOfficial?: boolean;
+  };
+}
+

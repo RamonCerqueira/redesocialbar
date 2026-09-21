@@ -4,8 +4,9 @@
   "description": "Rede social e comunidade exclusiva dos frequentadores do Pirambeira Bar",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c0a09",
-  "theme_color": "#f59e0b",
+  "background_color": "#080706",
+  "theme_color": "#080706",
+
   "icons": [
     {
       "src": "/LogoPirambeiraSemFundo.png",

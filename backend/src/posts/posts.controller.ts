@@ -27,6 +27,16 @@ export class PostsController {
     return this.postsService.getFeed(slug, userId, postType);
   }
 
+  @Get('bar/:slug')
+  @UseGuards(OptionalJwtAuthGuard)
+  async getBarPosts(
+    @Param('slug') slug: string,
+    @CurrentUser('id') userId?: string,
+  ) {
+    return this.postsService.getBarOfficialPosts(slug, userId);
+  }
+
+
   @Post(':id/react')
   @UseGuards(JwtAuthGuard)
   async react(

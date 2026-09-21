@@ -252,9 +252,14 @@ export default function PublicarPage() {
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
-          <h1 className="font-display font-black text-xl text-[#FBF8F5] tracking-tight">
-            Registrar Momento
-          </h1>
+          <div>
+            <h1 className="font-display font-black text-xl text-[#FBF8F5] tracking-tight">
+              Publicar no Feed
+            </h1>
+            <p className="text-[10px] text-[#A89F96]">
+              Compartilhe seu momento com a galera do bar
+            </p>
+          </div>
         </div>
 
         {/* Check-in Active Badge */}
@@ -506,7 +511,7 @@ export default function PublicarPage() {
         className="w-full py-4 px-6 rounded-2xl amber-gradient disabled:opacity-40 text-[#080706] font-display font-black text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-xl glow-amber-lg active:scale-95 transition-all mt-2 cursor-pointer"
       >
         <Send className="w-4 h-4 stroke-[2.5]" />
-        <span>{isSubmitting ? 'PUBLICANDO NO BAR...' : 'PUBLICAR MOMENTO'}</span>
+        <span>{isSubmitting ? 'PUBLICANDO NO FEED...' : 'PUBLICAR NO FEED DA GALERA'}</span>
       </button>
 
       {/* 7. MODAL DE AMIGOS DO BAR */}

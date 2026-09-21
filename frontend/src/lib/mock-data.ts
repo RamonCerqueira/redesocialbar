@@ -1,4 +1,4 @@
-import { Post, Patron, FlirtNote, Meetup, BarEvent, Promotion, Conversation, Message, Restaurant, User } from './types';
+import { Post, Patron, FlirtNote, Meetup, BarEvent, Promotion, Conversation, Message, Restaurant, User, Story } from './types';
 
 export const MOCK_RESTAURANT: Restaurant = {
   id: 'rest-pirambeira-001',
@@ -165,6 +165,108 @@ export const MOCK_PATRONS: Patron[] = [
     showInFlirtRadar: true,
     startedAt: new Date(Date.now() - 110 * 60 * 1000).toISOString(),
     timePresentMinutes: 110,
+  },
+];
+
+// Postagens EXCLUSIVAS do Bar (para a página inicial "O que está rolando")
+export const MOCK_BAR_POSTS: Post[] = [
+  {
+    id: 'post-bar-1',
+    content: '🔥 Sextou com a casa cheia no Piramba! Nosso bartender preparando o autêntico Caju Amigo defumado na pressão. Chega pra cá que a noite está só começando! 🍹🍻',
+    type: 'FEED',
+    createdAt: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
+    likesCount: 142,
+    commentsCount: 18,
+    userReaction: 'CHEERS',
+    isVideo: true,
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-bartender-pouring-a-drink-into-a-glass-41484-large.mp4',
+    videoDuration: '0:30',
+    isBarOfficial: true,
+    media: ['https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1000&q=80'],
+    author: {
+      id: 'bar-official-001',
+      name: 'Pirambeira Bar',
+      username: 'pirambeira.bar',
+      avatarUrl: '/LogoPirambeiraSemFundo.png',
+      checkInCount: 150,
+      isOfficial: true,
+    },
+    comments: [
+      {
+        id: 'comm-b1',
+        content: 'Esse drink defumado é uma obra de arte! Chegando em 15 minutos!',
+        createdAt: new Date(Date.now() - 6 * 60 * 1000).toISOString(),
+        author: {
+          id: 'user-larissa-002',
+          name: 'Larissa Bahia',
+          username: 'laribahia',
+          avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+        },
+      },
+    ],
+  },
+  {
+    id: 'post-bar-2',
+    content: '✨ O clima ao vivo na varanda do Piramba! Luz ambiente, boa conversa e os melhores drinks autorais da orla de Salvador. Vem curtir com a gente! 🍸🎷',
+    type: 'FEED',
+    createdAt: new Date(Date.now() - 50 * 60 * 1000).toISOString(),
+    likesCount: 198,
+    commentsCount: 24,
+    userReaction: 'FIRE',
+    isVideo: true,
+    videoUrl: 'https://assets.mixkit.co/videos/preview/mixkit-cocktails-glasses-on-a-tray-41487-large.mp4',
+    videoDuration: '0:30',
+    isBarOfficial: true,
+    media: ['https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=1000&q=80'],
+    author: {
+      id: 'bar-official-001',
+      name: 'Pirambeira Bar',
+      username: 'pirambeira.bar',
+      avatarUrl: '/LogoPirambeiraSemFundo.png',
+      checkInCount: 150,
+      isOfficial: true,
+    },
+    comments: [],
+  },
+  {
+    id: 'post-bar-3',
+    content: '🦐 Especialidade do dia do Chef Edu Moraes: Pastéis de camarão crocantes com queijo coalho e vinagrete de manga. Combinação perfeita com chopp gelado a -2°C!',
+    type: 'FEED',
+    createdAt: new Date(Date.now() - 110 * 60 * 1000).toISOString(),
+    likesCount: 115,
+    commentsCount: 14,
+    userReaction: 'CHEERS',
+    isBarOfficial: true,
+    media: ['https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1000&q=80'],
+    author: {
+      id: 'bar-official-001',
+      name: 'Pirambeira Bar',
+      username: 'pirambeira.bar',
+      avatarUrl: '/LogoPirambeiraSemFundo.png',
+      checkInCount: 150,
+      isOfficial: true,
+    },
+    comments: [],
+  },
+  {
+    id: 'post-bar-4',
+    content: '🎶 Roda de samba e brasilidades no deck começando! Chame os amigos e venha brindar. Dobradinha de caipirinha autoral até as 20h para quem fizer check-in no app! 🍻🥁',
+    type: 'FEED',
+    createdAt: new Date(Date.now() - 170 * 60 * 1000).toISOString(),
+    likesCount: 164,
+    commentsCount: 22,
+    userReaction: 'FIRE',
+    isBarOfficial: true,
+    media: ['https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1000&q=80'],
+    author: {
+      id: 'bar-official-001',
+      name: 'Pirambeira Bar',
+      username: 'pirambeira.bar',
+      avatarUrl: '/LogoPirambeiraSemFundo.png',
+      checkInCount: 150,
+      isOfficial: true,
+    },
+    comments: [],
   },
 ];
 
@@ -503,3 +605,57 @@ export const MOCK_MESSAGES: Message[] = [
     senderName: 'Larissa Bahia',
   },
 ];
+
+export const MOCK_STORIES: Story[] = [
+  {
+    id: 'story-bar-hoje',
+    mediaUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=1080&q=80',
+    caption: '🎶 Roda de samba ao vivo no deck externo! Chopp em dobro rolando até as 20h 🔥',
+    createdAt: new Date(Date.now() - 35 * 60 * 1000).toISOString(),
+    author: {
+      id: 'bar-official-001',
+      name: 'Pirambeira Bar',
+      username: 'pirambeira.bar',
+      avatarUrl: '/LogoPirambeiraSemFundo.png',
+      isOfficial: true,
+    },
+  },
+  {
+    id: 'story-bar-drinks',
+    mediaUrl: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1080&q=80',
+    caption: '🍹 Novos drinks autorais saindo agora no balcão! Caju Amigo defumado na pressão.',
+    createdAt: new Date(Date.now() - 75 * 60 * 1000).toISOString(),
+    author: {
+      id: 'bar-official-001',
+      name: 'Pirambeira Bar',
+      username: 'pirambeira.bar',
+      avatarUrl: '/LogoPirambeiraSemFundo.png',
+      isOfficial: true,
+    },
+  },
+  {
+    id: 'story-user-larissa',
+    mediaUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1080&q=80',
+    caption: 'Mesa 12 comemorando com chopp trincando e petiscos! O melhor de Salvador 🍻✨',
+    createdAt: new Date(Date.now() - 110 * 60 * 1000).toISOString(),
+    author: {
+      id: 'user-larissa-002',
+      name: 'Larissa Bahia',
+      username: 'laribahia',
+      avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    },
+  },
+  {
+    id: 'story-user-lucas',
+    mediaUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=1080&q=80',
+    caption: 'DJ no comando com o melhor da MPB e brasilidades 🎧🔥',
+    createdAt: new Date(Date.now() - 140 * 60 * 1000).toISOString(),
+    author: {
+      id: 'user-lucas-003',
+      name: 'Lucas Ferreira',
+      username: 'lucas_ferreira',
+      avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
+    },
+  },
+];
+

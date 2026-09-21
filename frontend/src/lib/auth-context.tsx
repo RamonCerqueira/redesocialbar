@@ -17,17 +17,36 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('tonopiramba_user');
+      if (cached) {
+        try {
+          return JSON.parse(cached);
+        } catch {}
+      }
+    }
+    return null;
+  });
   const [activeCheckIn, setActiveCheckIn] = useState<CheckIn | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshUser = async () => {
+    if (typeof window === 'undefined') return;
     const token = localStorage.getItem('tonopiramba_token');
+    const cachedUser = localStorage.getItem('tonopiramba_user');
+
     if (!token) {
       setUser(null);
       setActiveCheckIn(null);
       setIsLoading(false);
       return;
+    }
+
+    if (cachedUser && !user) {
+      try {
+        setUser(JSON.parse(cachedUser));
+      } catch {}
     }
 
     try {
@@ -40,18 +59,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         activeCheckIn: CheckIn | null;
       }>('/auth/me');
 
-      setUser({
-        id: data.id,
-        email: data.email,
-        role: data.role,
-        status: data.status,
-        profile: data.profile,
-      });
-      setActiveCheckIn(data.activeCheckIn);
-    } catch {
-      localStorage.removeItem('tonopiramba_token');
-      setUser(null);
-      setActiveCheckIn(null);
+      if (data && data.id) {
+        const validatedUser: User = {
+          id: data.id,
+          email: data.email,
+          role: data.role,
+          status: data.status,
+          profile: data.profile,
+        };
+        setUser(validatedUser);
+        localStorage.setItem('tonopiramba_user', JSON.stringify(validatedUser));
+        setActiveCheckIn(data.activeCheckIn);
+      }
+    } catch (err: any) {
+      // Apenas desloga se o servidor responder explicitamente com 401 ou 403 (token inválido/expirado)
+      if (err?.status === 401 || err?.status === 403) {
+        localStorage.removeItem('tonopiramba_token');
+        localStorage.removeItem('tonopiramba_user');
+        setUser(null);
+        setActiveCheckIn(null);
+      } else {
+        // Se a API estiver offline ou em erro 500, mantém a sessão do usuário intacta
+        console.warn('[Auth] Falha temporária na verificação de sessão, mantendo usuário logado.');
+        if (cachedUser) {
+          try {
+            setUser(JSON.parse(cachedUser));
+          } catch {}
+        }
+      }
     } finally {
       setIsLoading(false);
     }
@@ -62,16 +97,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = (token: string, userData: User) => {
-    localStorage.setItem('tonopiramba_token', token);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('tonopiramba_token', token);
+      localStorage.setItem('tonopiramba_user', JSON.stringify(userData));
+    }
     setUser(userData);
-    refreshUser();
   };
 
   const logout = () => {
-    localStorage.removeItem('tonopiramba_token');
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('tonopiramba_token');
+      localStorage.removeItem('tonopiramba_user');
+    }
     setUser(null);
     setActiveCheckIn(null);
   };
+
 
   return (
     <AuthContext.Provider
