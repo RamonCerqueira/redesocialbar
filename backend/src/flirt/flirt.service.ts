@@ -195,7 +195,7 @@ export class FlirtService {
     });
   }
 
-  async getFlirtNotes(restaurantSlug: string) {
+  async getFlirtNotes(restaurantSlug: string, currentUserId?: string) {
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { slug: restaurantSlug },
     });
@@ -212,25 +212,53 @@ export class FlirtService {
       },
       include: {
         author: { include: { profile: true } },
+        reactions: true,
         _count: { select: { reactions: true, comments: true } },
       },
       orderBy: { createdAt: 'desc' },
-      take: 25,
+      take: 40,
     });
 
-    return notes.map((n) => ({
-      id: n.id,
-      content: n.content,
-      flirtContext: n.flirtContext || 'No estabelecimento',
-      createdAt: n.createdAt,
-      likesCount: n._count.reactions,
-      commentsCount: n._count.comments,
-      author: {
-        id: n.author.id,
-        name: n.author.profile?.name || 'Alguém misterioso',
-        username: n.author.profile?.username,
-        avatarUrl: n.author.profile?.avatarUrl,
-      },
-    }));
+    return notes.map((n) => {
+      let tableNumber: string | undefined = undefined;
+      let targetPatron: string | undefined = undefined;
+      let isAnonymous = false;
+      let rawContext = n.flirtContext || 'No bar';
+
+      if (n.flirtContext && n.flirtContext.startsWith('{')) {
+        try {
+          const parsed = JSON.parse(n.flirtContext);
+          tableNumber = parsed.table || undefined;
+          targetPatron = parsed.target || undefined;
+          isAnonymous = Boolean(parsed.isAnonymous);
+          rawContext = parsed.context || tableNumber || 'No bar';
+        } catch {}
+      } else if (n.flirtContext) {
+        tableNumber = n.flirtContext;
+      }
+
+      const hasCheered = currentUserId
+        ? n.reactions.some((r) => r.userId === currentUserId)
+        : false;
+
+      return {
+        id: n.id,
+        content: n.content,
+        flirtContext: rawContext,
+        tableNumber,
+        targetPatron,
+        isAnonymous,
+        hasCheered,
+        createdAt: n.createdAt,
+        likesCount: n._count.reactions,
+        commentsCount: n._count.comments,
+        author: {
+          id: isAnonymous ? 'anon' : n.author.id,
+          name: isAnonymous ? 'Pirambeiro Secreto' : n.author.profile?.name || 'Alguém misterioso',
+          username: isAnonymous ? 'anonimo' : n.author.profile?.username || 'pirambeiro',
+          avatarUrl: isAnonymous ? undefined : n.author.profile?.avatarUrl,
+        },
+      };
+    });
   }
 }

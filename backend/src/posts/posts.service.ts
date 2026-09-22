@@ -17,11 +17,21 @@ export class PostsService {
       throw new NotFoundException(`Estabelecimento "${dto.restaurantSlug}" não encontrado.`);
     }
 
+    let flirtContext = dto.flirtContext;
+    if (dto.tableNumber || dto.targetPatron || dto.isAnonymous !== undefined) {
+      flirtContext = JSON.stringify({
+        table: dto.tableNumber,
+        target: dto.targetPatron,
+        isAnonymous: dto.isAnonymous,
+        context: dto.flirtContext || dto.tableNumber || 'No Piramba',
+      });
+    }
+
     const post = await this.prisma.post.create({
       data: {
         content: dto.content,
         type: dto.type || PostType.FEED,
-        flirtContext: dto.flirtContext,
+        flirtContext,
         restaurantId: restaurant.id,
         authorId: userId,
         media: dto.mediaUrls && dto.mediaUrls.length > 0
@@ -43,6 +53,47 @@ export class PostsService {
         _count: { select: { comments: true, reactions: true } },
       },
     });
+
+    // Se marcou um pirambeiro, disparar notificação automática
+    if (dto.targetPatron) {
+      const cleanTarget = dto.targetPatron.replace(/^@/, '').trim();
+      if (cleanTarget) {
+        try {
+          const targetUser = await this.prisma.user.findFirst({
+            where: {
+              profile: {
+                username: {
+                  equals: cleanTarget,
+                  mode: 'insensitive',
+                },
+              },
+            },
+            include: { profile: true },
+          });
+
+          if (targetUser && targetUser.id !== userId) {
+            const sender = await this.prisma.user.findUnique({
+              where: { id: userId },
+              include: { profile: true },
+            });
+            const senderName = dto.isAnonymous ? 'Um pirambeiro secreto 🤫' : sender?.profile?.name || 'Alguém';
+            const tableSuffix = dto.tableNumber ? ` da ${dto.tableNumber}` : '';
+
+            await this.prisma.notification.create({
+              data: {
+                userId: targetUser.id,
+                type: 'FLIRT',
+                title: '💌 Recado no guardanapo pra você!',
+                body: `${senderName} marcou você em um recadinho no guardanapo${tableSuffix}! 🍻`,
+                link: '/paquera',
+              },
+            });
+          }
+        } catch (notifErr) {
+          console.warn('Erro ao notificar usuário marcado no recado:', notifErr);
+        }
+      }
+    }
 
     return post;
   }
@@ -104,6 +155,13 @@ export class PostsService {
         ? post.reactions.find((r) => r.userId === currentUserId)?.type || null
         : null;
 
+      const isVideo = post.media.some((m) => m.type === 'VIDEO' || m.url.endsWith('.mp4'));
+      const videoMedia = isVideo ? post.media.find((m) => m.type === 'VIDEO' || m.url.endsWith('.mp4')) : null;
+      const isOfficial =
+        post.author.role === 'RESTAURANT_ADMIN' ||
+        post.author.role === 'SUPERADMIN' ||
+        post.author.profile?.username?.includes('pirambeira');
+
       return {
         id: post.id,
         content: post.content,
@@ -114,12 +172,17 @@ export class PostsService {
         commentsCount: post._count.comments,
         userReaction,
         media: post.media.map((m) => m.url),
+        isVideo,
+        videoUrl: videoMedia?.url,
+        videoDuration: isVideo ? '0:30' : undefined,
+        isBarOfficial: isOfficial,
         author: {
           id: post.author.id,
           name: post.author.profile?.name || 'Frequentador',
           username: post.author.profile?.username || 'usuario',
           avatarUrl: post.author.profile?.avatarUrl,
           checkInCount: post.author.profile?.checkInCount || 1,
+          isOfficial,
         },
         comments: post.comments.map((c) => ({
           id: c.id,
@@ -271,13 +334,31 @@ export class PostsService {
         where: { id: userId },
         include: { profile: true },
       });
+
+      const isFlirt = post.type === PostType.FLIRT;
+      const isCheers = type === ReactionType.CHEERS;
+      const senderName = user?.profile?.name || 'Alguém no bar';
+
+      let notifTitle = 'Nova reação no seu post';
+      let notifBody = `${senderName} reagiu ao seu post no bar.`;
+      let notifLink = '/';
+
+      if (isFlirt) {
+        notifTitle = '🍻 Brindaram no seu guardanapo!';
+        notifBody = `${senderName} mandou um brinde para o seu recado no guardanapo! Saúde! 🍻`;
+        notifLink = '/paquera';
+      } else if (isCheers) {
+        notifTitle = '🍻 Brindaram com você!';
+        notifBody = `${senderName} brindou com você no bar! Saúde! 🍻`;
+      }
+
       await this.prisma.notification.create({
         data: {
           userId: post.authorId,
-          type: 'REACTION',
-          title: 'Nova reação no seu post',
-          body: `${user?.profile?.name || 'Alguém'} reagiu ao seu post no bar.`,
-          link: '/',
+          type: isFlirt ? 'FLIRT' : 'REACTION',
+          title: notifTitle,
+          body: notifBody,
+          link: notifLink,
         },
       });
     }

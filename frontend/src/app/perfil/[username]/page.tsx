@@ -19,6 +19,7 @@ import {
   Beer,
   Sparkles,
   Camera,
+  Heart,
 } from 'lucide-react';
 
 interface ProfilePageProps {
@@ -121,158 +122,159 @@ export default function UserProfilePage({ params }: ProfilePageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Profile Header Card */}
-      <div className="surface-elevated rounded-3xl overflow-hidden border border-amber-500/20 glow-amber-sm">
-        {/* Cover Photo */}
-        <div className="h-32 sm:h-36 bg-gradient-to-r from-amber-700/40 via-[#1C1714] to-[#080706] relative">
-          <div className="absolute inset-0 bg-[#080706]/30" />
+    <div className="pb-24">
+      {/* 1. Header do Perfil (padding: 25px 18px 18px, display: flex, items-center, gap: 14) */}
+      <div className="pt-[25px] px-[18px] pb-[18px] flex items-center gap-[14px]">
+        {/* Avatar: width 82, height 82, borderRadius 41, border 3px solid #FFB800 */}
+        <div className="relative shrink-0">
+          <img
+            src={
+              profile.avatarUrl ||
+              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
+            }
+            alt={profile.name}
+            className="w-[82px] h-[82px] rounded-[41px] object-cover border-[3px] border-[#FFB800] shadow-lg"
+          />
+          {profile.activeCheckIn && (
+            <span
+              className="absolute bottom-0 right-0 w-4 h-4 rounded-full bg-[#00D084] border-2 border-[#080807] indicator-pulse-emerald flex items-center justify-center"
+              title="No Pirambeira agora"
+            />
+          )}
         </div>
 
-        {/* Avatar, Details & Actions */}
-        <div className="p-5 sm:p-6 pt-0 relative">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between -mt-14 mb-4 gap-4">
-            <div className="relative inline-block">
-              <img
-                src={
-                  profile.avatarUrl ||
-                  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80'
-                }
-                alt={profile.name}
-                className="w-24 h-24 rounded-3xl object-cover border-4 border-[#080706] shadow-2xl"
-              />
-              {profile.activeCheckIn && (
-                <span
-                  className="absolute bottom-1 right-1 w-5 h-5 rounded-full bg-emerald-400 border-2 border-[#080706] indicator-pulse-emerald flex items-center justify-center"
-                  title="No Pirambeira agora"
-                />
-              )}
+        {/* Identity: display flex, flexDirection column */}
+        <div className="flex flex-col min-w-0 flex-1">
+          <h1 className="font-display font-extrabold text-[21px] text-white leading-tight truncate">
+            {profile.name}
+          </h1>
+          <span className="text-[12px] text-[#88837C] font-mono mt-0.5">
+            @{profile.username}
+          </span>
+          {profile.activeCheckIn && (
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#00D084] mt-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#00D084]" />
+              <span>No Pirambeira agora</span>
             </div>
+          )}
+        </div>
 
-            <div className="flex items-center gap-2">
-              {isMe ? (
-                <>
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className="py-2 px-3.5 rounded-2xl bg-[#18130F] hover:bg-[#241B15] text-[#FBF8F5] text-xs font-bold border border-[#2C221A] flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <Settings className="w-4 h-4 text-amber-400" />
-                    <span>Privacidade</span>
-                  </button>
-                  <button
-                    onClick={logout}
-                    className="p-2 rounded-2xl bg-[#18130F] hover:bg-[#241B15] text-[#A89F96] hover:text-red-400 border border-[#2C221A] transition-colors cursor-pointer"
-                    title="Sair da Conta"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={handleToggleFollow}
-                    className={`py-2 px-4 rounded-2xl text-xs font-black flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
-                      isFollowing
-                        ? 'bg-[#18130F] text-[#FBF8F5] border border-[#2C221A]'
-                        : 'amber-gradient text-[#080706] shadow-md glow-amber-sm'
-                    }`}
-                  >
-                    {isFollowing ? (
-                      <>
-                        <UserCheck className="w-4 h-4 text-emerald-400" />
-                        <span>Seguindo</span>
-                      </>
-                    ) : (
-                      <>
-                        <UserPlus className="w-4 h-4" />
-                        <span>Seguir</span>
-                      </>
-                    )}
-                  </button>
+        {/* Action icons right */}
+        {isMe ? (
+          <button
+            onClick={logout}
+            className="p-2 rounded-xl border border-[#302A20] bg-[#11100F] text-[#88837C] hover:text-red-400 cursor-pointer"
+            title="Sair da Conta"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowReport(true)}
+            className="p-2 rounded-xl border border-[#302A20] bg-[#11100F] text-[#88837C] hover:text-red-400 cursor-pointer"
+            title="Reportar"
+          >
+            <ShieldAlert className="w-4 h-4" />
+          </button>
+        )}
+      </div>
 
-                  <button
-                    onClick={() => setShowReport(true)}
-                    className="p-2 text-[#6E655D] hover:text-red-400 rounded-2xl bg-[#18130F] border border-[#2C221A] cursor-pointer"
-                    title="Reportar Usuário"
-                  >
-                    <ShieldAlert className="w-4 h-4" />
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          {/* Name, Status & Bio */}
-          <div className="space-y-1.5">
-            <h1 className="font-display font-black text-xl text-[#FBF8F5]">{profile.name}</h1>
-            <p className="text-xs text-amber-400 font-mono font-semibold">@{profile.username}</p>
-
-            {profile.activeCheckIn && (
-              <div className="inline-flex items-center gap-2 bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 text-xs px-3 py-1 rounded-full font-bold mt-1 glow-emerald">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 indicator-pulse-emerald" />
-                <span>Presente no {profile.activeCheckIn.restaurantName} agora</span>
-              </div>
-            )}
-
-            <p className="text-xs text-[#A89F96] leading-relaxed pt-1.5 max-w-lg font-medium">
-              {profile.bio || 'Frequentador assíduo do Tô no Piramba.'}
-            </p>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs text-[#A89F96] pt-1">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3.5 h-3.5 text-amber-400" />
-                <span>{profile.city || 'Salvador, BA'}</span>
-              </span>
-              <span className="flex items-center gap-1 text-amber-400 font-bold">
-                <Flame className="w-3.5 h-3.5" />
-                <span>{profile.checkInCount} visitas ao Pirambeira</span>
-              </span>
-            </div>
-
-            {/* Interest Tags */}
-            {profile.interests && profile.interests.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-2">
-                {profile.interests.map((tag: string) => (
-                  <span
-                    key={tag}
-                    className="text-[10px] bg-[#18130F] text-amber-300/90 font-medium px-2.5 py-0.5 rounded-lg border border-amber-500/20"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Stats Bar */}
-          <div className="grid grid-cols-3 gap-2 mt-5 pt-4 border-t border-[#2C221A] text-center">
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="block font-display font-black text-base text-[#FBF8F5]">
-                {profile.counts?.posts || 0}
-              </span>
-              <span className="text-[10px] text-[#A89F96] uppercase font-bold tracking-wider">
-                Momentos
-              </span>
-            </div>
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="block font-display font-black text-base text-[#FBF8F5]">
-                {profile.counts?.followers || 0}
-              </span>
-              <span className="text-[10px] text-[#A89F96] uppercase font-bold tracking-wider">
-                Seguidores
-              </span>
-            </div>
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="block font-display font-black text-base text-[#FBF8F5]">
-                {profile.counts?.following || 0}
-              </span>
-              <span className="text-[10px] text-[#A89F96] uppercase font-bold tracking-wider">
-                Seguindo
-              </span>
-            </div>
-          </div>
+      {/* 2. Stats: display grid, repeat(3, 1fr), padding 15px 18px, borderTop/Bottom 1px solid #28241F */}
+      <div className="grid grid-cols-3 py-[15px] px-[18px] border-t border-b border-[#28241F] text-center">
+        <div>
+          <span className="font-display font-extrabold text-[16px] text-white block leading-none">
+            {profile.counts?.posts || 0}
+          </span>
+          <span className="text-[10px] text-[#88837C] uppercase font-bold tracking-wider mt-1 block">
+            Momentos
+          </span>
+        </div>
+        <div className="border-l border-r border-[#28241F]">
+          <span className="font-display font-extrabold text-[16px] text-white block leading-none">
+            {profile.counts?.followers || 0}
+          </span>
+          <span className="text-[10px] text-[#88837C] uppercase font-bold tracking-wider mt-1 block">
+            Seguidores
+          </span>
+        </div>
+        <div>
+          <span className="font-display font-extrabold text-[16px] text-[#FFB800] block leading-none">
+            {profile.checkInCount || 0}
+          </span>
+          <span className="text-[10px] text-[#88837C] uppercase font-bold tracking-wider mt-1 block">
+            Visitas
+          </span>
         </div>
       </div>
+
+      {/* 3. Action / Edit Button: margin 14px 18px, height 40, borderRadius 20, border 1px solid #FFB800 */}
+      <div className="mx-[18px] my-[14px]">
+        {isMe ? (
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-full h-[40px] rounded-[20px] border border-[#FFB800] text-[#FFB800] hover:bg-[#FFB800]/10 font-display font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Editar Perfil & Privacidade</span>
+          </button>
+        ) : (
+          <button
+            onClick={handleToggleFollow}
+            className={`w-full h-[40px] rounded-[20px] font-display font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              isFollowing
+                ? 'border border-[#302A20] bg-[#11100F] text-white'
+                : 'bg-[#FFB800] text-[#080807] shadow-[0_0_15px_rgba(255,184,0,0.3)]'
+            }`}
+          >
+            {isFollowing ? (
+              <>
+                <UserCheck className="w-4 h-4 text-[#00D084]" />
+                <span>Seguindo</span>
+              </>
+            ) : (
+              <>
+                <UserPlus className="w-4 h-4" />
+                <span>Seguir Frequentador</span>
+              </>
+            )}
+          </button>
+        )}
+      </div>
+
+      {/* 4. Settings Grid: display grid, 1fr 1fr, gap 10, padding 0 18px, item height 74 */}
+      {isMe && (
+        <div className="grid grid-cols-2 gap-2.5 px-[18px] mb-5">
+          <button
+            onClick={() => setShowSettings(true)}
+            className="h-[74px] rounded-[18px] bg-[#14110E]/75 backdrop-blur-2xl border border-white/[0.08] hover:border-[#FF2D70]/40 shadow-[0_8px_25px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] flex items-center gap-2.5 p-3 text-left transition-all cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-[#FF2D70]/15 border border-[#FF2D70]/30 flex items-center justify-center shrink-0">
+              <Heart className="w-4 h-4 text-[#FF2D70]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-white block leading-tight">Radar da Paquera</span>
+              <span className="text-[10px] text-[#88837C] block truncate mt-0.5">
+                {showInFlirtRadar ? 'Visível' : 'Oculto'}
+              </span>
+            </div>
+          </button>
+
+          <button
+            onClick={() => setShowSettings(true)}
+            className="h-[74px] rounded-[18px] bg-[#14110E]/75 backdrop-blur-2xl border border-white/[0.08] hover:border-[#00D084]/40 shadow-[0_8px_25px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] flex items-center gap-2.5 p-3 text-left transition-all cursor-pointer"
+          >
+            <div className="w-8 h-8 rounded-xl bg-[#00D084]/15 border border-[#00D084]/30 flex items-center justify-center shrink-0">
+              <Beer className="w-4 h-4 text-[#00D084]" />
+            </div>
+            <div className="min-w-0">
+              <span className="text-xs font-bold text-white block leading-tight">Modo Fantasma</span>
+              <span className="text-[10px] text-[#88837C] block truncate mt-0.5">
+                {invisibleMode ? 'Ativado' : 'Desativado'}
+              </span>
+            </div>
+          </button>
+        </div>
+      )}
 
       {/* Recent Posts Grid */}
       <section className="space-y-3">

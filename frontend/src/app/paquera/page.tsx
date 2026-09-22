@@ -3,30 +3,34 @@
 import React, { useState, useEffect } from 'react';
 import { FlirtNote } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
+import { MOCK_FLIRT_NOTES } from '@/lib/mock-data';
 import { FlirtNoteCard } from '@/components/flirt-note-card';
-import { InfoModal } from '@/components/info-modal';
 import { RecadinhoModal } from '@/components/recadinho-modal';
 import {
-  Heart,
+  PenLine,
   PlusCircle,
-  ShieldCheck,
   Sparkles,
-  Info,
-  Flame,
+  MapPin,
+  Heart,
+  MessageSquare,
 } from 'lucide-react';
 
-export default function MuralDaPaqueraPage() {
-  const [notes, setNotes] = useState<FlirtNote[]>([]);
+export default function RecadosGuardanapoPage() {
+  const [notes, setNotes] = useState<FlirtNote[]>(MOCK_FLIRT_NOTES);
   const [isLoading, setIsLoading] = useState(true);
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showRecadinhoModal, setShowRecadinhoModal] = useState(false);
 
   const loadNotes = async () => {
     try {
       const data = await apiRequest<FlirtNote[]>('/flirt/notes/pirambeira');
-      setNotes(data);
+      if (data && data.length > 0) {
+        setNotes(data);
+      } else {
+        setNotes(MOCK_FLIRT_NOTES);
+      }
     } catch (err) {
-      console.error('Erro ao carregar notas do mural:', err);
+      // Fallback para mock data local de guardanapos
+      setNotes(MOCK_FLIRT_NOTES);
     } finally {
       setIsLoading(false);
     }
@@ -45,93 +49,76 @@ export default function MuralDaPaqueraPage() {
   };
 
   return (
-    <div className="space-y-5 max-w-xl mx-auto pb-12">
-      {/* 1. Header Compacto e Limpo (Sem card gigante fixo) */}
-      <div className="flex items-center justify-between gap-3 pt-1">
+    <div className="max-w-xl mx-auto pb-24 px-[18px]">
+      {/* Header Principal da Página */}
+      <div className="pt-5 pb-4 flex items-center justify-between gap-3 border-b border-[#2C221A] mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-display font-black text-2xl text-white tracking-tight">
-              Mural da Paquera
+            <span className="text-2xl">✍️</span>
+            <h1 className="font-display font-medium text-[24px] sm:text-[26px] text-white tracking-tight leading-tight">
+              Paquera do Piramba
             </h1>
-            {/* Info Trigger Button (Abre o Popup que antes ficava fixo) */}
-            <button
-              type="button"
-              onClick={() => setShowInfoModal(true)}
-              className="p-1 rounded-full text-[#8E867E] hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
-              title="Como funciona o Mural da Paquera"
-            >
-              <Info className="w-4 h-4" />
-            </button>
           </div>
-          <p className="text-xs text-[#A89F96] mt-0.5">
-            Recados de quem está no Piramba agora
+          <p className="text-xs text-[#A9A5A0] mt-1 font-medium leading-relaxed">
+            Como aqueles bilhetinhos que o garçom entrega na mesa do Pírambeira 🍻
           </p>
         </div>
 
-        {/* Botão Novo Recadinho */}
         <button
           type="button"
           onClick={() => setShowRecadinhoModal(true)}
-          className="py-2 px-3.5 sm:px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-display font-extrabold text-xs flex items-center gap-1.5 shadow-lg glow-rose active:scale-95 transition-all cursor-pointer shrink-0"
+          className="h-[40px] px-4 rounded-[20px] bg-[#FFB800] hover:bg-[#FFC928] text-[#080807] font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_18px_rgba(255,184,0,0.3)] active:scale-95 transition-all cursor-pointer shrink-0"
         >
-          <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-          <span>Deixar Recadinho</span>
+          <PenLine className="w-4 h-4 stroke-[2.5]" />
+          <span>Deixar recado</span>
         </button>
       </div>
 
-      {/* 2. Barra de Status com Chip Informativo Clicável */}
-      <div className="flex items-center justify-between px-1">
+      {/* Banner Informativo Rápido */}
+      <div className="mb-4 p-3.5 rounded-[18px] bg-[#14100D]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_8px_25px_rgba(0,0,0,0.6),inset_0_1px_0_0_rgba(255,255,255,0.06)] flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-black uppercase tracking-wider text-white">
-            Recados no bar
-          </span>
-          <span className="text-xs text-rose-400 bg-rose-500/15 px-2.5 py-0.5 rounded-full border border-rose-500/30 font-bold">
-            {notes.length}
+          <span className="w-2 h-2 rounded-full bg-[#00D084] indicator-pulse-emerald shrink-0" />
+          <span className="text-xs text-[#C5BCB2]">
+            <strong className="text-white">{notes.length} recados</strong> postados no bar hoje
           </span>
         </div>
-
-        {/* Small Discreet Helper Pill that opens the Info Popup */}
-        <button
-          type="button"
-          onClick={() => setShowInfoModal(true)}
-          className="flex items-center gap-1.5 text-[11px] text-[#A89F96] hover:text-rose-300 transition-colors cursor-pointer"
-        >
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Double Opt-in Silencioso</span>
-        </button>
+        <span className="text-[10px] text-[#FF9E40] font-semibold flex items-center gap-1">
+          <MapPin className="w-3 h-3 text-[#FF7900]" />
+          <span>Mesa e @ são opcionais</span>
+        </span>
       </div>
 
-      {/* 3. Lista de Bilhetes do Mural */}
+      {/* Lista de Recados Postados no Guardanapo */}
       {isLoading ? (
         <div className="space-y-3.5">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="surface-ambient rounded-3xl p-5 h-32 animate-pulse border border-rose-500/15"
+              className="rounded-[22px] p-5 h-36 animate-pulse bg-[#14100D]/60 backdrop-blur-md border border-white/[0.05]"
             />
           ))}
         </div>
       ) : notes.length === 0 ? (
-        <div className="surface-ambient rounded-3xl p-8 sm:p-10 text-center border border-rose-500/20 space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-rose-500/15 text-rose-400 flex items-center justify-center mx-auto">
-            <Heart className="w-6 h-6 fill-rose-500/30" />
+        <div className="rounded-[24px] p-8 text-center bg-[#120F0D]/75 backdrop-blur-2xl border border-white/[0.08] shadow-[0_12px_36px_rgba(0,0,0,0.7),inset_0_1px_0_0_rgba(255,255,255,0.08)] space-y-4 my-6">
+          <div className="w-14 h-14 rounded-2xl bg-[#FFB800]/15 text-[#FFB800] flex items-center justify-center mx-auto text-2xl">
+            ✍️
           </div>
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             <h3 className="font-display font-bold text-white text-base">
-              Nenhum recado no mural ainda
+              Nenhum recadinho no guardanapo ainda
             </h3>
             <p className="text-xs text-[#A89F96] max-w-sm mx-auto leading-relaxed">
-              Viu alguém interessante no bar hoje? Deixe o primeiro recadinho de forma leve, divertida e discreta!
+              Viu alguém legal na mesa ao lado ou no balcão? Escreva o primeiro bilhetinho no guardanapo!
             </p>
           </div>
 
           <button
             type="button"
             onClick={() => setShowRecadinhoModal(true)}
-            className="inline-flex items-center gap-2 py-2.5 px-5 rounded-2xl bg-rose-600 hover:bg-rose-500 text-white font-display font-extrabold text-xs uppercase tracking-wider shadow-lg glow-rose active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center gap-2 py-3 px-6 rounded-full bg-[#FFB800] hover:bg-[#FFC928] text-[#080807] font-display font-black text-xs uppercase tracking-wider shadow-lg active:scale-95 transition-all cursor-pointer"
           >
             <PlusCircle className="w-4 h-4 stroke-[2.5]" />
-            <span>Mandar primeiro recado</span>
+            <span>Escrever primeiro guardanapo</span>
           </button>
         </div>
       ) : (
@@ -142,34 +129,7 @@ export default function MuralDaPaqueraPage() {
         </div>
       )}
 
-      {/* POPUP 1: Informações & Regras de Privacidade (O que antes era o card fixo gigante) */}
-      <InfoModal
-        isOpen={showInfoModal}
-        onClose={() => setShowInfoModal(false)}
-        badge={{
-          icon: Heart,
-          label: 'ESPAÇO DE CONEXÃO DISCRETA',
-          variant: 'rose',
-        }}
-        title="Mural da Paquera"
-        subtitle="Conexão leve e autêntica dentro do bar"
-        description="Deixe um recado discreto para quem chamou sua atenção no bar ou mande um olhar para alguém que está aqui agora. Se a pessoa também demonstrar interesse recíproco: Deu Match no Piramba!"
-        highlights={[
-          {
-            icon: ShieldCheck,
-            title: 'Double Opt-in Silencioso',
-            text: 'Nenhum contato invasivo. A conversa só é liberada se ambos demonstrarem interesse mútuo.',
-          },
-          {
-            icon: Sparkles,
-            title: 'Exclusivo do Bar',
-            text: 'Feito para quem está vivendo a noite presencialmente no Restaurante Pirambeira.',
-          },
-        ]}
-        confirmLabel="Entendi, voltar ao mural"
-      />
-
-      {/* POPUP 2: Criar Novo Recadinho (Sem foto, apenas texto e mesa) */}
+      {/* Modal para Escrever Recado no Guardanapo */}
       <RecadinhoModal
         isOpen={showRecadinhoModal}
         onClose={() => setShowRecadinhoModal(false)}

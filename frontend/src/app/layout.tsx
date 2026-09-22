@@ -1,21 +1,22 @@
 import type { Metadata, Viewport } from 'next';
-import { Outfit, Plus_Jakarta_Sans } from 'next/font/google';
+import { Montserrat, Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
 import { Navigation } from '@/components/navigation';
 import { Header } from '@/components/header';
 import { SplashScreen } from '@/components/splash-screen';
 
-
-const outfit = Outfit({
+const montserrat = Montserrat({
   subsets: ['latin'],
   variable: '--font-display',
+  weight: ['400', '500', '600', '700', '800', '900'],
   display: 'swap',
 });
 
-const plusJakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+  weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 });
 
@@ -55,8 +56,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={`${outfit.variable} ${plusJakarta.variable}`}>
-      <body className="bg-[#080706] text-[#FBF8F5] min-h-screen selection:bg-amber-500/30 selection:text-amber-200">
+    <html lang="pt-BR" className={`${montserrat.variable} ${inter.variable}`}>
+      <body className="bg-[#080807] text-[#FFFFFF] min-h-screen selection:bg-[#FFB800]/30 selection:text-[#FFB800]">
         <AuthProvider>
           <SplashScreen />
           <div className="flex min-h-screen">
@@ -64,7 +65,7 @@ export default function RootLayout({
             <Navigation />
             <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
               <Header />
-              <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-5 sm:px-6 sm:py-6">
+              <main className="flex-1 w-full max-w-[430px] lg:max-w-2xl mx-auto min-w-0 lg:py-6 lg:px-4">
                 {children}
               </main>
             </div>

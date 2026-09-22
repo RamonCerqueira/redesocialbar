@@ -1,43 +1,40 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Post } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
+import { MOCK_BAR_POSTS } from '@/lib/mock-data';
 import { PostCard } from '@/components/post-card';
 import {
   Flame,
-  Plus,
   RotateCw,
   Camera,
-  Beer,
-  Sparkles,
-  MapPin,
-  Image as ImageIcon,
-  Users,
-  Video,
+  Loader2,
 } from 'lucide-react';
 
-const FILTER_TAGS = [
-  { id: 'all', label: 'Todos', icon: Flame },
-  { id: 'videos', label: 'Vídeos (Bar)', icon: Video },
-  { id: 'photos', label: 'Fotos', icon: ImageIcon },
-  { id: 'friends', label: 'Mesas & Galera', icon: Users },
-  { id: 'drinks', label: 'Drinks & Chopp', icon: Beer },
-];
-
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Post[]>(MOCK_BAR_POSTS);
+  const [visibleCount, setVisibleCount] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('all');
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const loadPosts = async () => {
     try {
       const data = await apiRequest<Post[]>('/posts/feed/pirambeira');
-      setPosts(data);
+      if (data && data.length > 0) {
+        setPosts(data);
+        setHasMore(data.length > visibleCount);
+      } else {
+        setPosts(MOCK_BAR_POSTS);
+        setHasMore(MOCK_BAR_POSTS.length > visibleCount);
+      }
     } catch (err) {
-      console.error('Erro ao carregar feed:', err);
+      setPosts(MOCK_BAR_POSTS);
+      setHasMore(MOCK_BAR_POSTS.length > visibleCount);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -53,130 +50,134 @@ export default function FeedPage() {
     loadPosts();
   };
 
-  const filteredPosts = posts.filter((post) => {
-    if (activeFilter === 'all') return true;
-    if (activeFilter === 'videos') return Boolean(post.isVideo);
-    if (activeFilter === 'photos') return post.media && post.media.length > 0 && !post.isVideo;
-    if (activeFilter === 'friends') {
-      return (
-        post.content.toLowerCase().includes('amig') ||
-        post.content.toLowerCase().includes('mesa') ||
-        post.content.toLowerCase().includes('@')
-      );
-    }
-    if (activeFilter === 'drinks') {
-      return (
-        post.content.toLowerCase().includes('drink') ||
-        post.content.toLowerCase().includes('chopp') ||
-        post.content.toLowerCase().includes('cerveja')
-      );
-    }
-    return true;
-  });
+  // Rolagem contínua infinita estilo Instagram
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && !isLoadingMore && hasMore) {
+          setIsLoadingMore(true);
+          setTimeout(() => {
+            setVisibleCount((prev) => {
+              const next = prev + 2;
+              if (next >= posts.length) {
+                setHasMore(false);
+              }
+              return next;
+            });
+            setIsLoadingMore(false);
+          }, 450);
+        }
+      },
+      { threshold: 0.1, rootMargin: '300px' }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [isLoadingMore, hasMore, posts.length]);
 
   return (
-    <div className="space-y-4 max-w-xl mx-auto pb-14">
-      {/* 1. Header do Feed com Botão de Publicar */}
-      <div className="flex items-center justify-between gap-3 pt-1">
+    <div className="w-full max-w-[430px] mx-auto pb-24 px-3 sm:px-0">
+      {/* 1. Header do Feed estilo Instagram Clean */}
+      <div className="flex items-center justify-between gap-3 pt-3 pb-3 px-1 mb-2 border-b border-[#2A231C]">
         <div>
-          <div className="flex items-center gap-2">
-            <Flame className="w-6 h-6 text-[#F5A623] fill-[#F5A623]" />
-            <h1 className="font-display font-black text-2xl text-white tracking-tight">
-              Feed do Piramba
+          <div className="flex items-center gap-1.5">
+            <Flame className="w-5 h-5 text-[#FF7900] fill-[#FF7900]" />
+            <h1 className="font-display font-black text-xl sm:text-2xl text-white tracking-tight leading-none">
+              Explorar
             </h1>
           </div>
-          <p className="text-xs text-[#A89F96] mt-0.5 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 indicator-pulse-emerald inline-block" />
-            <span>Momentos ao vivo no Restaurante Pirambeira</span>
+          <p className="text-[11px] text-[#A6A29D] mt-1 flex items-center gap-1.5 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00D084] indicator-pulse-emerald inline-block" />
+            <span>Momentos ao vivo no Pírambeira</span>
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Botão de Atualizar Feed */}
+          {/* Botão de Atualizar */}
           <button
             type="button"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="p-2.5 rounded-2xl bg-[#18130F] hover:bg-[#221B16] text-[#A89F96] hover:text-white border border-[#2C221A] transition-all cursor-pointer active:scale-95"
+            className="w-9 h-9 rounded-full bg-[#161311] hover:bg-[#201B17] text-[#A6A29D] hover:text-[#FFB800] border border-[#332A20] flex items-center justify-center transition-all cursor-pointer active:scale-90"
             title="Atualizar feed"
             aria-label="Atualizar feed"
           >
             <RotateCw
-              className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#F5A623]' : ''}`}
+              className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#FFB800]' : ''}`}
             />
           </button>
 
-          {/* Botão Registrar Momento */}
+          {/* Botão Publicar */}
           <Link
             href="/publicar"
-            className="py-2.5 px-3.5 sm:px-4 rounded-2xl bg-[#F5A623] hover:bg-[#ffb338] text-[#080706] font-display font-black text-xs flex items-center gap-1.5 shadow-lg shadow-amber-500/25 active:scale-95 transition-all shrink-0"
+            className="h-9 px-3.5 rounded-full bg-[#FFB800] hover:bg-[#FFC928] text-[#080807] font-display font-black text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,184,0,0.3)] active:scale-95 transition-all shrink-0"
           >
-            <Camera className="w-4 h-4 stroke-[2.5]" />
+            <Camera className="w-3.5 h-3.5 stroke-[2.5]" />
             <span>Publicar</span>
           </Link>
         </div>
       </div>
 
-      {/* 2. Filtros de Categorias do Feed */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none pt-1">
-        {FILTER_TAGS.map((tab) => {
-          const isActive = activeFilter === tab.id;
-          const Icon = tab.icon;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveFilter(tab.id)}
-              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold shrink-0 transition-all active:scale-95 cursor-pointer ${
-                isActive
-                  ? 'bg-[#F5A623] text-[#080706] shadow-md shadow-amber-500/20 font-black'
-                  : 'bg-[#120F0D] text-[#A89F96] hover:text-white border border-[#221B16] hover:border-amber-500/30'
-              }`}
-            >
-              <Icon className={`w-3.5 h-3.5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 3. Lista de Posts / Momentos */}
+      {/* 2. Fluxo Contínuo de Postagens (Instagram-style) */}
       {isLoading ? (
         <div className="space-y-4 pt-1">
-          {[1, 2, 3].map((i) => (
+          {[1, 2].map((i) => (
             <div
               key={i}
-              className="bg-[#120F0D] rounded-3xl p-5 h-64 animate-pulse border border-[#221B16]"
+              className="bg-[#11100F] rounded-[20px] p-5 h-80 animate-pulse border border-[#30291F]"
             />
           ))}
         </div>
-      ) : filteredPosts.length === 0 ? (
-        <div className="bg-[#120F0D] rounded-3xl p-8 sm:p-10 text-center border border-[#221B16] space-y-3 mt-2">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-[#F5A623] flex items-center justify-center mx-auto">
+      ) : posts.length === 0 ? (
+        <div className="bg-[#11100F] rounded-[20px] p-8 text-center border border-[#30291F] space-y-3 my-6">
+          <div className="w-12 h-12 rounded-2xl bg-[#FFB800]/15 text-[#FFB800] flex items-center justify-center mx-auto">
             <Camera className="w-6 h-6 stroke-[2]" />
           </div>
           <div className="space-y-1">
             <h3 className="font-display font-bold text-white text-base">
-              Nenhum momento publicado nesta categoria
+              Nenhum momento publicado ainda
             </h3>
-            <p className="text-xs text-[#A89F96] max-w-sm mx-auto leading-relaxed">
-              Tirou foto do brinde ou da galera na mesa? Seja o primeiro a registrar a noite no Piramba!
+            <p className="text-xs text-[#A6A29D] max-w-sm mx-auto leading-relaxed">
+              Tirou foto do brinde ou da galera na mesa? Seja o primeiro a registrar a noite no Pírambeira!
             </p>
           </div>
 
           <Link
             href="/publicar"
-            className="inline-flex items-center gap-2 py-2.5 px-5 rounded-2xl bg-[#F5A623] hover:bg-[#ffb338] text-[#080706] font-display font-black text-xs uppercase tracking-wider shadow-lg shadow-amber-500/25 active:scale-95 transition-all mt-2"
+            className="inline-flex items-center gap-2 py-2.5 px-5 rounded-full bg-[#FFB800] hover:bg-[#FFC928] text-[#080807] font-display font-black text-xs uppercase tracking-wider shadow-lg active:scale-95 transition-all mt-2"
           >
-            <Plus className="w-4 h-4 stroke-[3]" />
             <span>Publicar agora</span>
           </Link>
         </div>
       ) : (
-        <div className="space-y-4 pt-1">
-          {filteredPosts.map((post) => (
+        <div className="space-y-4">
+          {posts.slice(0, visibleCount).map((post) => (
             <PostCard key={post.id} post={post} onPostUpdate={loadPosts} />
           ))}
+
+          {/* Sentinel de Rolagem Infinita */}
+          <div ref={sentinelRef} className="py-4 flex flex-col items-center justify-center">
+            {isLoadingMore ? (
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#161311] border border-[#30291F]">
+                <Loader2 className="w-3.5 h-3.5 text-[#FFB800] animate-spin" />
+                <span className="text-[11px] text-[#A6A29D] font-medium">
+                  Carregando mais momentos...
+                </span>
+              </div>
+            ) : !hasMore && posts.length > 2 ? (
+              <div className="text-center py-4 space-y-1 border-t border-[#29221B] w-full mt-2">
+                <p className="text-xs font-bold text-[#A6A29D]">
+                  Você viu todas as novidades por enquanto! 🍻
+                </p>
+                <p className="text-[11px] text-[#6E6760]">
+                  Bora pedir mais uma rodada?
+                </p>
+              </div>
+            ) : null}
+          </div>
         </div>
       )}
     </div>

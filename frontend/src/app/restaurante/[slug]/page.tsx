@@ -82,117 +82,138 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Hero Header */}
-      <div className="surface-elevated rounded-3xl overflow-hidden border border-amber-500/25 glow-amber-sm">
-        <div className="relative h-52 sm:h-72 w-full">
-          <img
-            src={
-              restaurant.coverUrl ||
-              'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=1600&q=80'
-            }
-            alt={restaurant.name}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#080706] via-[#080706]/40 to-transparent" />
+    <div className="pb-24 space-y-5">
+      {/* 1. Cover: height 190, relative, gradient linear-gradient(transparent,#080807) */}
+      <div className="relative h-[190px] w-full overflow-hidden bg-[#080807]">
+        <img
+          src={
+            restaurant.coverUrl ||
+            'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80'
+          }
+          alt={restaurant.name}
+          className="w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(180deg, transparent 0%, #080807 100%)',
+          }}
+        />
 
-          {/* Rating Badge */}
-          <div className="absolute top-4 right-4 bg-[#080706]/85 backdrop-blur-md border border-amber-500/30 text-amber-400 px-3.5 py-1.5 rounded-full flex items-center gap-1.5 text-xs font-black shadow-lg">
-            <Star className="w-3.5 h-3.5 fill-amber-400" />
-            <span>{restaurant.rating}</span>
-            <span className="text-[#A89F96] font-normal">(4.9 estrelas)</span>
+        {/* Rating Badge Top Right */}
+        <div className="absolute top-3 right-4 bg-[#080807]/85 backdrop-blur-md border border-[#FFB800]/30 text-[#FFB800] px-3 py-1 rounded-full flex items-center gap-1 text-[11px] font-black shadow-lg">
+          <Star className="w-3 h-3 fill-[#FFB800]" />
+          <span>{restaurant.rating || 4.9}</span>
+        </div>
+      </div>
+
+      {/* 2. Profile Identity: marginTop -50, padding 0 18px */}
+      <div className="-mt-[50px] relative px-[18px] z-10">
+        <div className="flex items-end justify-between">
+          {/* Avatar: width 90, height 90, borderRadius 45, border 4px solid #080807 */}
+          <div className="w-[90px] h-[90px] rounded-[45px] border-[4px] border-[#080807] overflow-hidden bg-[#11100F] shadow-2xl relative">
+            <img
+              src="/LogoPirambeiraSemFundo.png"
+              alt="Pirambeira"
+              className="w-full h-full object-contain p-1.5"
+            />
+          </div>
+
+          {/* Status de Check-in Ativo */}
+          {activeCheckIn?.restaurant?.slug === slug ? (
+            <div className="bg-[#00D084]/15 border border-[#00D084]/40 text-[#00D084] text-xs px-3.5 py-1.5 rounded-full font-black flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00D084] indicator-pulse-emerald" />
+              <span>Você está aqui</span>
+            </div>
+          ) : (
+            <button
+              onClick={handleCheckIn}
+              className="h-[38px] px-4 rounded-[19px] bg-[#FFB800] text-[#080807] font-display font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-[0_0_15px_rgba(255,184,0,0.35)] active:scale-95 transition-all cursor-pointer"
+            >
+              <Beer className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Check-in</span>
+            </button>
+          )}
+        </div>
+
+        {/* Name: fontSize 21, fontWeight 800 */}
+        <div className="mt-3">
+          <h1 className="font-display font-extrabold text-[21px] text-white tracking-tight leading-tight flex items-center gap-1.5">
+            {restaurant.name}
+            <span className="w-4 h-4 rounded-full bg-[#1D9BF0] flex items-center justify-center text-white text-[9px] font-black leading-none shrink-0" title="Verificado Oficial">
+              ✓
+            </span>
+          </h1>
+          <p className="text-xs text-[#AAA49C] mt-0.5 font-medium">
+            Bar & Encontros • Salvador - BA
+          </p>
+        </div>
+
+        {/* 3. Stats: display grid, repeat(3, 1fr), marginTop 16, padding 14px 0, borderTop 1px solid #29251F, borderBottom 1px solid #29251F */}
+        <div className="grid grid-cols-3 mt-4 py-[14px] border-t border-b border-[#29251F] text-center">
+          <div>
+            <span className="font-display font-extrabold text-[16px] text-[#00D084] block leading-none">
+              {restaurant.activePeopleCount || 128}
+            </span>
+            <span className="text-[10px] text-[#716D68] uppercase font-bold tracking-wider mt-1 block">
+              No Bar Agora
+            </span>
+          </div>
+          <div className="border-l border-r border-[#29251F]">
+            <span className="font-display font-extrabold text-[16px] text-white block leading-none">
+              {restaurant.rating || 4.9}
+            </span>
+            <span className="text-[10px] text-[#716D68] uppercase font-bold tracking-wider mt-1 block">
+              Avaliação
+            </span>
+          </div>
+          <div>
+            <span className="font-display font-extrabold text-[16px] text-[#FFB800] block leading-none">
+              17h às 02h
+            </span>
+            <span className="text-[10px] text-[#716D68] uppercase font-bold tracking-wider mt-1 block">
+              Horário
+            </span>
           </div>
         </div>
 
-        {/* Info & Venue Details */}
-        <div className="p-5 sm:p-7">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#2C221A]">
-            <div>
-              <h1 className="font-display font-black text-2xl sm:text-3xl text-[#FBF8F5] tracking-tight">
-                {restaurant.name}
-              </h1>
-              <p className="text-xs text-amber-400 font-bold mt-0.5">{restaurant.tagline}</p>
-            </div>
+        {/* 4. Actions: grid 2 colunas, gap 8, marginTop 12, buttons height 38, borderRadius 19, border 1px solid #FFB800 */}
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <button
+            onClick={() => setActiveTab('CARDAPIO')}
+            className="h-[38px] rounded-[19px] border border-[#FFB800] text-[#FFB800] hover:bg-[#FFB800]/10 font-display font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+          >
+            <Utensils className="w-3.5 h-3.5" />
+            <span>Cardápio</span>
+          </button>
+          <a
+            href={`https://instagram.com/${restaurant.instagram?.replace('@', '') || 'pirambeira.bar'}`}
+            target="_blank"
+            rel="noreferrer"
+            className="h-[38px] rounded-[19px] border border-[#302A20] bg-[#11100F] text-white hover:border-[#FFB800]/40 font-display font-bold text-xs flex items-center justify-center gap-1.5 transition-all"
+          >
+            <Instagram className="w-3.5 h-3.5 text-[#FF2D70]" />
+            <span>Instagram</span>
+          </a>
+        </div>
 
-            {/* Check-In Button */}
-            <div>
-              {activeCheckIn?.restaurant.slug === slug ? (
-                <div className="bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-xs px-4 py-2.5 rounded-2xl font-black flex items-center gap-2 glow-emerald">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 indicator-pulse-emerald" />
-                  <span>Você está aqui agora</span>
-                </div>
-              ) : (
-                <button
-                  onClick={handleCheckIn}
-                  className="py-2.5 px-5 rounded-2xl amber-gradient text-[#080706] font-display font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg glow-amber-sm active:scale-95 transition-transform cursor-pointer"
-                >
-                  <Beer className="w-4 h-4 stroke-[2.5]" />
-                  <span>Fazer Check-in no Bar</span>
-                </button>
-              )}
-            </div>
-          </div>
-
-          <p className="text-xs text-[#A89F96] leading-relaxed mt-4 font-medium">
-            {restaurant.description}
-          </p>
-
-          {/* Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="text-[10px] text-[#6E655D] uppercase font-black block tracking-wider">
-                Presentes Agora
-              </span>
-              <span className="text-base font-display font-black text-emerald-400 flex items-center gap-1.5 mt-0.5">
-                <Users className="w-4 h-4" />
-                {restaurant.activePeopleCount || 128}
+        {/* 5. Story Highlights: display flex, gap 12, padding 18px 0, overflow-x-auto */}
+        <div className="flex items-center gap-3 py-[18px] overflow-x-auto scroll-x-hide">
+          {[
+            { label: 'Drinks 🍸', img: 'https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=150&q=80' },
+            { label: 'Samba 🎶', img: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=150&q=80' },
+            { label: 'Petiscos 🍤', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=150&q=80' },
+            { label: 'Galera 🍻', img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=150&q=80' },
+          ].map((hl) => (
+            <div key={hl.label} className="w-[58px] shrink-0 text-center cursor-pointer group">
+              <div className="w-[58px] h-[58px] rounded-full p-[2px] border-2 border-[#FFB800] group-hover:scale-105 transition-transform overflow-hidden">
+                <img src={hl.img} alt={hl.label} className="w-full h-full rounded-full object-cover" />
+              </div>
+              <span className="text-[10px] font-medium text-[#AAA49C] mt-1 block truncate">
+                {hl.label}
               </span>
             </div>
-
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="text-[10px] text-[#6E655D] uppercase font-black block tracking-wider">
-                Bairro
-              </span>
-              <span className="text-xs font-bold text-[#FBF8F5] mt-1 block truncate">
-                Pituba, Salvador
-              </span>
-            </div>
-
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="text-[10px] text-[#6E655D] uppercase font-black block tracking-wider">
-                Instagram
-              </span>
-              <a
-                href={`https://instagram.com/${restaurant.instagram?.replace('@', '')}`}
-                target="_blank"
-                rel="noreferrer"
-                className="text-xs font-bold text-rose-400 hover:underline mt-1 block truncate"
-              >
-                {restaurant.instagram || '@pirambeira.bar'}
-              </a>
-            </div>
-
-            <div className="bg-[#18130F] p-3 rounded-2xl border border-[#2C221A]">
-              <span className="text-[10px] text-[#6E655D] uppercase font-black block tracking-wider">
-                Telefone
-              </span>
-              <span className="text-xs font-bold text-[#FBF8F5] mt-1 block">
-                {restaurant.phone || '(71) 98844-3210'}
-              </span>
-            </div>
-          </div>
-
-          {/* Location & Opening Hours */}
-          <div className="mt-5 pt-4 border-t border-[#2C221A] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-[#A89F96]">
-            <div className="flex items-center gap-1.5">
-              <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>{restaurant.address} • Pituba, Salvador - BA</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-              <span>Qua a Dom: a partir das 17h (Almoço sex a dom)</span>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 

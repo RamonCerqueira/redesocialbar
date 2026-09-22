@@ -5,9 +5,9 @@ import { Sparkles, ExternalLink } from 'lucide-react';
 
 export function SponsoredCard() {
   return (
-    <div className="surface-elevated rounded-3xl p-4 border border-amber-500/20 mb-5 relative overflow-hidden glow-amber-sm">
+    <div className="rounded-[24px] p-4 border border-white/[0.08] hover:border-[#FFB800]/40 bg-[#14110E]/75 backdrop-blur-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7),inset_0_1px_0_0_rgba(255,255,255,0.08)] mb-5 relative overflow-hidden group transition-all duration-300">
       <div className="flex items-center justify-between mb-2.5">
-        <span className="text-[10px] bg-amber-500/15 text-amber-400 font-display font-black px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1">
+        <span className="text-[10px] bg-amber-500/15 text-amber-400 font-display font-black px-2.5 py-0.5 rounded-full border border-amber-500/30 flex items-center gap-1 backdrop-blur-md">
           <Sparkles className="w-3 h-3" />
           SUGESTÃO DA CASA
         </span>

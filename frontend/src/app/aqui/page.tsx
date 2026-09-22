@@ -41,7 +41,7 @@ export default function QuemEstaAquiPage() {
   return (
     <div className="space-y-6">
       {/* 1. Hero / Big Number Presence Header */}
-      <div className="surface-elevated rounded-3xl p-6 sm:p-7 border border-amber-500/20 relative overflow-hidden">
+      <div className="rounded-[26px] p-6 sm:p-7 border border-white/[0.08] bg-[#14110E]/75 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.75),0_0_20px_rgba(0,208,132,0.06),inset_0_1px_0_0_rgba(255,255,255,0.08)] relative overflow-hidden">
         <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
 
         <div className="flex items-center gap-2 text-xs font-black text-emerald-400 uppercase tracking-widest mb-2">
@@ -76,10 +76,10 @@ export default function QuemEstaAquiPage() {
             <button
               key={btn.key}
               onClick={() => setFilter(btn.key as any)}
-              className={`flex items-center gap-2 py-2 px-4 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer ${
+              className={`flex items-center gap-2 py-2 px-4 rounded-2xl text-xs font-bold whitespace-nowrap transition-all active:scale-95 cursor-pointer backdrop-blur-md ${
                 isActive
                   ? 'amber-gradient text-[#080706] shadow-md glow-amber-sm'
-                  : 'bg-[#18130F] hover:bg-[#241B15] text-[#A89F96] hover:text-[#FBF8F5] border border-[#2C221A]'
+                  : 'bg-[#18130F]/70 hover:bg-[#241B15] text-[#A89F96] hover:text-[#FBF8F5] border border-white/[0.08]'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />

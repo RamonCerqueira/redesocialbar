@@ -4,6 +4,8 @@ import { ExpressInterestDto } from './dto/express-interest.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 
+import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt.guard';
+
 @Controller('flirt')
 export class FlirtController {
   constructor(private readonly flirtService: FlirtService) {}
@@ -21,7 +23,8 @@ export class FlirtController {
   }
 
   @Get('notes/:slug')
-  async getNotes(@Param('slug') slug: string) {
-    return this.flirtService.getFlirtNotes(slug);
+  @UseGuards(OptionalJwtAuthGuard)
+  async getNotes(@Param('slug') slug: string, @CurrentUser('id') userId?: string) {
+    return this.flirtService.getFlirtNotes(slug, userId);
   }
 }

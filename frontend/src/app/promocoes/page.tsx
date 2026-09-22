@@ -27,7 +27,7 @@ export default function PromocoesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="surface-elevated rounded-3xl p-6 sm:p-7 border border-amber-500/20 glow-amber-sm">
+      <div className="rounded-[26px] p-6 sm:p-7 border border-white/[0.08] bg-[#14110E]/75 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.75),0_0_20px_rgba(255,184,0,0.08),inset_0_1px_0_0_rgba(255,255,255,0.08)]">
         <div className="flex items-center gap-1.5 text-xs font-black text-amber-400 uppercase tracking-widest mb-1.5">
           <Percent className="w-4 h-4" />
           <span>RODADAS EXCLUSIVAS DO SALÃO</span>

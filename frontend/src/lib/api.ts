@@ -29,8 +29,44 @@ function getMockFallback(endpoint: string, options: RequestInit = {}): any {
 
   // POST actions simulation
   if (method === 'POST') {
+    if (endpoint.includes('/check-ins/checkout')) {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('tonopiramba_checkins');
+        const list = stored ? JSON.parse(stored) : [];
+        const filtered = list.filter((p: any) => p.userId !== MOCK_CURRENT_USER.id);
+        localStorage.setItem('tonopiramba_checkins', JSON.stringify(filtered));
+        localStorage.removeItem('tonopiramba_active_checkin');
+      }
+      return { success: true, message: 'Check-out realizado com sucesso!' };
+    }
     if (endpoint.includes('/check-ins')) {
-      return { success: true, message: 'Check-in realizado com sucesso!', startedAt: new Date().toISOString() };
+      const now = new Date().toISOString();
+      const newPatron = {
+        checkInId: 'chk-' + Date.now(),
+        userId: MOCK_CURRENT_USER.id,
+        name: MOCK_CURRENT_USER.profile.name.split(' ')[0],
+        username: MOCK_CURRENT_USER.profile.username,
+        avatarUrl: MOCK_CURRENT_USER.profile.avatarUrl,
+        startedAt: now,
+      };
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('tonopiramba_checkins');
+        const list = stored ? JSON.parse(stored) : [];
+        const updated = [newPatron, ...list.filter((p: any) => p.userId !== newPatron.userId)];
+        localStorage.setItem('tonopiramba_checkins', JSON.stringify(updated));
+        localStorage.setItem('tonopiramba_active_checkin', JSON.stringify({
+          id: newPatron.checkInId,
+          status: 'ACTIVE',
+          startedAt: now,
+          restaurant: MOCK_RESTAURANT,
+        }));
+      }
+      return {
+        id: newPatron.checkInId,
+        status: 'ACTIVE',
+        startedAt: now,
+        restaurant: MOCK_RESTAURANT,
+      };
     }
     if (endpoint.includes('/react')) {
       return { success: true, reaction: 'CHEERS' };
@@ -126,17 +162,28 @@ function getMockFallback(endpoint: string, options: RequestInit = {}): any {
     return MOCK_STORIES;
   }
   if (endpoint.includes('/who-is-here') || endpoint.includes('/check-ins/here')) {
-    return { totalActivePatrons: 87, patrons: MOCK_PATRONS };
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('tonopiramba_checkins');
+      if (stored !== null) {
+        try {
+          const list = JSON.parse(stored);
+          return { totalActivePatrons: list.length, patrons: list };
+        } catch {}
+      }
+    }
+    return { totalActivePatrons: 0, patrons: [] };
   }
 
   if (endpoint.includes('/check-ins/active')) {
-    return {
-      isActive: true,
-      restaurantName: 'Restaurante Pirambeira',
-      restaurantSlug: 'pirambeira',
-      startedAt: new Date(Date.now() - 40 * 60 * 1000).toISOString(),
-      expiresAt: new Date(Date.now() + 200 * 60 * 1000).toISOString(),
-    };
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('tonopiramba_active_checkin');
+      if (stored) {
+        try {
+          return JSON.parse(stored);
+        } catch {}
+      }
+    }
+    return null;
   }
   if (endpoint.includes('/posts/bar') || endpoint.includes('/posts/official')) {
     return MOCK_BAR_POSTS;

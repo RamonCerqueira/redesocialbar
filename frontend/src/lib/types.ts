@@ -107,10 +107,13 @@ export interface Post {
 export interface FlirtNote {
   id: string;
   content: string;
-  flirtContext: string;
+  flirtContext?: string;
+  tableNumber?: string;
+  targetPatron?: string;
+  isAnonymous?: boolean;
   createdAt: string;
   likesCount: number;
-  commentsCount: number;
+  commentsCount?: number;
   author: {
     id: string;
     name: string;

@@ -242,42 +242,42 @@ export default function PublicarPage() {
       />
       <canvas ref={canvasRef} className="hidden" />
 
-      {/* 1. HEADER: Voltar + "Registrar Momento" + Badge de Check-in */}
-      <div className="flex items-center justify-between pt-1">
+      {/* 1. HEADER (height: 60px, padding: 0 18px, display: flex, items-center, justify-between) */}
+      <div className="h-[60px] px-[18px] flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <button
             type="button"
             onClick={() => router.back()}
-            className="p-1 -ml-1 text-[#A89F96] hover:text-[#FBF8F5] transition-colors active:scale-90"
+            className="p-1 -ml-1 text-[#A89F96] hover:text-white transition-colors active:scale-90"
           >
             <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
           <div>
-            <h1 className="font-display font-black text-xl text-[#FBF8F5] tracking-tight">
-              Publicar no Feed
+            <h1 className="font-display font-black text-xl text-white tracking-tight leading-none">
+              Publicar
             </h1>
-            <p className="text-[10px] text-[#A89F96]">
-              Compartilhe seu momento com a galera do bar
+            <p className="text-[10px] text-[#A9A5A0] mt-0.5">
+              Compartilhe seu momento no Piramba
             </p>
           </div>
         </div>
 
         {/* Check-in Active Badge */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#18130F] border border-amber-500/30 text-left shadow-sm">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 indicator-pulse-emerald" />
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#11100F] border border-[#3A2908] text-left shadow-sm">
+          <span className="w-2 h-2 rounded-full bg-[#00D084] indicator-pulse-emerald" />
           <div className="leading-tight">
-            <span className="text-[11px] font-bold text-[#FBF8F5] block">
+            <span className="text-[11px] font-bold text-white block">
               Pirambeira
             </span>
-            <span className="text-[9px] text-amber-400 font-extrabold block">
+            <span className="text-[9px] text-[#FFB800] font-extrabold block">
               Check-in ativo
             </span>
           </div>
         </div>
       </div>
 
-      {/* 2. MEDIA: Foto ou Câmera Imersiva com Controles */}
-      <div className="surface-elevated rounded-3xl p-3 border border-amber-500/20 space-y-3">
+      {/* 2. MEDIA PREVIEW (Exact JSON: margin 0 18px, height 380px, borderRadius 20px, bg #11100F, border 1px dashed #514019) */}
+      <div className="mx-[18px] min-h-[320px] sm:h-[380px] rounded-[20px] bg-[#11100F] border border-dashed border-[#514019] p-3 flex flex-col justify-center items-center relative overflow-hidden">
         {/* Case A: Camera is Active */}
         {isCameraActive ? (
           <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-[#2C221A]">
@@ -465,25 +465,25 @@ export default function PublicarPage() {
         </button>
       </div>
 
-      {/* 4. CAPTION BOX: "O que está rolando?" */}
-      <div className="surface-elevated rounded-3xl p-4 border border-amber-500/15 space-y-2 focus-within:border-amber-500/40 transition-colors">
+      {/* 4. CAPTION (margin: 0 18px, minHeight: 100, borderRadius: 16, background: #11100F, border: 1px solid #302A20, padding: 14) */}
+      <div className="mx-[18px] min-h-[100px] rounded-[16px] bg-[#11100F] border border-[#302A20] p-[14px] space-y-2 focus-within:border-[#FFB800]/40 transition-colors">
         <textarea
           rows={3}
           maxLength={280}
           value={caption}
           onChange={(e) => setCaption(e.target.value)}
           placeholder="O que está rolando? Conta pra galera o que está acontecendo no Pirambeira..."
-          className="w-full bg-transparent border-none text-xs text-[#FBF8F5] placeholder-[#6E655D] focus:outline-none resize-none leading-relaxed font-medium"
+          className="w-full bg-transparent border-none text-xs text-white placeholder-[#716D68] focus:outline-none resize-none leading-relaxed font-medium"
         />
         <div className="text-right">
-          <span className="text-[10px] text-[#6E655D] font-mono">
+          <span className="text-[10px] text-[#716D68] font-mono">
             {caption.length}/280
           </span>
         </div>
       </div>
 
       {/* 5. QUICK CHIPS: Amigos 🍻, Festa 🎉, Hoje 🔥, Música 🎵, Paquera ❤️ */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none px-0.5">
+      <div className="mx-[18px] flex items-center gap-2 overflow-x-auto pb-1 scroll-x-hide">
         {config.quickTags.map((tag) => {
           const isSelected = selectedTags.includes(tag.id);
           return (
@@ -491,10 +491,11 @@ export default function PublicarPage() {
               key={tag.id}
               type="button"
               onClick={() => toggleQuickTag(tag.id)}
-              className={`py-1.5 px-3 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${isSelected
-                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/50 shadow-sm'
-                : 'bg-[#18130F] text-[#A89F96] border border-[#2C221A] hover:border-[#382C23]'
-                }`}
+              className={`py-1.5 px-3 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
+                isSelected
+                  ? 'bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/50 shadow-sm'
+                  : 'bg-[#11100F] text-[#A9A5A0] border border-[#302A20] hover:border-[#FFB800]/30'
+              }`}
             >
               <span>{tag.emoji}</span>
               <span>{tag.label}</span>
@@ -503,16 +504,21 @@ export default function PublicarPage() {
         })}
       </div>
 
-      {/* 6. BOTÃO PUBLICAR */}
-      <button
-        type="button"
-        onClick={handlePublish}
-        disabled={isSubmitting || (!selectedPhoto && !caption.trim())}
-        className="w-full py-4 px-6 rounded-2xl amber-gradient disabled:opacity-40 text-[#080706] font-display font-black text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-xl glow-amber-lg active:scale-95 transition-all mt-2 cursor-pointer"
-      >
-        <Send className="w-4 h-4 stroke-[2.5]" />
-        <span>{isSubmitting ? 'PUBLICANDO NO FEED...' : 'PUBLICAR NO FEED DA GALERA'}</span>
-      </button>
+      {/* 6. PUBLISH BUTTON (Fixed bottom: 92px, left: 18, right: 18, height: 48, borderRadius: 24, bg: gradient, color: #080807, font: 800) */}
+      <div className="pt-2 pb-16 px-[18px]">
+        <button
+          type="button"
+          onClick={handlePublish}
+          disabled={isSubmitting || (!selectedPhoto && !caption.trim())}
+          className="fixed bottom-[92px] left-[18px] right-[18px] max-w-[394px] mx-auto h-[48px] rounded-[24px] text-[#080807] font-display font-extrabold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(255,184,0,0.35)] active:scale-95 transition-all z-40 cursor-pointer disabled:opacity-40"
+          style={{
+            background: 'linear-gradient(90deg, #FFC928 0%, #FF7900 100%)',
+          }}
+        >
+          <Send className="w-4 h-4 stroke-[2.5]" />
+          <span>{isSubmitting ? 'PUBLICANDO NO FEED...' : 'PUBLICAR NO FEED'}</span>
+        </button>
+      </div>
 
       {/* 7. MODAL DE AMIGOS DO BAR */}
       {showFriendSelector && (

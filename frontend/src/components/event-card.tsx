@@ -40,26 +40,29 @@ export function EventCard({ event, onEventUpdate }: EventCardProps) {
   };
 
   return (
-    <div className="surface-elevated rounded-3xl overflow-hidden border border-amber-500/20 mb-5 group hover:border-amber-500/40 transition-all glow-amber-sm">
-      {event.coverImageUrl && (
-        <div className="relative h-48 sm:h-56 w-full overflow-hidden bg-black">
-          <img
-            src={event.coverImageUrl}
-            alt={event.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#13100E] via-transparent to-transparent" />
-          <span className="absolute top-3 left-3 bg-[#080706]/85 backdrop-blur-md text-amber-400 text-[10px] font-black px-3 py-1 rounded-full border border-amber-500/30 flex items-center gap-1.5 uppercase tracking-widest shadow-md">
-            <Music className="w-3 h-3" />
+    <div className="h-[94px] rounded-[18px] bg-[#14110E]/75 backdrop-blur-2xl border border-white/[0.08] hover:border-[#FFB800]/40 flex overflow-hidden group transition-all duration-300 shadow-[0_8px_30px_rgba(0,0,0,0.65),inset_0_1px_0_0_rgba(255,255,255,0.06)]">
+      {/* Imagem lateral 94x94 */}
+      <div className="relative w-[94px] h-[94px] shrink-0 overflow-hidden bg-black">
+        <img
+          src={
+            event.coverImageUrl ||
+            'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=300&q=80'
+          }
+          alt={event.title}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+        {event.category && (
+          <span className="absolute top-1.5 left-1.5 bg-[#080807]/90 text-[#FFB800] text-[9px] font-black px-1.5 py-0.5 rounded-full border border-[#FFB800]/30 uppercase tracking-wider">
             {event.category}
           </span>
-        </div>
-      )}
+        )}
+      </div>
 
-      <div className="p-5 sm:p-6">
-        <div className="flex items-center gap-3 text-xs text-[#A89F96] mb-2 font-medium">
-          <span className="flex items-center gap-1.5 text-amber-400 font-bold">
-            <Calendar className="w-3.5 h-3.5" />
+      {/* Conteúdo à direita (padding: 11px, flex vertical centralizado) */}
+      <div className="p-[11px] flex-1 flex flex-col justify-center min-w-0">
+        <div className="flex items-center gap-2 text-[10px] text-[#A89F96] font-medium leading-none mb-1">
+          <span className="flex items-center gap-1 text-[#FFB800] font-bold">
+            <Calendar className="w-3 h-3" />
             {new Date(event.date).toLocaleDateString('pt-BR', {
               weekday: 'short',
               day: '2-digit',
@@ -67,43 +70,40 @@ export function EventCard({ event, onEventUpdate }: EventCardProps) {
             })}
           </span>
           <span>•</span>
-          <span className="flex items-center gap-1">
-            <Clock className="w-3.5 h-3.5 text-[#6E655D]" />
+          <span className="flex items-center gap-0.5 text-[#858079]">
+            <Clock className="w-3 h-3" />
             {event.startTime}
           </span>
         </div>
 
-        <h3 className="font-display font-black text-lg sm:text-xl text-[#FBF8F5] mb-2 leading-snug tracking-tight">
+        <h3 className="font-display font-extrabold text-[14px] text-white truncate leading-tight mb-1">
           {event.title}
         </h3>
 
-        <p className="text-xs text-[#A89F96] leading-relaxed mb-4 font-medium">
-          {event.description}
-        </p>
-
-        <div className="flex items-center justify-between pt-3 border-t border-[#2C221A]">
-          <span className="text-xs text-[#A89F96] font-medium">
-            <span className="font-bold text-[#FBF8F5] font-mono">{count}</span> confirmados no bar
+        <div className="flex items-center justify-between mt-auto">
+          <span className="text-[10px] text-[#8E8982]">
+            <strong className="text-white font-mono">{count}</strong> no bar
           </span>
 
           <button
+            type="button"
             onClick={handleRsvp}
             disabled={isSubmitting}
-            className={`py-2 px-4 rounded-2xl text-xs font-extrabold transition-all active:scale-95 flex items-center gap-1.5 cursor-pointer ${
+            className={`h-[24px] px-2.5 rounded-[12px] text-[10px] font-black uppercase tracking-wider transition-all active:scale-95 flex items-center gap-1 cursor-pointer ${
               isRsvpd
-                ? 'bg-emerald-950/80 text-emerald-300 border border-emerald-500/40 glow-emerald'
-                : 'amber-gradient text-[#080706] shadow-md glow-amber-sm'
+                ? 'bg-[#00D084] text-[#080807]'
+                : 'bg-[#FFB800] hover:bg-[#FFC928] text-[#080807]'
             }`}
           >
             {isRsvpd ? (
               <>
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Vou colar</span>
+                <Check className="w-3 h-3 stroke-[3]" />
+                <span>Vou</span>
               </>
             ) : (
               <>
-                <span>Confirmar Presença</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>Bora</span>
+                <ArrowRight className="w-3 h-3" />
               </>
             )}
           </button>

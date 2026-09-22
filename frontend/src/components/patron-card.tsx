@@ -63,7 +63,7 @@ export function PatronCard({ patron, restaurantSlug = 'pirambeira' }: PatronCard
 
   return (
     <>
-      <div className="surface-elevated rounded-3xl p-4 border border-amber-500/15 flex flex-col justify-between hover:border-amber-500/35 transition-all group relative overflow-hidden">
+      <div className="rounded-[24px] p-4 border border-white/[0.08] hover:border-[#00D084]/40 bg-[#14110E]/75 backdrop-blur-2xl shadow-[0_10px_35px_rgba(0,0,0,0.7),0_0_15px_rgba(0,208,132,0.05),inset_0_1px_0_0_rgba(255,255,255,0.08)] flex flex-col justify-between transition-all duration-300 group relative overflow-hidden">
         <div>
           {/* Avatar com Anel de Presença Viva */}
           <div className="relative mb-3 inline-block">
@@ -111,7 +111,7 @@ export function PatronCard({ patron, restaurantSlug = 'pirambeira' }: PatronCard
                 {patron.interests.slice(0, 2).map((tag) => (
                   <span
                     key={tag}
-                    className="text-[10px] bg-[#18130F] text-[#A89F96] px-2 py-0.5 rounded-md border border-[#2C221A]"
+                    className="text-[10px] bg-[#18130F]/80 backdrop-blur-md text-[#A89F96] px-2 py-0.5 rounded-md border border-white/[0.06]"
                   >
                     #{tag}
                   </span>
@@ -122,7 +122,7 @@ export function PatronCard({ patron, restaurantSlug = 'pirambeira' }: PatronCard
         </div>
 
         {/* Ações Rápidas */}
-        <div className="pt-3 mt-3 border-t border-[#2C221A] flex flex-col gap-1.5">
+        <div className="pt-3 mt-3 border-t border-white/[0.06] flex flex-col gap-1.5">
           {patron.showInFlirtRadar && !isMe && (
             <button
               onClick={handleSendInterest}

@@ -18,6 +18,17 @@ export class CreatePostDto {
   @IsOptional()
   flirtContext?: string;
 
+  @IsString()
+  @IsOptional()
+  tableNumber?: string;
+
+  @IsString()
+  @IsOptional()
+  targetPatron?: string;
+
+  @IsOptional()
+  isAnonymous?: boolean;
+
   @IsArray()
   @IsOptional()
   mediaUrls?: string[];

@@ -17,6 +17,7 @@ import {
   Music,
   Sparkles,
   ArrowRight,
+  Crown,
 } from 'lucide-react';
 
 const DEFAULT_NOTIFICATIONS: AppNotification[] = [
@@ -77,61 +78,55 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#080706]/85 backdrop-blur-xl border-b border-white/[0.06] px-4 py-2.5 transition-all shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+    <header className="sticky top-0 z-40 h-[72px] bg-[#080807]/90 backdrop-blur-xl border-b border-[rgba(255,184,0,0.12)] px-[18px] py-3 transition-all">
       {/* Glow ambiente sutil superior */}
       <div className="absolute top-0 left-10 w-48 h-10 bg-amber-500/10 blur-2xl pointer-events-none" />
 
-      <div className="max-w-xl mx-auto flex items-center justify-between relative z-10">
-        {/* Left: Brand Logo & Title */}
-        <Link href="/" className="flex items-center gap-3 group">
-          {/* Logo Oficial Sem Fundo com Glow Dinâmico */}
+      <div className="max-w-xl mx-auto h-full flex items-center justify-between relative z-10">
+        {/* Left: Brand Logo & Title (gap: 10px, logo: 46x46, title: 18px/800, subtitle: 9px/600/1.4px) */}
+        <Link href="/" className="flex items-center gap-[10px] group">
+          {/* Logo Oficial Sem Fundo */}
           <div className="relative shrink-0">
-            <div className="absolute inset-0 bg-amber-500/20 blur-md rounded-full group-hover:bg-amber-500/35 transition-all" />
+            <div className="absolute inset-0 bg-[#FFB800]/20 blur-md rounded-full group-hover:bg-[#FFB800]/35 transition-all" />
             <img
               src="/LogoPirambeiraSemFundo.png"
-              alt="Piramba Bar & Encontros"
-              className="relative w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_2px_10px_rgba(245,166,35,0.35)]"
+              alt="Pírambeira"
+              className="relative w-[46px] h-[46px] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_2px_12px_rgba(255,184,0,0.35)]"
             />
           </div>
 
-          <div className="flex flex-col leading-none">
-            <div className="flex items-center gap-1.5">
-              <span className="font-display font-black text-lg sm:text-xl tracking-tight bg-gradient-to-r from-white via-[#FFF8EF] to-[#F5A623] bg-clip-text text-transparent">
-                PIRAMBEIRA
-              </span>
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 indicator-pulse-emerald inline-block" />
-            </div>
-            <span className="text-[9px] font-bold tracking-[0.24em] text-[#A89F96] mt-0.5 uppercase">
-              Bar & Encontros • Salvador
+          <div className="flex flex-col">
+            <span className="font-display font-extrabold text-[18px] text-[#FFFFFF] leading-tight tracking-tight">
+              Pírambeira
+            </span>
+            <span className="text-[9px] font-semibold tracking-[1.4px] text-[#AAA49C] uppercase">
+              BAR & ENCONTROS • SALVADOR
             </span>
           </div>
         </Link>
 
-        {/* Right: Action Buttons in Tactile Squircles */}
+        {/* Right: Actions (gap: 8px, iconButton: 40x40, border: 1px solid #332F2A, bg: #11100F) */}
         <div className="flex items-center gap-2">
-          {/* Botão Explorar (Quem está aqui agora) */}
+          {/* Botão Busca (Circular 40x40) */}
           <Link
             href="/aqui"
-            className="w-9 h-9 rounded-2xl bg-[#18130F]/90 hover:bg-[#241C15] text-[#D1C9C1] hover:text-[#F5A623] border border-white/[0.08] hover:border-amber-500/35 flex items-center justify-center transition-all active:scale-90 shadow-sm"
-            aria-label="Explorar quem está no bar"
-            title="Explorar quem está no bar"
+            className="w-10 h-10 rounded-full border border-[#332F2A] bg-[#11100F] text-white flex items-center justify-center transition-all active:scale-90 hover:border-[#FFB800]/40 shadow-sm"
+            aria-label="Buscar"
+            title="Buscar pessoas e eventos"
           >
-            <Search className="w-4 h-4 stroke-[2.2]" />
+            <Search className="w-4 h-4 stroke-[2]" />
           </Link>
 
-          {/* Bell Icon with Animated Radar Dot */}
+          {/* Bell Icon with Red Dot (Circular 40x40) */}
           <div className="relative">
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="w-9 h-9 rounded-2xl bg-[#18130F]/90 hover:bg-[#241C15] text-white hover:text-[#F5A623] border border-white/[0.08] hover:border-amber-500/35 flex items-center justify-center transition-all active:scale-90 shadow-sm relative cursor-pointer"
+              className="w-10 h-10 rounded-full border border-[#332F2A] bg-[#11100F] text-white flex items-center justify-center transition-all active:scale-90 hover:border-[#FFB800]/40 shadow-sm relative cursor-pointer"
               aria-label="Notificações"
             >
-              <Bell className="w-4 h-4 stroke-[2.2]" />
+              <Bell className="w-4 h-4 stroke-[2]" />
               {unreadCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F5A623] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F5A623] ring-2 ring-[#080706]" />
-                </span>
+                <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#E52532] border-2 border-[#080807]" />
               )}
             </button>
 

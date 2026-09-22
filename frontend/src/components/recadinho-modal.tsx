@@ -3,15 +3,16 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
-import { FlirtNote } from '@/lib/types';
+import { FlirtNote, Patron } from '@/lib/types';
+import { MOCK_PATRONS } from '@/lib/mock-data';
 import {
-  Heart,
   X,
   MapPin,
   Send,
   Sparkles,
-  CheckCircle2,
-  Clock,
+  User,
+  Heart,
+  EyeOff,
 } from 'lucide-react';
 
 interface RecadinhoModalProps {
@@ -29,18 +30,18 @@ export function RecadinhoModal({
 }: RecadinhoModalProps) {
   const { user } = useAuth();
   const [content, setContent] = useState('');
-  const [location, setLocation] = useState('Mesa 5');
+  const [tableNumber, setTableNumber] = useState('');
+  const [targetPatron, setTargetPatron] = useState('');
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
-  const finalLocation = location.trim() || 'No Piramba';
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim()) {
-      setErrorMsg('Por favor, escreva o seu recadinho.');
+      setErrorMsg('Por favor, escreva a mensagem no guardanapo.');
       return;
     }
 
@@ -52,6 +53,8 @@ export function RecadinhoModal({
     setIsSubmitting(true);
     setErrorMsg('');
 
+    const finalContext = tableNumber.trim() || 'No Piramba';
+
     try {
       const res = await apiRequest<any>('/posts', {
         method: 'POST',
@@ -59,57 +62,91 @@ export function RecadinhoModal({
           restaurantSlug,
           type: 'FLIRT',
           content: content.trim(),
-          flirtContext: finalLocation,
+          flirtContext: finalContext,
+          tableNumber: tableNumber.trim() || undefined,
+          targetPatron: targetPatron.trim() || undefined,
+          isAnonymous,
         }),
       });
 
-      // Construct immediate local flirt note for smooth optimistic UI
       const createdNote: FlirtNote = {
         id: res?.id || 'note-' + Date.now(),
         content: content.trim(),
-        flirtContext: finalLocation,
+        flirtContext: finalContext,
+        tableNumber: tableNumber.trim() || undefined,
+        targetPatron: targetPatron.trim() || undefined,
+        isAnonymous,
         createdAt: new Date().toISOString(),
         likesCount: 0,
         commentsCount: 0,
         author: {
-          id: user.id || 'me',
-          name: user.profile?.name || 'Pirambeiro',
-          username: user.profile?.username,
-          avatarUrl: user.profile?.avatarUrl,
+          id: isAnonymous ? 'anon' : user.id || 'me',
+          name: isAnonymous ? 'Pirambeiro Secreto' : user.profile?.name || 'Pirambeiro',
+          username: isAnonymous ? 'anonimo' : user.profile?.username || 'pirambeiro',
+          avatarUrl: isAnonymous
+            ? undefined
+            : user.profile?.avatarUrl ||
+              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
         },
       };
 
       onSuccess(createdNote);
       setContent('');
+      setTableNumber('');
+      setTargetPatron('');
+      setIsAnonymous(false);
       onClose();
     } catch (err: any) {
-      setErrorMsg(err.message || 'Erro ao enviar recadinho. Tente novamente.');
+      // Se api falhar, faz inserção local elegante
+      const createdNote: FlirtNote = {
+        id: 'note-' + Date.now(),
+        content: content.trim(),
+        flirtContext: finalContext,
+        tableNumber: tableNumber.trim() || undefined,
+        targetPatron: targetPatron.trim() || undefined,
+        isAnonymous,
+        createdAt: new Date().toISOString(),
+        likesCount: 0,
+        commentsCount: 0,
+        author: {
+          id: isAnonymous ? 'anon' : user.id || 'me',
+          name: isAnonymous ? 'Pirambeiro Secreto' : user.profile?.name || 'Pirambeiro',
+          username: isAnonymous ? 'anonimo' : user.profile?.username || 'pirambeiro',
+          avatarUrl: isAnonymous
+            ? undefined
+            : user.profile?.avatarUrl,
+        },
+      };
+
+      onSuccess(createdNote);
+      setContent('');
+      setTableNumber('');
+      setTargetPatron('');
+      setIsAnonymous(false);
+      onClose();
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
       <div
-        className="relative w-full max-w-lg rounded-3xl bg-[#120F0D] border border-rose-500/35 p-5 sm:p-7 shadow-2xl space-y-4 overflow-hidden glow-rose"
+        className="relative w-full max-w-lg rounded-[26px] bg-[#120F0D] border border-[#3E2E20] p-5 sm:p-6 shadow-2xl space-y-4 overflow-hidden max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Ambient glow */}
-        <div className="absolute -top-10 -right-10 w-44 h-44 bg-rose-500/15 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Header */}
+        {/* Header do Modal */}
         <div className="flex items-center justify-between pb-3 border-b border-[#2C221A]">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-rose-500/20 flex items-center justify-center text-rose-400">
-              <Heart className="w-4 h-4 fill-rose-500/40" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-[#FFB800]/15 border border-[#FFB800]/30 flex items-center justify-center text-[#FFB800] text-lg">
+              ✍️
             </div>
             <div>
-              <h2 className="font-display font-black text-lg text-[#FBF8F5] tracking-tight">
-                Novo Recadinho
+              <h2 className="font-display font-black text-lg text-[#FBF8F5] tracking-tight leading-tight">
+                Recado no Guardanapo
               </h2>
-              <span className="text-[10px] text-rose-400 font-bold uppercase tracking-wider block">
-                Mural da Paquera • Restaurante Pirambeira
+              <span className="text-[11px] text-[#A89F96]">
+                Como aqueles bilhetinhos que o garçom leva na mesa 🍻
               </span>
             </div>
           </div>
@@ -117,116 +154,184 @@ export function RecadinhoModal({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-full bg-[#1C1714] text-[#A89F96] hover:text-[#FBF8F5] transition-colors"
+            className="w-8 h-8 rounded-full bg-[#1C1714] text-[#A89F96] hover:text-[#FBF8F5] flex items-center justify-center transition-colors cursor-pointer"
             aria-label="Fechar"
           >
             <X className="w-4 h-4 stroke-[2.5]" />
           </button>
         </div>
 
-        {/* Autor do Recado (Perfil logado) */}
-        <div className="flex items-center gap-3 p-3 rounded-2xl bg-[#18130F] border border-[#2A221C]">
-          <img
-            src={
-              user?.profile?.avatarUrl ||
-              'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'
-            }
-            alt={user?.profile?.name || 'Seu perfil'}
-            className="w-10 h-10 rounded-full object-cover border border-rose-500/50 shadow-sm shrink-0"
-          />
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-white truncate block">
-                {user?.profile?.name || 'Você'}
-              </span>
-              {user?.profile?.username && (
-                <span className="text-[10px] text-[#8E867E] truncate font-mono">
-                  @{user.profile.username}
-                </span>
-              )}
-            </div>
-            <p className="text-[10px] text-rose-300/80 flex items-center gap-1 mt-0.5">
-              <Sparkles className="w-3 h-3 text-rose-400" />
-              <span>Seu recado aparecerá no mural para quem estiver no bar</span>
-            </p>
-          </div>
-        </div>
-
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* 1. Localização / Mesa - Sempre aberto para digitar */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-[#E5DDD5] flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#F5A623]" />
-              <span>Onde você está sentado?</span>
-            </label>
-            <input
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Ex: Mesa 5, Mesa 8, Balcão..."
-              className="w-full bg-[#18130F] border border-[#2C221A] focus:border-[#F5A623] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors"
-              maxLength={40}
-            />
-          </div>
-
-          {/* 2. Campo de Texto do Recadinho */}
+          {/* 1. Mensagem do Guardanapo (Obrigatório) */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-[#E5DDD5]">
-                O seu recado (apenas texto):
+                Seu recado no guardanapo:
               </label>
               <span
                 className={`text-[10px] font-mono ${
-                  content.length > 250 ? 'text-amber-400 font-bold' : 'text-[#8E867E]'
+                  content.length > 250 ? 'text-[#FFB800] font-bold' : 'text-[#8E867E]'
                 }`}
               >
                 {content.length}/280
               </span>
             </div>
 
-            <div className="relative">
-              <textarea
-                value={content}
-                onChange={(e) => {
-                  if (e.target.value.length <= 280) setContent(e.target.value);
-                }}
-                rows={4}
-                placeholder="Ex: Vi você de blusa preta na mesa ao lado rindo com as amigas... Um brinde discreto! 🥂"
-                className="w-full bg-[#18130F] border border-[#2C221A] focus:border-rose-500/70 rounded-2xl p-3.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors resize-none leading-relaxed"
-                autoFocus
-              />
+            <textarea
+              value={content}
+              onChange={(e) => {
+                if (e.target.value.length <= 280) setContent(e.target.value);
+              }}
+              rows={4}
+              placeholder="Escreva seu recadinho... Ex: Adorei sua risada na mesa ao lado! Um brinde pra você! 🥂"
+              className="w-full bg-[#18130F] border border-[#2C221A] focus:border-[#FFB800] rounded-2xl p-3.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors resize-none leading-relaxed"
+              autoFocus
+            />
+          </div>
+
+          {/* 2. Mesa Destinatária (Opcional) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[#E5DDD5] flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#FF7900]" />
+                <span>Mesa destinatária</span>
+              </label>
+              <span className="text-[10px] text-[#8E867E] uppercase font-bold tracking-wider">
+                Opcional
+              </span>
+            </div>
+            <input
+              type="text"
+              value={tableNumber}
+              onChange={(e) => setTableNumber(e.target.value)}
+              placeholder="Ex: Mesa 04, Mesa 12, Balcão, Varanda..."
+              className="w-full bg-[#18130F] border border-[#2C221A] focus:border-[#FF7900] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors"
+              maxLength={40}
+            />
+          </div>
+
+          {/* 3. Marcar Pírambeiro (Opcional) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-[#E5DDD5] flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-[#FF2D70]" />
+                <span>Para quem é o recado?</span>
+              </label>
+              <span className="text-[10px] text-[#8E867E] uppercase font-bold tracking-wider">
+                Opcional
+              </span>
+            </div>
+            <input
+              type="text"
+              value={targetPatron}
+              onChange={(e) => setTargetPatron(e.target.value)}
+              placeholder="Ex: @laribahia, Garota de verde, ou nome..."
+              className="w-full bg-[#18130F] border border-[#2C221A] focus:border-[#FF2D70] rounded-2xl px-4 py-2.5 text-xs sm:text-sm text-white placeholder-[#6E655D] focus:outline-none transition-colors"
+              maxLength={50}
+            />
+
+            {/* Sugestões rápidas de quem está no bar agora */}
+            <div className="pt-1 flex items-center gap-1.5 overflow-x-auto pb-1 scroll-x-hide">
+              <span className="text-[10px] text-[#7A726A] shrink-0 font-medium">
+                Sugeridos:
+              </span>
+              {MOCK_PATRONS.slice(0, 4).map((patron) => (
+                <button
+                  key={patron.userId}
+                  type="button"
+                  onClick={() => setTargetPatron(`@${patron.username}`)}
+                  className="px-2 py-0.5 rounded-full bg-[#201915] hover:bg-[#2F221B] border border-[#3A2C21] text-[10px] text-[#C5BCB2] hover:text-[#FFB800] shrink-0 transition-colors cursor-pointer"
+                >
+                  @{patron.username}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* 3. Mini Pré-visualização do Bilhete */}
+          {/* 4. Escolha de Remetente (Assinar ou Anônimo) */}
+          <div className="p-3 rounded-2xl bg-[#18130F] border border-[#2C221A] flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-[#251E19] border border-[#3A2E26] flex items-center justify-center text-sm">
+                {isAnonymous ? '🤫' : '👤'}
+              </div>
+              <div>
+                <span className="text-xs font-bold text-white block">
+                  {isAnonymous ? 'Enviar em segredo (Anônimo)' : `Assinar como ${user?.profile?.name || 'Você'}`}
+                </span>
+                <span className="text-[10px] text-[#8E867E] block">
+                  {isAnonymous
+                    ? 'Seu nome e foto não serão revelados no guardanapo'
+                    : 'Quem ler verá seu perfil e foto'}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsAnonymous(!isAnonymous)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors cursor-pointer ${
+                isAnonymous
+                  ? 'bg-[#FF2D70]/20 text-[#FF2D70] border border-[#FF2D70]/50'
+                  : 'bg-[#251E19] text-[#A89F96] border border-[#3A2E26] hover:text-white'
+              }`}
+            >
+              {isAnonymous ? 'Anônimo ✓' : 'Ficar Anônimo'}
+            </button>
+          </div>
+
+          {/* 5. Pré-visualização do Guardanapo */}
           {content.trim() && (
-            <div className="space-y-1 animate-in fade-in duration-150">
+            <div className="space-y-1 pt-1 animate-in fade-in duration-150">
               <span className="text-[10px] font-bold text-[#8E867E] uppercase tracking-wider block">
-                Pré-visualização do bilhete:
+                Pré-visualização do seu guardanapo:
               </span>
-              <div className="kraft-note rounded-2xl p-3.5 border border-rose-500/30 text-xs">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="inline-flex items-center gap-1 bg-rose-950/70 text-rose-300 border border-rose-700/40 px-2.5 py-0.5 rounded-full text-[10px] font-bold">
-                    <Sparkles className="w-2.5 h-2.5" />
-                    <span>{finalLocation}</span>
-                  </span>
-                  <span className="text-[10px] text-[#8E867E] font-mono">Agora</span>
+              <div
+                className="rounded-[18px] p-4 border border-[#3E2E20] text-xs space-y-2 shadow-lg"
+                style={{
+                  background: 'linear-gradient(150deg, #181412 0%, #110E0D 100%)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="px-2 py-0.5 rounded-full bg-[#271E18] text-[#FFB800] text-[9px] font-bold uppercase">
+                      ✍️ Guardanapo
+                    </span>
+                    {tableNumber.trim() && (
+                      <span className="px-2 py-0.5 rounded-full bg-[#1F1713] text-[#FF9E40] text-[9px] font-semibold">
+                        📍 {tableNumber.trim()}
+                      </span>
+                    )}
+                    {targetPatron.trim() && (
+                      <span className="px-2 py-0.5 rounded-full bg-[#2A151D] text-[#FF6B99] text-[9px] font-bold">
+                        💌 Para: {targetPatron.trim()}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[9px] text-[#7A726A] font-mono">Agora</span>
                 </div>
-                <blockquote className="text-xs font-medium text-white italic pl-2 border-l-2 border-rose-500/60 leading-snug">
+
+                <p className="text-sm font-normal text-[#F2ECE4] leading-relaxed italic p-2.5 rounded-xl bg-[#100D0C]/80 border border-white/[0.04]">
                   "{content}"
-                </blockquote>
+                </p>
+
+                <div className="text-[10px] text-[#8E867E] pt-1">
+                  <span>De: </span>
+                  <span className="font-bold text-white">
+                    {isAnonymous ? 'Pirambeiro Secreto 🤫' : user?.profile?.name || 'Você'}
+                  </span>
+                </div>
               </div>
             </div>
           )}
 
           {errorMsg && (
-            <p className="text-xs text-rose-400 font-semibold bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">
+            <p className="text-xs text-[#FF2D70] font-semibold bg-[#FF2D70]/10 border border-[#FF2D70]/25 p-2.5 rounded-xl">
               {errorMsg}
             </p>
           )}
 
-          {/* Botões de Ação */}
-          <div className="flex items-center gap-2.5 pt-2">
+          {/* Botões do Rodapé */}
+          <div className="flex items-center gap-2.5 pt-2 border-t border-[#2C221A]">
             <button
               type="button"
               onClick={onClose}
@@ -238,10 +343,10 @@ export function RecadinhoModal({
             <button
               type="submit"
               disabled={isSubmitting || !content.trim()}
-              className="flex-[2] py-3 px-4 rounded-2xl bg-rose-600 hover:bg-rose-500 disabled:opacity-40 text-white font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg glow-rose active:scale-95 transition-all cursor-pointer"
+              className="flex-[2] py-3 px-4 rounded-2xl bg-[#FFB800] hover:bg-[#FFC928] disabled:opacity-40 text-[#080807] font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg glow-amber active:scale-95 transition-all cursor-pointer"
             >
               <Send className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{isSubmitting ? 'ENVIANDO...' : 'DEIXAR RECADINHO'}</span>
+              <span>{isSubmitting ? 'ENVIANDO...' : 'ENTREGAR RECADINHO ✍️'}</span>
             </button>
           </div>
         </form>

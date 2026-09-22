@@ -47,9 +47,9 @@ export function CouponCard({ promotion, onPromotionUpdate }: CouponCardProps) {
   };
 
   return (
-    <div className="surface-elevated rounded-3xl p-5 sm:p-6 border border-amber-500/25 relative overflow-hidden mb-5 group hover:border-amber-500/45 transition-all glow-amber-sm">
+    <div className="rounded-[24px] p-5 sm:p-6 border border-white/[0.08] hover:border-[#FFB800]/40 bg-[#14110E]/75 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7),0_0_20px_rgba(255,184,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.08)] relative overflow-hidden mb-5 group transition-all duration-300">
       <div className="flex items-start justify-between gap-3 mb-2.5">
-        <span className="text-[10px] bg-amber-500/20 text-amber-400 font-display font-black px-3 py-1 rounded-full border border-amber-500/35 uppercase tracking-wider flex items-center gap-1.5 shadow-sm">
+        <span className="text-[10px] bg-amber-500/20 text-amber-400 font-display font-black px-3 py-1 rounded-full border border-amber-500/35 uppercase tracking-wider flex items-center gap-1.5 shadow-sm backdrop-blur-md">
           <Beer className="w-3 h-3 text-amber-400" />
           {promotion.badge || 'PROMOÇÃO DE BOTECO'}
         </span>
@@ -79,9 +79,9 @@ export function CouponCard({ promotion, onPromotionUpdate }: CouponCardProps) {
       )}
 
       {/* Action / Claimed Coupon Details */}
-      <div className="pt-4 mt-4 border-t border-[#2C221A]">
+      <div className="pt-4 mt-4 border-t border-white/[0.06]">
         {userCoupon ? (
-          <div className="bg-[#18130F] rounded-2xl p-3 sm:p-4 border border-amber-500/30 flex items-center justify-between">
+          <div className="bg-[#18130F]/80 backdrop-blur-md rounded-2xl p-3 sm:p-4 border border-[#FFB800]/30 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-2xl bg-amber-500/15 text-amber-400 flex items-center justify-center border border-amber-500/25 shadow-sm">
                 <QrCode className="w-5 h-5" />
