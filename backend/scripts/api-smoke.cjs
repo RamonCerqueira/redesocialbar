@@ -55,6 +55,13 @@ async function user(index, role = 'USER') {
   const official = await request('/posts/bar/' + r.slug);
   check('nome de usuário não falsifica selo oficial', official.data.length === 1 && official.data[0].id === post.data.id);
   check('botão chega ao aplicativo', official.data[0].buttonText === 'Ver oferta');
+  check('rotas de chat removidas', (await request('/chat/conversations', a.token)).status === 404);
+  const secretNote=await request('/posts', a.token, 'POST', {restaurantSlug:r.slug,type:'FLIRT',content:'Recado anônimo QA',isAnonymous:true});
+  const notes=await request('/flirt/notes/'+r.slug);
+  check('recado anônimo não revela identidade', notes.data.find(n=>n.id===secretNote.data.id).author.id==='anon');
+  check('feed não revela autor do recado anônimo', !(await request('/posts/feed/'+r.slug)).data.some(n=>n.id===secretNote.data.id));
+  const profileName=(await prisma.profile.findUnique({where:{userId:a.id}})).username;
+  check('perfil não associa recado anônimo ao autor', !JSON.stringify((await request('/users/profile/'+profileName)).data).includes(secretNote.data.id));
   const regular = await request('/posts', a.token, 'POST', { restaurantSlug: r.slug, content: 'Teste de serialização' });
   check('resposta de publicação não inclui senha ou e-mail', !JSON.stringify(regular.data).includes('passwordHash') && !JSON.stringify(regular.data).includes('@example.test'));
   check('URL javascript é recusada', (await request(adminPath + '/posts', owner.token, 'POST', { content: 'Inseguro', buttonText: 'Ver', buttonUrl: 'javascript:alert(1)' })).status === 400);

@@ -53,7 +53,7 @@ export default function QuemEstaAquiPage() {
           <div>
             <div className="flex items-baseline gap-3">
               <span className="font-display font-black text-4xl sm:text-5xl text-[#FBF8F5] tracking-tight">
-                {totalCount || 128}
+                {totalCount ?? 0}
               </span>
               <span className="font-display font-extrabold text-lg sm:text-xl text-amber-400 uppercase tracking-wide">
                 PESSOAS AQUI AGORA

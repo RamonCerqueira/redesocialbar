@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import Link from 'next/link';
 import confetti from 'canvas-confetti';
-import { Sparkles, MessageSquare, X, Heart } from 'lucide-react';
+import { Sparkles, UserRound, X, Heart } from 'lucide-react';
 
 interface MatchModalProps {
   isOpen: boolean;
@@ -13,14 +13,12 @@ interface MatchModalProps {
     avatarUrl?: string;
     username: string;
   };
-  conversationId: string;
 }
 
 export function MatchModal({
   isOpen,
   onClose,
   matchedUser,
-  conversationId,
 }: MatchModalProps) {
   useEffect(() => {
     if (isOpen) {
@@ -72,17 +70,17 @@ export function MatchModal({
         </p>
 
         <p className="text-xs text-[#A89F96] mt-1 mb-6 px-2 leading-relaxed">
-          Vocês estão no mesmo bar e a conversa privada foi liberada de forma 100% discreta.
+          O interesse é recíproco. Conheça o perfil e aproveite o encontro!
         </p>
 
         <div className="space-y-2">
           <Link
-            href={`/chat/${conversationId}`}
+            href={`/perfil/${matchedUser.username}`}
             onClick={onClose}
             className="w-full py-3 px-4 rounded-2xl amber-gradient text-[#080706] font-display font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg glow-amber-sm active:scale-95 transition-transform"
           >
-            <MessageSquare className="w-4 h-4 stroke-[2.5]" />
-            <span>Conversar Agora</span>
+            <UserRound className="w-4 h-4 stroke-[2.5]" />
+            <span>Ver perfil</span>
           </Link>
 
           <button

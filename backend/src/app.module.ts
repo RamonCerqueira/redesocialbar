@@ -12,7 +12,6 @@ import { FlirtModule } from './flirt/flirt.module';
 import { MeetupsModule } from './meetups/meetups.module';
 import { EventsModule } from './events/events.module';
 import { PromotionsModule } from './promotions/promotions.module';
-import { ChatModule } from './chat/chat.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ModerationModule } from './moderation/moderation.module';
 import { AdminModule } from './admin/admin.module';
@@ -31,7 +30,6 @@ import { AdsModule } from './ads/ads.module';
     MeetupsModule,
     EventsModule,
     PromotionsModule,
-    ChatModule,
     NotificationsModule,
     ModerationModule,
     AdminModule,

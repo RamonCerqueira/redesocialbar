@@ -20,11 +20,9 @@ export function PatronCard({ patron, restaurantSlug = 'pirambeira' }: PatronCard
   const [matchData, setMatchData] = useState<{
     isOpen: boolean;
     matchedUser: any;
-    conversationId: string;
   }>({
     isOpen: false,
     matchedUser: null,
-    conversationId: '',
   });
 
   const isMe = user?.id === patron.userId;
@@ -51,7 +49,6 @@ export function PatronCard({ patron, restaurantSlug = 'pirambeira' }: PatronCard
         setMatchData({
           isOpen: true,
           matchedUser: res.matchedUser,
-          conversationId: res.conversationId,
         });
       }
     } catch (err: any) {
@@ -160,9 +157,8 @@ export function PatronCard({ patron, restaurantSlug = 'pirambeira' }: PatronCard
       {matchData.isOpen && (
         <MatchModal
           isOpen={matchData.isOpen}
-          onClose={() => setMatchData({ isOpen: false, matchedUser: null, conversationId: '' })}
+          onClose={() => setMatchData({ isOpen: false, matchedUser: null, })}
           matchedUser={matchData.matchedUser}
-          conversationId={matchData.conversationId}
         />
       )}
     </>

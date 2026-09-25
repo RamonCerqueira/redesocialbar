@@ -20,47 +20,19 @@ import {
   Crown,
 } from 'lucide-react';
 
-const DEFAULT_NOTIFICATIONS: AppNotification[] = [
-  {
-    id: 'notif-1',
-    type: 'PROMO',
-    title: 'Terça é Happy Hour! 🍺',
-    body: 'Drinks e cervejas artesanais com 20% de desconto hoje no Pirambeira até as 21h.',
-    link: '/promocoes',
-    isRead: false,
-    createdAt: 'Agora há pouco',
-  },
-  {
-    id: 'notif-2',
-    type: 'FLIRT',
-    title: 'Alguém mandou um olhar 👀',
-    body: 'Você recebeu um recadinho discreto no Mural da Paquera vindo da mesa 04.',
-    link: '/paquera',
-    isRead: false,
-    createdAt: 'Há 25 minutos',
-  },
-  {
-    id: 'notif-3',
-    type: 'EVENT',
-    title: 'Samba no Deck Sexta-Feira 🎶',
-    body: 'Roda de samba ao vivo confirmada a partir das 19h! Chopp em dobro até 20h.',
-    link: '/eventos',
-    isRead: true,
-    createdAt: 'Há 2 horas',
-  },
-];
-
 export function Header() {
   const { user, activeCheckIn } = useAuth();
-  const [notifications, setNotifications] = useState<AppNotification[]>(DEFAULT_NOTIFICATIONS);
-  const [unreadCount, setUnreadCount] = useState(2);
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
+    setNotifications([]);
+    setUnreadCount(0);
     if (user) {
       apiRequest<{ unreadCount: number; notifications: AppNotification[] }>('/notifications')
         .then((data) => {
-          if (data && data.notifications && data.notifications.length > 0) {
+          if (data && data.notifications) {
             setNotifications(data.notifications);
             setUnreadCount(data.unreadCount ?? data.notifications.filter((n) => !n.isRead).length);
           }
@@ -72,7 +44,7 @@ export function Header() {
   const handleMarkAllRead = async () => {
     try {
       await apiRequest('/notifications/read-all', { method: 'POST' });
-    } catch { }
+    } catch { return; }
     setUnreadCount(0);
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   };
@@ -82,9 +54,9 @@ export function Header() {
       {/* Glow ambiente sutil superior */}
       <div className="absolute top-0 left-10 w-48 h-10 bg-amber-500/10 blur-2xl pointer-events-none" />
 
-      <div className="max-w-xl mx-auto h-full flex items-center justify-between relative z-10">
+      <div className="max-w-2xl mx-auto h-full flex items-center justify-between relative z-10">
         {/* Left: Brand Logo & Title (gap: 10px, logo: 46x46, title: 18px/800, subtitle: 9px/600/1.4px) */}
-        <Link href="/" className="flex items-center gap-[10px] group">
+        <Link href="/" className="flex items-center gap-2 min-w-0 group">
           {/* Logo Oficial Sem Fundo */}
           <div className="relative shrink-0">
             <div className="absolute inset-0 bg-[#FFB800]/20 blur-md rounded-full group-hover:bg-[#FFB800]/35 transition-all" />
@@ -96,10 +68,10 @@ export function Header() {
           </div>
 
           <div className="flex flex-col">
-            <span className="font-display font-extrabold text-[18px] text-[#FFFFFF] leading-tight tracking-tight">
+            <span className="font-display font-black text-[21px] uppercase text-[#ff9c22] leading-tight tracking-tight">
               Pírambeira
             </span>
-            <span className="text-[9px] font-semibold tracking-[1.4px] text-[#AAA49C] uppercase">
+            <span className="text-[8px] sm:text-[9px] font-semibold tracking-[.8px] text-[#AAA49C] uppercase">
               BAR & ENCONTROS • SALVADOR
             </span>
           </div>
@@ -191,6 +163,7 @@ export function Header() {
 
                 {/* Lista de Notificações com Ícones e Design de Alta Qualidade */}
                 <div className="divide-y divide-white/[0.05] max-h-84 overflow-y-auto mt-2 space-y-1.5 scrollbar-none pr-0.5">
+                  {!notifications.length && <p className="py-8 text-center text-sm text-stone-400">{user ? 'Nenhuma notificação por enquanto.' : 'Entre na sua conta para ver as notificações.'}</p>}
                   {notifications.map((notif) => {
                     const isPromo = notif.type === 'PROMO';
                     const isFlirt = notif.type === 'FLIRT';

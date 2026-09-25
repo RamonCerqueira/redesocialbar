@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { FlirtNote } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
-import { MOCK_FLIRT_NOTES } from '@/lib/mock-data';
 import { FlirtNoteCard } from '@/components/flirt-note-card';
 import { RecadinhoModal } from '@/components/recadinho-modal';
 import {
@@ -16,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function RecadosGuardanapoPage() {
-  const [notes, setNotes] = useState<FlirtNote[]>(MOCK_FLIRT_NOTES);
+  const [notes, setNotes] = useState<FlirtNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showRecadinhoModal, setShowRecadinhoModal] = useState(false);
 
@@ -26,11 +25,11 @@ export default function RecadosGuardanapoPage() {
       if (data && data.length > 0) {
         setNotes(data);
       } else {
-        setNotes(MOCK_FLIRT_NOTES);
+        setNotes([]);
       }
     } catch (err) {
-      // Fallback para mock data local de guardanapos
-      setNotes(MOCK_FLIRT_NOTES);
+      // Mantém o mural vazio quando a consulta falha.
+      setNotes([]);
     } finally {
       setIsLoading(false);
     }

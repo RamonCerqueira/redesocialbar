@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { FlirtNote, Patron } from '@/lib/types';
-import { MOCK_PATRONS } from '@/lib/mock-data';
 import {
   X,
   MapPin,
@@ -36,6 +35,12 @@ export function RecadinhoModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const [patrons, setPatrons] = useState<Patron[]>([]);
+  useEffect(() => {
+    if (!isOpen) return;
+    apiRequest<{ patrons: Patron[] }>(`/check-ins/who-is-here/${restaurantSlug}?filter=all`)
+      .then(data => setPatrons(data.patrons)).catch(() => setPatrons([]));
+  }, [isOpen, restaurantSlug]);
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -96,34 +101,8 @@ export function RecadinhoModal({
       setTargetPatron('');
       setIsAnonymous(false);
       onClose();
-    } catch (err: any) {
-      // Se api falhar, faz inserção local elegante
-      const createdNote: FlirtNote = {
-        id: 'note-' + Date.now(),
-        content: content.trim(),
-        flirtContext: finalContext,
-        tableNumber: tableNumber.trim() || undefined,
-        targetPatron: targetPatron.trim() || undefined,
-        isAnonymous,
-        createdAt: new Date().toISOString(),
-        likesCount: 0,
-        commentsCount: 0,
-        author: {
-          id: isAnonymous ? 'anon' : user.id || 'me',
-          name: isAnonymous ? 'Pirambeiro Secreto' : user.profile?.name || 'Pirambeiro',
-          username: isAnonymous ? 'anonimo' : user.profile?.username || 'pirambeiro',
-          avatarUrl: isAnonymous
-            ? undefined
-            : user.profile?.avatarUrl,
-        },
-      };
-
-      onSuccess(createdNote);
-      setContent('');
-      setTableNumber('');
-      setTargetPatron('');
-      setIsAnonymous(false);
-      onClose();
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : 'Não foi possível enviar o recado. Tente novamente.');
     } finally {
       setIsSubmitting(false);
     }
@@ -235,7 +214,7 @@ export function RecadinhoModal({
               <span className="text-[10px] text-[#7A726A] shrink-0 font-medium">
                 Sugeridos:
               </span>
-              {MOCK_PATRONS.slice(0, 4).map((patron) => (
+              {patrons.slice(0, 4).map((patron) => (
                 <button
                   key={patron.userId}
                   type="button"

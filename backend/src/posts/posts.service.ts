@@ -125,7 +125,7 @@ export class PostsService {
         restaurantId: restaurant.id,
         isDeleted: false,
         authorId: { notIn: blockedUserIds },
-        ...(postType ? { type: postType } : {}),
+        type: postType && postType !== PostType.FLIRT ? postType : { not: PostType.FLIRT },
       },
       include: {
         author: {
@@ -268,7 +268,7 @@ export class PostsService {
           name: post.author.profile?.name || 'Pirambeira Bar',
           username: post.author.profile?.username || 'pirambeira.bar',
           avatarUrl: post.author.profile?.avatarUrl || '/LogoPirambeiraSemFundo.png',
-          checkInCount: post.author.profile?.checkInCount || 100,
+          checkInCount: post.author.profile?.checkInCount ?? 0,
           isOfficial: true,
         },
         comments: post.comments.map((c) => ({

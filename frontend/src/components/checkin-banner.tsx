@@ -34,8 +34,6 @@ export function CheckInBanner({
         method: 'POST',
         body: JSON.stringify({
           restaurantSlug,
-          approxLatitude: -13.0031,
-          approxLongitude: -38.4554,
         }),
       });
       setActiveCheckIn(data);
@@ -91,7 +89,7 @@ export function CheckInBanner({
               <span>•</span>
               <span className="flex items-center gap-1 text-emerald-400 font-bold">
                 <Users className="w-3.5 h-3.5" />
-                {activeCount || 128} pessoas no bar agora
+                {activeCount ?? 0} pessoas no bar agora
               </span>
             </div>
           </div>
@@ -142,7 +140,7 @@ export function CheckInBanner({
           <div className="flex items-center gap-2 pt-1">
             <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400 font-bold">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              {activeCount || 128} pessoas estão aqui agora
+              {activeCount ?? 0} pessoas estão aqui agora
             </span>
           </div>
         </div>

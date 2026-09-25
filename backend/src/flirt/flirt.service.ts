@@ -98,23 +98,11 @@ export class FlirtService {
       });
 
       if (!existingMatch) {
-        // Criar conversa privada desbloqueada pelo match
-        const conversation = await this.prisma.conversation.create({
-          data: {
-            restaurantId: restaurant.id,
-            type: 'MATCH',
-            participants: {
-              create: [{ userId: fromUserId }, { userId: dto.targetUserId }],
-            },
-          },
-        });
-
         const match = await this.prisma.match.create({
           data: {
             user1Id: fromUserId,
             user2Id: dto.targetUserId,
             restaurantId: restaurant.id,
-            conversationId: conversation.id,
           },
         });
 
@@ -131,15 +119,15 @@ export class FlirtService {
               userId: dto.targetUserId,
               type: 'MATCH',
               title: '✨ Deu Match no Piramba!',
-              body: `Você e ${sender?.profile?.name || 'alguém'} demonstraram interesse mútuo! A conversa foi liberada.`,
-              link: `/chat/${conversation.id}`,
+              body: `Você e ${sender?.profile?.name || 'alguém'} demonstraram interesse mútuo!`,
+              link: '/paquera',
             },
             {
               userId: fromUserId,
               type: 'MATCH',
               title: '✨ Deu Match no Piramba!',
-              body: `Você e ${targetUser.profile.name} demonstraram interesse mútuo! A conversa foi liberada.`,
-              link: `/chat/${conversation.id}`,
+              body: `Você e ${targetUser.profile.name} demonstraram interesse mútuo!`,
+              link: '/paquera',
             },
           ],
         });
@@ -147,7 +135,6 @@ export class FlirtService {
         return {
           isMatch: true,
           matchId: match.id,
-          conversationId: conversation.id,
           matchedUser: {
             id: targetUser.id,
             name: targetUser.profile.name,
@@ -182,7 +169,6 @@ export class FlirtService {
       return {
         id: m.id,
         restaurantName: m.restaurant.name,
-        conversationId: m.conversationId,
         createdAt: m.createdAt,
         partner: {
           id: partner.id,

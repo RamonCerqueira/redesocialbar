@@ -196,7 +196,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)('Tô no Piramba - Suíte Complet
       });
 
       expect(res.isMatch).toBe(true);
-      expect(res.conversationId).toBeDefined();
+      expect(res.matchId).toBeDefined();
       expect(res.matchedUser).toBeDefined();
     });
 

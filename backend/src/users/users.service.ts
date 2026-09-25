@@ -22,7 +22,7 @@ export class UsersService {
               take: 1,
             },
             posts: {
-              where: { isDeleted: false },
+              where: { isDeleted: false, type: { not: 'FLIRT' } },
               include: { media: true },
               orderBy: { createdAt: 'desc' },
               take: 12,

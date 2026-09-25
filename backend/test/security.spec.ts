@@ -53,7 +53,7 @@ describe('Privacidade do perfil',()=>{
 });
 describe('Segredo JWT e uploads',()=>{
   it('recusa segredo ausente, curto ou padrão',()=>{
-    for(const value of [undefined,'short','pirambeira-super-secret-key-2026-production-ready']) expect(()=>requireJwtSecret(value)).toThrow();
+    for(const value of [undefined,'short','pirambeira-super-secret-key-2026-production-ready','REPLACE_WITH_RANDOM_SECRET_AT_LEAST_32_CHARACTERS']) expect(()=>requireJwtSecret(value)).toThrow();
     expect(requireJwtSecret('a'.repeat(48))).toHaveLength(48);
   });
   it('valida assinatura do arquivo e não aceita SVG',()=>{
