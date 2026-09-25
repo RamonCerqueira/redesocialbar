@@ -95,10 +95,8 @@ export function DeAgoraViewerModal({
       setReplySent(true);
       setReplyText('');
       setTimeout(() => setReplySent(false), 2500);
-    } catch {
-      setReplySent(true);
-      setReplyText('');
-      setTimeout(() => setReplySent(false), 2500);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível enviar a resposta.');
     } finally {
       setIsSendingReply(false);
     }

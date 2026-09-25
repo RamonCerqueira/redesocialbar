@@ -31,6 +31,7 @@ export function ReportModal({
       await apiRequest('/moderation/reports', {
         method: 'POST',
         body: JSON.stringify({
+          restaurantSlug: 'pirambeira',
           targetType,
           targetId,
           reason,
@@ -75,7 +76,7 @@ export function ReportModal({
             </div>
 
             <p className="text-xs text-[#A89F96] leading-relaxed">
-              Sua denúncia é 100% anônima e será avaliada com prioridade pela gerência do Pirambeira.
+              Sua denúncia é confidencial e será avaliada com prioridade pela gerência do Pirambeira.
             </p>
 
             <div>

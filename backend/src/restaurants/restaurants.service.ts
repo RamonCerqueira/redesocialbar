@@ -37,6 +37,7 @@ export class RestaurantsService {
       include: {
         events: {
           where: {
+            isActive: true,
             date: { gte: new Date(Date.now() - 24 * 3600000) },
           },
           orderBy: { date: 'asc' },
@@ -47,6 +48,7 @@ export class RestaurantsService {
         },
         promotions: {
           where: {
+            isActive: true,
             validUntil: { gt: new Date() },
           },
           orderBy: { createdAt: 'desc' },

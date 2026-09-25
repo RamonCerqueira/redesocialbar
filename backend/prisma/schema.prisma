@@ -130,6 +130,8 @@ model User {
   blockedByUsers Block[]       @relation("UserBlockedBy")
   
   auditLogs     AuditLog[]
+  stories       Story[]
+  mediaAssets   MediaAsset[]
 
   @@index([email])
   @@index([role])
@@ -196,6 +198,8 @@ model Restaurant {
   matches         Match[]
   conversations   Conversation[]
   advertisements  Advertisement[]
+  stories         Story[]
+  reports         Report[]
 
   @@index([slug])
   @@index([city])
@@ -250,6 +254,9 @@ model Post {
   commentsCount Int        @default(0)
   isPinned      Boolean    @default(false)
   isDeleted     Boolean    @default(false)
+  isOfficial    Boolean    @default(false)
+  buttonText    String?
+  buttonUrl     String?
   
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -367,6 +374,7 @@ model Event {
   date         DateTime
   startTime    String
   coverImageUrl String?
+  isActive     Boolean            @default(true)
   restaurantId String
   restaurant   Restaurant         @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt    DateTime           @default(now())
@@ -401,6 +409,9 @@ model Promotion {
   totalCoupons   Int       @default(50)
   redeemedCount  Int       @default(0)
   badge          String?
+  imageUrl       String?
+  buttonText     String    @default("Resgatar cupom")
+  isActive       Boolean   @default(true)
   restaurantId   String
   restaurant     Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
   createdAt      DateTime  @default(now())
@@ -422,6 +433,7 @@ model Coupon {
   claimedAt   DateTime     @default(now())
   usedAt      DateTime?
 
+  @@unique([promotionId, userId])
   @@index([promotionId])
   @@index([userId])
   @@index([code])
@@ -524,6 +536,8 @@ model Report {
   reason       String
   status       ReportStatus     @default(PENDING)
   notes        String?
+  restaurantId String?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
   
   postId       String?
   post         Post?            @relation(fields: [postId], references: [id], onDelete: SetNull)
@@ -536,6 +550,7 @@ model Report {
   updatedAt    DateTime         @updatedAt
 
   @@index([reporterId])
+  @@index([restaurantId, status])
   @@index([status])
   @@index([targetType, targetId])
 }
@@ -559,6 +574,7 @@ model Advertisement {
   description  String?
   imageUrl     String
   targetUrl    String?
+  buttonText   String     @default("Saiba mais")
   type         AdType     @default(SPONSORED_POST)
   sponsorName  String
   isActive     Boolean    @default(true)
@@ -585,4 +601,29 @@ model AuditLog {
 
   @@index([userId])
   @@index([entity, entityId])
+}
+
+model Story {
+  id           String     @id @default(uuid())
+  restaurantId String
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  mediaUrl     String
+  caption      String?
+  createdAt    DateTime   @default(now())
+  expiresAt    DateTime
+  @@index([restaurantId, expiresAt])
+  @@index([authorId])
+}
+
+// Imagens pequenas persistidas no Postgres; servidas somente pelo backend.
+model MediaAsset {
+  id        String   @id @default(uuid())
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  mimeType  String
+  data      Bytes
+  createdAt DateTime @default(now())
+  @@index([ownerId, createdAt])
 }

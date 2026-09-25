@@ -17,17 +17,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('tonopiramba_user');
-      if (cached) {
-        try {
-          return JSON.parse(cached);
-        } catch {}
-      }
-    }
-    return null;
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [activeCheckIn, setActiveCheckIn] = useState<CheckIn | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 

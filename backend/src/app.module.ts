@@ -1,3 +1,5 @@
+import { MediaModule } from './media/media.module';
+import { StoriesModule } from './stories/stories.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
@@ -34,6 +36,8 @@ import { AdsModule } from './ads/ads.module';
     ModerationModule,
     AdminModule,
     AdsModule,
+    MediaModule,
+    StoriesModule,
   ],
 })
 export class AppModule {}

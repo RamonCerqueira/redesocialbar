@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { Post, Story, Patron } from '@/lib/types';
-import { MOCK_BAR_POSTS } from '@/lib/mock-data';
+import { SponsoredCard } from '@/components/sponsored-card';
 import { PostCard } from '@/components/post-card';
 import { DeAgoraCameraModal } from '@/components/de-agora-camera-modal';
 import { DeAgoraViewerModal } from '@/components/de-agora-viewer-modal';
@@ -24,42 +24,6 @@ import {
   Crown,
 } from 'lucide-react';
 
-// Destaques e Promoções do Restaurante Pirambeira
-const PROMO_SLIDES = [
-  {
-    id: 'happy-hour',
-    tag: 'TERÇA É',
-    title: 'HAPPY HOUR',
-    descPrefix: 'Drinks e cervejas com ',
-    highlight: '20% de desconto!',
-    when: 'HOJE • 17H–20H',
-    link: '/promocoes',
-    buttonText: 'VER PROMOÇÃO',
-    bannerImage: '/happy_hour_banner_full.png',
-  },
-  {
-    id: 'samba',
-    tag: 'SEXTA TEM',
-    title: 'SAMBA NO DECK',
-    descPrefix: 'Roda de samba ao vivo com ',
-    highlight: 'Chopp em dobro até 20h!',
-    when: 'SEXTA • 19H–23H',
-    link: '/eventos',
-    buttonText: 'VER PROGRAMAÇÃO',
-    bannerImage: '/happy_hour_banner_full.png',
-  },
-  {
-    id: 'caipirinha',
-    tag: 'QUARTA DA',
-    title: 'DOBRADINHA',
-    descPrefix: 'Peça uma caipirinha e a ',
-    highlight: '2ª é por conta do bar!',
-    when: 'QUARTA • ATÉ 22H',
-    link: '/promocoes',
-    buttonText: 'PEGAR CUPOM',
-    bannerImage: '/happy_hour_banner_full.png',
-  },
-];
 
 export default function HomePage() {
   const { user, activeCheckIn, setActiveCheckIn } = useAuth();
@@ -78,11 +42,10 @@ export default function HomePage() {
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
 
   // Carrossel de Promoções
-  const [currentPromoIndex, setCurrentPromoIndex] = useState(0);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   // Feed
-  const [posts, setPosts] = useState<Post[]>(MOCK_BAR_POSTS);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [visibleCount, setVisibleCount] = useState(2);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -90,9 +53,7 @@ export default function HomePage() {
 
   // 1. Sincronizar status de check-in do usuário logado
   useEffect(() => {
-    if (activeCheckIn) {
-      setIsCheckedIn(true);
-    }
+    setIsCheckedIn(Boolean(activeCheckIn));
   }, [activeCheckIn]);
 
   // 2. Carregar Lista de Usuários que fizeram check-in
@@ -141,21 +102,13 @@ export default function HomePage() {
         if (data && data.length > 0) {
           setPosts(data);
         } else {
-          setPosts(MOCK_BAR_POSTS);
+          setPosts([]);
         }
       } catch {
-        setPosts(MOCK_BAR_POSTS);
+        setPosts([]);
       }
     }
     fetchPosts();
-  }, []);
-
-  // 5. Auto-play do Carrossel de Promoções
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentPromoIndex((prev) => (prev + 1) % PROMO_SLIDES.length);
-    }, 6000);
-    return () => clearInterval(timer);
   }, []);
 
   // 6. Rolagem infinita do Feed
@@ -188,13 +141,18 @@ export default function HomePage() {
 
   // Função para realizar Check-in Instantâneo ao clicar em "ESTOU AQUI"
   const handleToggleCheckIn = async () => {
+    if (!user) { window.location.href = '/login'; return; }
     if (isCheckedIn) {
       const confirmCheckout = window.confirm('Deseja encerrar seu check-in no Pírambeira?');
       if (confirmCheckout) {
         setIsProcessingCheckIn(true);
         try {
           await apiRequest('/check-ins/checkout', { method: 'POST' });
-        } catch {}
+        } catch (error) {
+          alert(error instanceof Error ? error.message : 'Falha ao sair.');
+          setIsProcessingCheckIn(false);
+          return;
+        }
         setIsCheckedIn(false);
         setActiveCheckIn(null);
         setCheckedInPatrons((prev) => prev.filter((p) => p.userId !== (user?.id || 'me-current')));
@@ -215,8 +173,10 @@ export default function HomePage() {
         }),
       });
       setActiveCheckIn(data);
-    } catch {
-      // Criação de check-in local se a API estiver em modo offline
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Falha ao fazer check-in.');
+      setIsProcessingCheckIn(false);
+      return;
     }
 
     // Confetti comemorativo de boas-vindas ao bar
@@ -248,7 +208,6 @@ export default function HomePage() {
     setIsProcessingCheckIn(false);
   };
 
-  const currentPromo = PROMO_SLIDES[currentPromoIndex];
 
   return (
     <div className="w-full max-w-[430px] mx-auto pb-24 space-y-0">
@@ -382,139 +341,13 @@ export default function HomePage() {
               </span>
             </button>
 
-            {/* Story Oficial Pirambeira (Anel Gradiente Neon e Selo de Verificação) */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStoryIndex(0);
-                setShowViewerModal(true);
-              }}
-              className="flex flex-col items-center shrink-0 w-[62px] group cursor-pointer focus:outline-none"
-            >
-              <div className="relative mb-1">
-                <div
-                  className="w-[60px] h-[60px] rounded-full p-[2.5px] group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(255,122,0,0.45)]"
-                  style={{ background: 'linear-gradient(135deg, #FFB800 0%, #FF7900 50%, #E52532 100%)' }}
-                >
-                  <img
-                    src="/LogoPirambeiraSemFundo.png"
-                    alt="Pírambeira"
-                    className="w-full h-full rounded-full object-contain p-1 border-2 border-[#080807] bg-[#11100F]"
-                  />
-                </div>
-              </div>
-              <span className="text-[10px] font-bold text-white truncate w-full text-center flex items-center justify-center gap-0.5">
-                Pírambeira
-                <span className="w-3 h-3 rounded-full bg-[#1D9BF0] flex items-center justify-center text-white text-[8px] font-black leading-none shrink-0">
-                  ✓
-                </span>
-              </span>
-            </button>
-
-            {/* Larissa */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStoryIndex(1);
-                setShowViewerModal(true);
-              }}
-              className="flex flex-col items-center shrink-0 w-[62px] group cursor-pointer focus:outline-none"
-            >
-              <div className="relative mb-1">
-                <div
-                  className="w-[60px] h-[60px] rounded-full p-[2px] group-hover:scale-105 transition-transform shadow-[0_0_10px_rgba(229,37,50,0.35)]"
-                  style={{ background: 'linear-gradient(135deg, #FF7900 0%, #E52532 100%)' }}
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80"
-                    alt="Larissa"
-                    className="w-full h-full rounded-full object-cover border-2 border-[#080807]"
-                  />
-                </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00D084] border-2 border-[#080807]" />
-              </div>
-              <span className="text-[10px] font-medium text-white/90 truncate w-full text-center">
-                Larissa
-              </span>
-            </button>
-
-            {/* Lucas */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStoryIndex(2);
-                setShowViewerModal(true);
-              }}
-              className="flex flex-col items-center shrink-0 w-[62px] group cursor-pointer focus:outline-none"
-            >
-              <div className="relative mb-1">
-                <div
-                  className="w-[60px] h-[60px] rounded-full p-[2px] group-hover:scale-105 transition-transform shadow-[0_0_10px_rgba(229,37,50,0.35)]"
-                  style={{ background: 'linear-gradient(135deg, #FF7900 0%, #E52532 100%)' }}
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=200&q=80"
-                    alt="Lucas"
-                    className="w-full h-full rounded-full object-cover border-2 border-[#080807]"
-                  />
-                </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00D084] border-2 border-[#080807]" />
-              </div>
-              <span className="text-[10px] font-medium text-white/90 truncate w-full text-center">
-                Lucas
-              </span>
-            </button>
-
-            {/* Camila */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStoryIndex(3);
-                setShowViewerModal(true);
-              }}
-              className="flex flex-col items-center shrink-0 w-[62px] group cursor-pointer focus:outline-none"
-            >
-              <div className="relative mb-1">
-                <div
-                  className="w-[60px] h-[60px] rounded-full p-[2px] group-hover:scale-105 transition-transform shadow-[0_0_10px_rgba(229,37,50,0.35)]"
-                  style={{ background: 'linear-gradient(135deg, #FF7900 0%, #E52532 100%)' }}
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=200&q=80"
-                    alt="Camila"
-                    className="w-full h-full rounded-full object-cover border-2 border-[#080807]"
-                  />
-                </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#00D084] border-2 border-[#080807]" />
-              </div>
-              <span className="text-[10px] font-medium text-white/90 truncate w-full text-center">
-                Camila
-              </span>
-            </button>
-
-            {/* Mais (+83 com anel neon Magenta/Roxo) */}
-            <button
-              type="button"
-              onClick={() => {
-                setActiveStoryIndex(0);
-                setShowViewerModal(true);
-              }}
-              className="flex flex-col items-center shrink-0 w-[62px] group cursor-pointer focus:outline-none"
-            >
-              <div className="relative mb-1">
-                <div
-                  className="w-[60px] h-[60px] rounded-full p-[2px] group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(255,45,112,0.4)]"
-                  style={{ background: 'linear-gradient(135deg, #FF2D70 0%, #8B3DFF 100%)' }}
-                >
-                  <div className="w-full h-full rounded-full bg-[#181512]/90 backdrop-blur-md border-2 border-[#080807] flex items-center justify-center">
-                    <span className="font-display font-black text-xs text-white">+83</span>
-                  </div>
-                </div>
-              </div>
-              <span className="text-[10px] font-medium text-[#AAA49D] truncate w-full text-center">
-                Mais
-              </span>
-            </button>
+            {stories.map((story,index)=>(
+              <button key={story.id} type="button" onClick={()=>{setActiveStoryIndex(index);setShowViewerModal(true);}} className="flex flex-col items-center shrink-0 w-[62px] gap-1">
+                <img src={story.author.avatarUrl || '/LogoPirambeiraSemFundo.png'} alt={story.author.name} className="w-[60px] h-[60px] rounded-full object-cover border-2 border-amber-400"/>
+                <span className="text-[10px] truncate w-full">{story.author.name}</span>
+              </button>
+            ))}
+            {!isLoadingStories && !stories.length && <p className="text-xs text-stone-400 py-4">Compartilhe o primeiro momento de hoje.</p>}
           </div>
         </section>
 
@@ -585,30 +418,8 @@ export default function HomePage() {
         {/* ══════════════════════════════════════════
             4. PROMOTION BANNER (Imagem preenche o card com borda neon e botão por cima)
             ══════════════════════════════════════════ */}
-        <div
-          className="relative w-full aspect-[868/230] min-h-[105px] sm:min-h-[120px] overflow-hidden rounded-[20px] border border-[#FF7900] shadow-[0_0_22px_rgba(255,121,0,0.38),0_10px_35px_rgba(0,0,0,0.8)] group mb-5 cursor-pointer"
-          onClick={() => setCurrentPromoIndex((prev) => (prev + 1) % PROMO_SLIDES.length)}
-        >
-          {/* A imagem toma o conteúdo do card inteiro com borda neon */}
-          <img
-            src={currentPromo.bannerImage || '/happy_hour_banner_full.png'}
-            onError={(e) => {
-              e.currentTarget.src = '/happy_hour_banner_full.png';
-            }}
-            alt={currentPromo.title}
-            className="absolute inset-0 w-full h-full object-cover object-center group-hover:scale-[1.015] transition-transform duration-500 rounded-[19px]"
-          />
-
-          {/* O botão fica por cima da imagem com acabamento glass e brilho dourado */}
-          <Link
-            href={currentPromo.link}
-            onClick={(e) => e.stopPropagation()}
-            className="absolute right-2.5 sm:right-4 bottom-2 sm:bottom-3.5 h-[32px] sm:h-[36px] px-3.5 sm:px-4 rounded-full bg-[#FFB800] hover:bg-[#FFC928] text-[#080807] font-display font-black text-[10px] sm:text-xs inline-flex items-center gap-1.5 shadow-[0_0_18px_rgba(255,184,0,0.55),0_4px_12px_rgba(0,0,0,0.5),inset_0_1px_0_0_rgba(255,255,255,0.3)] active:scale-95 transition-all uppercase tracking-wider z-20 cursor-pointer"
-          >
-            <span>{currentPromo.buttonText}</span>
-            <ArrowRight className="w-3.5 h-3.5 stroke-[2.5]" />
-          </Link>
-        </div>
+        <SponsoredCard placement="BANNER" />
+        <SponsoredCard placement="SIDEBAR" />
 
         {/* ══════════════════════════════════════════
             5. QUICK ACTIONS (Glassmorphism & Exact REFERENCE.png Layout)

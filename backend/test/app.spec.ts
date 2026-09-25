@@ -1,3 +1,4 @@
+import { AccessService } from '../src/auth/access.service';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { PrismaClient, ReactionType, PostType, CheckInStatus } from '@prisma/client';
 import { AuthService } from '../src/auth/auth.service';
@@ -8,7 +9,7 @@ import { PromotionsService } from '../src/promotions/promotions.service';
 import { ModerationService } from '../src/moderation/moderation.service';
 import { JwtService } from '@nestjs/jwt';
 
-describe('Tô no Piramba - Suíte Completa de Testes de Integração Backend', () => {
+describe.skipIf(!process.env.TEST_DATABASE_URL)('Tô no Piramba - Suíte Completa de Testes de Integração Backend', () => {
   let prisma: PrismaClient;
   let authService: AuthService;
   let checkInsService: CheckInsService;
@@ -19,21 +20,29 @@ describe('Tô no Piramba - Suíte Completa de Testes de Integração Backend', (
 
   let testUser1Id: string;
   let testUser2Id: string;
-  let restaurantSlug = 'pirambeira';
+  const restaurantSlug = 'test-' + Date.now();
+  const createdRestaurants: string[] = [];
 
   beforeAll(async () => {
-    prisma = new PrismaClient();
+    if (process.env.TEST_DATABASE_URL === process.env.DATABASE_URL) throw new Error('Use um banco exclusivo de testes.');
+    prisma = new PrismaClient({ datasources: { db: { url: process.env.TEST_DATABASE_URL } } });
+    const restaurant = await prisma.restaurant.create({ data: { name: 'Restaurante de teste', slug: restaurantSlug, address: 'Teste' } });
+    createdRestaurants.push(restaurant.id);
+    await prisma.promotion.create({ data: { restaurantId: restaurant.id, title: 'Teste', description: 'Teste', discountText: '10%', validUntil: new Date(Date.now()+86400000), totalCoupons: 10 } });
     const jwtService = new JwtService({ secret: 'test-secret', signOptions: { expiresIn: '1h' } });
     // Instanciar serviços diretamente usando o prisma compartilhado
     authService = new AuthService(prisma as any, jwtService);
     checkInsService = new CheckInsService(prisma as any);
     flirtService = new FlirtService(prisma as any);
-    postsService = new PostsService(prisma as any);
-    promotionsService = new PromotionsService(prisma as any);
-    moderationService = new ModerationService(prisma as any);
+    postsService = new PostsService(prisma as any, new AccessService(prisma as any));
+    promotionsService = new PromotionsService(prisma as any, new AccessService(prisma as any));
+    moderationService = new ModerationService(prisma as any, new AccessService(prisma as any));
   });
 
   afterAll(async () => {
+    if (!prisma) return;
+    await prisma.user.deleteMany({ where: { id: { in: [testUser1Id, testUser2Id].filter(Boolean) } } });
+    await prisma.restaurant.deleteMany({ where: { id: { in: createdRestaurants } } });
     await prisma.$disconnect();
   });
 
@@ -215,14 +224,14 @@ describe('Tô no Piramba - Suíte Completa de Testes de Integração Backend', (
     });
 
     it('deve permitir que a equipe do restaurante valide o cupom', async () => {
-      const val = await promotionsService.validateCoupon(claimedCode, restaurantSlug);
+      const val = await promotionsService.validateCoupon(claimedCode, restaurantSlug, { id: testUser1Id, role: 'SUPERADMIN' });
       expect(val.success).toBe(true);
       expect(val.coupon.status).toBe('USED');
     });
 
     it('não deve permitir validar o mesmo cupom duas vezes', async () => {
       await expect(
-        promotionsService.validateCoupon(claimedCode, restaurantSlug),
+        promotionsService.validateCoupon(claimedCode, restaurantSlug, { id: testUser1Id, role: 'SUPERADMIN' }),
       ).rejects.toThrow();
     });
   });
@@ -231,6 +240,7 @@ describe('Tô no Piramba - Suíte Completa de Testes de Integração Backend', (
     it('deve registrar denúncia de conteúdo com sucesso', async () => {
       const res = await moderationService.createReport(testUser1Id, {
         targetType: 'USER',
+        restaurantSlug,
         targetId: testUser2Id,
         reason: 'Comportamento inconveniente no bar',
         notes: 'Relato verificado pela mesa',
@@ -240,7 +250,7 @@ describe('Tô no Piramba - Suíte Completa de Testes de Integração Backend', (
     });
 
     it('deve listar denúncias pendentes para a moderação', async () => {
-      const reports = await moderationService.getReports();
+      const reports = await moderationService.getReports({ id: testUser1Id, role: 'SUPERADMIN' }, restaurantSlug);
       expect(reports.length).toBeGreaterThan(0);
     });
   });
@@ -256,8 +266,10 @@ describe('Tô no Piramba - Suíte Completa de Testes de Integração Backend', (
         },
       });
 
+      createdRestaurants.push(otherRestaurant.id);
+      const coupon = await prisma.coupon.findFirst({ where: { userId: testUser1Id } });
       await expect(
-        promotionsService.validateCoupon('PIRAMBA-INVALID-999', otherRestaurant.slug),
+        promotionsService.validateCoupon(coupon!.code, otherRestaurant.slug, { id: testUser1Id, role: 'SUPERADMIN' }),
       ).rejects.toThrow();
     });
   });

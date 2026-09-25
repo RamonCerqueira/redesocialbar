@@ -9,6 +9,7 @@ import { MessageSquare, Sparkles, User, Clock, Heart } from 'lucide-react';
 
 export default function ChatListPage() {
   const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState('');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -41,7 +42,6 @@ export default function ChatListPage() {
     );
   }
 
-  const [searchQuery, setSearchQuery] = useState('');
 
   const filteredConversations = conversations.filter(c =>
     c.otherUser?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||

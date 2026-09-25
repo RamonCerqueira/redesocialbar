@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../prisma/prisma.service';
+import { ConfigService } from '@nestjs/config';
+import { requireJwtSecret } from './jwt-secret';
 
 export interface JwtPayload {
   sub: string;
@@ -11,11 +13,11 @@ export interface JwtPayload {
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private prisma: PrismaService) {
+  constructor(private prisma: PrismaService, config: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SECRET || 'pirambeira-super-secret-key-2026-production-ready',
+      secretOrKey: requireJwtSecret(config.get<string>('JWT_SECRET')),
     });
   }
 
@@ -28,7 +30,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       },
     });
 
-    if (!user || user.status === 'BANNED') {
+    if (!user || user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Usuário não autorizado ou banido');
     }
 

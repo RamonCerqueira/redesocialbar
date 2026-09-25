@@ -26,7 +26,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       login(data.token, data.user);
-      router.push('/');
+      router.push(data.user.role === 'RESTAURANT_ADMIN' || data.user.role === 'SUPERADMIN' ? '/admin' : '/');
     } catch (err: any) {
       setError(err.message || 'Erro ao entrar na conta.');
     } finally {
@@ -34,25 +34,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoLogin = async (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('Piramba@2026');
-    setIsLoading(true);
-    setError('');
-
-    try {
-      const data = await apiRequest<{ token: string; user: any }>('/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email: demoEmail, password: 'Piramba@2026' }),
-      });
-      login(data.token, data.user);
-      router.push('/');
-    } catch (err: any) {
-      setError(err.message || 'Erro no login demonstrativo.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div className="max-w-md mx-auto py-6 space-y-6">
@@ -134,32 +115,6 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Demo Quick Access */}
-      <div className="surface-ambient rounded-3xl p-5 border border-amber-500/15">
-        <h4 className="font-display font-extrabold text-xs text-[#FBF8F5] mb-2 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Acesso Rápido de Teste</span>
-        </h4>
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('ramon@tonopiramba.com.br')}
-            className="p-3 rounded-2xl bg-[#18130F] hover:bg-[#241B15] text-left border border-[#2C221A] transition-colors cursor-pointer"
-          >
-            <span className="text-xs font-bold text-[#FBF8F5] block">Ramon Valente</span>
-            <span className="text-[10px] text-amber-400 font-mono block mt-0.5">Admin Pirambeira</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleDemoLogin('carolina.mendes@tonopiramba.com.br')}
-            className="p-3 rounded-2xl bg-[#18130F] hover:bg-[#241B15] text-left border border-[#2C221A] transition-colors cursor-pointer"
-          >
-            <span className="text-xs font-bold text-[#FBF8F5] block">Carolina Mendes</span>
-            <span className="text-[10px] text-emerald-400 font-mono block mt-0.5">Frequentadora</span>
-          </button>
-        </div>
-      </div>
     </div>
   );
 }

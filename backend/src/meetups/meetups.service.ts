@@ -38,7 +38,7 @@ export class MeetupsService {
       },
     });
 
-    return meetup;
+    return { id: meetup.id, title: meetup.title, description: meetup.description, scheduledFor: meetup.scheduledFor, status: meetup.status };
   }
 
   async findAll(restaurantSlug: string, currentUserId?: string) {

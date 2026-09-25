@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, uploadImage } from '@/lib/api';
 import { Story } from '@/lib/types';
 import {
   X,
@@ -162,7 +162,7 @@ export function DeAgoraCameraModal({
     setIsSubmitting(true);
     try {
       const payload = {
-        mediaUrl: capturedImage,
+        mediaUrl: await uploadImage(capturedImage),
         mediaType: 'IMAGE',
         caption: caption.trim() || undefined,
         restaurantSlug: 'pirambeira',
@@ -173,24 +173,7 @@ export function DeAgoraCameraModal({
         body: JSON.stringify(payload),
       });
 
-      const newStory: Story = res?.id
-        ? res
-        : {
-            id: 'story-' + Date.now(),
-            mediaUrl: capturedImage,
-            mediaType: 'IMAGE',
-            caption: caption.trim() || undefined,
-            createdAt: new Date().toISOString(),
-            author: {
-              id: user?.id || 'user-me',
-              name: user?.profile?.name || 'Você',
-              username: user?.profile?.username || 'voce',
-              avatarUrl: user?.profile?.avatarUrl || '/LogoPirambeiraSemFundo.png',
-              isOfficial: user?.role === 'RESTAURANT_ADMIN' || user?.role === 'SUPERADMIN',
-            },
-          };
-
-      onStoryCreated(newStory);
+      onStoryCreated(res);
       handleClose();
     } catch (err: any) {
       alert(err.message || 'Erro ao publicar no De Agora');

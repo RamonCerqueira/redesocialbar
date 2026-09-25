@@ -2,11 +2,12 @@ import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/commo
 import { PrismaService } from '../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
+import { AccessService } from '../auth/access.service';
 import { ReactionType, PostType } from '@prisma/client';
 
 @Injectable()
 export class PostsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService, private access: AccessService) {}
 
   async create(userId: string, dto: CreatePostDto) {
     const restaurant = await this.prisma.restaurant.findUnique({
@@ -95,7 +96,8 @@ export class PostsService {
       }
     }
 
-    return post;
+    const { author, ...result } = post;
+    return { ...result, author: { id: author.id, name: author.profile?.name, username: author.profile?.username, avatarUrl: author.profile?.avatarUrl } };
   }
 
   async getFeed(restaurantSlug: string, currentUserId?: string, postType?: PostType) {
@@ -145,7 +147,7 @@ export class PostsService {
           select: { comments: true, reactions: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: [{ isPinned: 'desc' }, { createdAt: 'desc' }],
       take: 30,
     });
 
@@ -157,16 +159,15 @@ export class PostsService {
 
       const isVideo = post.media.some((m) => m.type === 'VIDEO' || m.url.endsWith('.mp4'));
       const videoMedia = isVideo ? post.media.find((m) => m.type === 'VIDEO' || m.url.endsWith('.mp4')) : null;
-      const isOfficial =
-        post.author.role === 'RESTAURANT_ADMIN' ||
-        post.author.role === 'SUPERADMIN' ||
-        post.author.profile?.username?.includes('pirambeira');
+      const isOfficial = post.isOfficial;
 
       return {
         id: post.id,
         content: post.content,
         type: post.type,
         flirtContext: post.flirtContext,
+        buttonText: post.buttonText,
+        buttonUrl: post.buttonUrl,
         createdAt: post.createdAt,
         likesCount: post._count.reactions,
         commentsCount: post._count.comments,
@@ -212,11 +213,7 @@ export class PostsService {
       where: {
         restaurantId: restaurant.id,
         isDeleted: false,
-        OR: [
-          { author: { role: { in: ['RESTAURANT_ADMIN', 'SUPERADMIN'] } } },
-          { author: { restaurantMembers: { some: { restaurantId: restaurant.id } } } },
-          { author: { profile: { username: { contains: 'pirambeira' } } } },
-        ],
+        isOfficial: true,
       },
       include: {
         author: {
@@ -255,6 +252,8 @@ export class PostsService {
         content: post.content,
         type: post.type,
         flirtContext: post.flirtContext,
+        buttonText: post.buttonText,
+        buttonUrl: post.buttonUrl,
         createdAt: post.createdAt,
         likesCount: post._count.reactions,
         commentsCount: post._count.comments,
@@ -426,6 +425,7 @@ export class PostsService {
 
     const isAuthor = post.authorId === userId;
     const isAdmin = role === 'RESTAURANT_ADMIN' || role === 'SUPERADMIN';
+    if (!isAuthor && isAdmin) await this.access.restaurantId({ id: userId, role }, post.restaurantId);
 
     if (!isAuthor && !isAdmin) {
       throw new ForbiddenException('Sem permissão para remover esta publicação.');

@@ -80,6 +80,8 @@ export interface PostComment {
 }
 
 export interface Post {
+  buttonText?: string;
+  buttonUrl?: string;
   id: string;
   content: string;
   type: 'FEED' | 'FLIRT' | 'SPONSORED';
@@ -156,6 +158,8 @@ export interface BarEvent {
 }
 
 export interface Promotion {
+  imageUrl?: string;
+  buttonText?: string;
   id: string;
   title: string;
   discountText: string;

@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { MOCK_PATRONS } from '@/lib/mock-data';
+import { apiRequest } from '@/lib/api';
+import { Patron } from '@/lib/types';
 import { submitPost } from '@/lib/publish/publish.actions';
 import { PostModel } from '@/lib/publish/post.schema';
 import screenConfig from '@/lib/publish/publish-screen.json';
@@ -33,16 +34,11 @@ export default function PublicarPage() {
   const { user } = useAuth();
   const config = screenConfig.screen;
 
-  // Apenas o bar oficial pode postar vídeos curtos de 30s
-  const isBarAdmin =
-    user?.role === 'RESTAURANT_ADMIN' ||
-    user?.role === 'SUPERADMIN' ||
-    user?.profile?.username === 'pirambeira.bar';
+  const [patrons, setPatrons] = useState<Patron[]>([]);
+  useEffect(() => { apiRequest<{patrons: Patron[]}>('/check-ins/who-is-here/pirambeira').then(data => setPatrons(data.patrons)).catch(() => setPatrons([])); }, []);
 
   // Media state
-  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(
-    'https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=1200&q=80'
-  );
+  const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<'photo' | 'video'>('photo');
   const [showMediaTypeDropdown, setShowMediaTypeDropdown] = useState(false);
 
@@ -145,16 +141,8 @@ export default function PublicarPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type.startsWith('video/')) {
-      if (!isBarAdmin) {
-        alert('Apenas a conta oficial do bar pode postar vídeos curtos de até 30s. Clientes podem compartilhar fotos!');
-        e.target.value = '';
-        return;
-      }
-      setMediaType('video');
-    } else {
-      setMediaType('photo');
-    }
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { alert('Envie uma imagem JPEG, PNG ou WebP de até 5 MB.'); return; }
+    setMediaType('photo');
 
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -217,7 +205,7 @@ export default function PublicarPage() {
     }
   };
 
-  const filteredPatrons = MOCK_PATRONS.filter((p) => {
+  const filteredPatrons = patrons.filter((p) => {
     const q = friendSearch.toLowerCase().replace('@', '');
     return p.name.toLowerCase().includes(q) || p.username.toLowerCase().includes(q);
   });
@@ -228,7 +216,7 @@ export default function PublicarPage() {
       <input
         type="file"
         ref={fileInputRef}
-        accept={isBarAdmin ? 'image/*,video/*' : 'image/*'}
+        accept={'image/jpeg,image/png,image/webp'}
         onChange={handleFileChange}
         className="hidden"
       />
@@ -339,55 +327,7 @@ export default function PublicarPage() {
 
             {/* Top Controls: Media type badge & "X" remove */}
             <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10">
-              {isBarAdmin ? (
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setShowMediaTypeDropdown(!showMediaTypeDropdown)}
-                    className="flex items-center gap-1.5 py-1 px-2.5 rounded-xl bg-black/75 backdrop-blur-md text-white text-[11px] font-bold border border-white/10 hover:bg-black/90 transition-colors"
-                  >
-                    {mediaType === 'video' ? (
-                      <Video className="w-3 h-3 text-amber-400" />
-                    ) : (
-                      <Camera className="w-3 h-3 text-amber-400" />
-                    )}
-                    <span>{mediaType === 'video' ? 'Vídeo (30s)' : 'Foto'}</span>
-                    <ChevronDown className="w-3 h-3 text-stone-400" />
-                  </button>
-
-                  {showMediaTypeDropdown && (
-                    <div className="absolute left-0 mt-1 py-1 w-36 rounded-xl bg-[#18130F] border border-[#2C221A] shadow-2xl z-30 text-xs font-semibold">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMediaType('photo');
-                          setShowMediaTypeDropdown(false);
-                        }}
-                        className="w-full px-3 py-1.5 text-left text-[#FBF8F5] hover:bg-[#241B15] flex items-center gap-1.5"
-                      >
-                        <Camera className="w-3.5 h-3.5 text-amber-400" />
-                        Foto
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMediaType('video');
-                          setShowMediaTypeDropdown(false);
-                        }}
-                        className="w-full px-3 py-1.5 text-left text-[#FBF8F5] hover:bg-[#241B15] flex items-center gap-1.5"
-                      >
-                        <Video className="w-3.5 h-3.5 text-amber-400" />
-                        Vídeo (30s)
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 py-1 px-2.5 rounded-xl bg-black/75 backdrop-blur-md text-white text-[11px] font-bold border border-white/10">
-                  <Camera className="w-3 h-3 text-amber-400" />
-                  <span>Foto</span>
-                </div>
-              )}
+              <span className="px-3 py-1 rounded-xl bg-black/75 text-white text-xs">Foto</span>
 
               <button
                 type="button"
@@ -417,21 +357,11 @@ export default function PublicarPage() {
             className="py-3 px-4 rounded-2xl bg-[#18130F] hover:bg-[#241B15] active:scale-95 text-[#FBF8F5] border border-[#2C221A] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
           >
             <ImageIcon className="w-4 h-4 text-amber-400" />
-            <span>{isBarAdmin ? 'Galeria / Vídeo' : 'Galeria'}</span>
+            <span>Galeria</span>
           </button>
         </div>
 
-        {/* Info pill for regular patrons explaining video policy */}
-        {!isBarAdmin && (
-          <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-[#18130F] border border-[#2C221A] text-xs text-[#A89F96]">
-            <div className="w-6 h-6 rounded-xl bg-amber-500/15 flex items-center justify-center text-[#F5A623] shrink-0">
-              <Lock className="w-3.5 h-3.5" />
-            </div>
-            <span className="leading-tight">
-              Vídeos curtos de 30s são exclusivos para a conta oficial do bar. Patrões e clientes compartilham fotos da noite!
-            </span>
-          </div>
-        )}
+        <p className="text-xs text-stone-400">Compartilhe fotos JPEG, PNG ou WebP de até 5 MB.</p>
       </div>
 
       {/* 3. AUTHOR ROW & MARCAR AMIGOS */}

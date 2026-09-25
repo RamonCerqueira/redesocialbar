@@ -2,6 +2,9 @@ import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { ReportTargetType } from '@prisma/client';
 
 export class CreateReportDto {
+  @IsOptional() @IsString()
+  restaurantSlug?: string;
+
   @IsEnum(ReportTargetType)
   @IsNotEmpty({ message: 'Tipo do alvo da denúncia é obrigatório' })
   targetType!: ReportTargetType;

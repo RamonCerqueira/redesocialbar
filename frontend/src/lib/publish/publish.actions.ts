@@ -1,5 +1,5 @@
 import { PostModel } from './post.schema';
-import { apiRequest } from '../api';
+import { apiRequest, uploadImage } from '../api';
 
 export interface PublishActionHandlers {
   onCamera: () => Promise<void> | void;
@@ -21,7 +21,7 @@ export async function submitPost(postData: PostModel): Promise<any> {
       type,
       content: postData.caption,
       flirtContext: postData.location.name,
-      mediaUrls: postData.media.map((m) => m.url),
+      mediaUrls: await Promise.all(postData.media.map((m) => uploadImage(m.url))),
       taggedPirambeiros: postData.taggedUsers,
       tags: postData.tags,
     }),

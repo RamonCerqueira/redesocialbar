@@ -153,7 +153,7 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
         <div className="grid grid-cols-3 mt-4 py-[14px] border-t border-b border-[#29251F] text-center">
           <div>
             <span className="font-display font-extrabold text-[16px] text-[#00D084] block leading-none">
-              {restaurant.activePeopleCount || 128}
+              {restaurant.activePeopleCount ?? 0}
             </span>
             <span className="text-[10px] text-[#716D68] uppercase font-bold tracking-wider mt-1 block">
               No Bar Agora

@@ -261,6 +261,8 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
         </div>
       )}
 
+      {post.buttonText && post.buttonUrl && <div className="px-4 pb-4"><a href={post.buttonUrl} target="_blank" rel="noopener noreferrer" className="inline-flex bg-amber-400 text-black font-bold rounded-xl px-4 py-2 text-sm">{post.buttonText}</a></div>}
+
       {/* 4. Mídia Dominante (1 foto ou vídeo curto de 30s exclusivo do bar) */}
       {post.isVideo && post.videoUrl ? (
         /* VÍDEO DO BAR COM CONTROLES INTEGRADOS NO PLAYER */

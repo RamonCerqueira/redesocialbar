@@ -48,6 +48,7 @@ export function CouponCard({ promotion, onPromotionUpdate }: CouponCardProps) {
 
   return (
     <div className="rounded-[24px] p-5 sm:p-6 border border-white/[0.08] hover:border-[#FFB800]/40 bg-[#14110E]/75 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.7),0_0_20px_rgba(255,184,0,0.06),inset_0_1px_0_0_rgba(255,255,255,0.08)] relative overflow-hidden mb-5 group transition-all duration-300">
+      {promotion.imageUrl && <img src={promotion.imageUrl} alt={promotion.title} className="w-full h-44 object-cover rounded-2xl mb-4" />}
       <div className="flex items-start justify-between gap-3 mb-2.5">
         <span className="text-[10px] bg-amber-500/20 text-amber-400 font-display font-black px-3 py-1 rounded-full border border-amber-500/35 uppercase tracking-wider flex items-center gap-1.5 shadow-sm backdrop-blur-md">
           <Beer className="w-3 h-3 text-amber-400" />
@@ -125,7 +126,7 @@ export function CouponCard({ promotion, onPromotionUpdate }: CouponCardProps) {
               className="py-2.5 px-5 rounded-2xl amber-gradient text-[#080706] font-display font-black text-xs uppercase tracking-wider shadow-md glow-amber-sm active:scale-95 transition-transform flex items-center gap-1.5 cursor-pointer"
             >
               <Tag className="w-3.5 h-3.5 stroke-[2.5]" />
-              <span>{isClaiming ? 'Resgatando...' : 'Resgatar na Mesa'}</span>
+              <span>{isClaiming ? 'Resgatando...' : (promotion.buttonText || 'Resgatar cupom')}</span>
             </button>
           </div>
         )}

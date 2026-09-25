@@ -6,6 +6,8 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '@prisma/client';
+import { Actor } from '../auth/access.service';
+import { ValidateCouponDto } from '../admin/admin.dto';
 
 @Controller('promotions')
 export class PromotionsController {
@@ -27,9 +29,9 @@ export class PromotionsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.RESTAURANT_ADMIN, Role.SUPERADMIN)
   async validateCoupon(
-    @Body('code') code: string,
-    @Body('restaurantSlug') restaurantSlug: string,
+    @Body() dto: ValidateCouponDto,
+    @CurrentUser() actor: Actor,
   ) {
-    return this.promotionsService.validateCoupon(code, restaurantSlug);
+    return this.promotionsService.validateCoupon(dto.code, dto.restaurantSlug, actor);
   }
 }

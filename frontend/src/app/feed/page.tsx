@@ -1,10 +1,11 @@
 'use client';
+import { SponsoredCard } from '@/components/sponsored-card';
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Post } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
-import { MOCK_BAR_POSTS } from '@/lib/mock-data';
 import { PostCard } from '@/components/post-card';
 import {
   Flame,
@@ -14,7 +15,7 @@ import {
 } from 'lucide-react';
 
 export default function FeedPage() {
-  const [posts, setPosts] = useState<Post[]>(MOCK_BAR_POSTS);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [visibleCount, setVisibleCount] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -29,12 +30,12 @@ export default function FeedPage() {
         setPosts(data);
         setHasMore(data.length > visibleCount);
       } else {
-        setPosts(MOCK_BAR_POSTS);
-        setHasMore(MOCK_BAR_POSTS.length > visibleCount);
+        setPosts([]);
+        setHasMore(false);
       }
     } catch (err) {
-      setPosts(MOCK_BAR_POSTS);
-      setHasMore(MOCK_BAR_POSTS.length > visibleCount);
+      setPosts([]);
+      setHasMore(false);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -80,6 +81,7 @@ export default function FeedPage() {
 
   return (
     <div className="w-full max-w-[430px] mx-auto pb-24 px-3 sm:px-0">
+      <SponsoredCard />
       {/* 1. Header do Feed estilo Instagram Clean */}
       <div className="flex items-center justify-between gap-3 pt-3 pb-3 px-1 mb-2 border-b border-[#2A231C]">
         <div>

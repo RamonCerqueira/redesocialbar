@@ -2,9 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Montserrat, Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/lib/auth-context';
-import { Navigation } from '@/components/navigation';
-import { Header } from '@/components/header';
-import { SplashScreen } from '@/components/splash-screen';
+import { AppShell } from '@/components/app-shell';
 
 const montserrat = Montserrat({
   subsets: ['latin'],
@@ -59,17 +57,7 @@ export default function RootLayout({
     <html lang="pt-BR" className={`${montserrat.variable} ${inter.variable}`}>
       <body className="bg-[#080807] text-[#FFFFFF] min-h-screen selection:bg-[#FFB800]/30 selection:text-[#FFB800]">
         <AuthProvider>
-          <SplashScreen />
-          <div className="flex min-h-screen">
-
-            <Navigation />
-            <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
-              <Header />
-              <main className="flex-1 w-full max-w-[430px] lg:max-w-2xl mx-auto min-w-0 lg:py-6 lg:px-4">
-                {children}
-              </main>
-            </div>
-          </div>
+          <AppShell>{children}</AppShell>
         </AuthProvider>
       </body>
     </html>

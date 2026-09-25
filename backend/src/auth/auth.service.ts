@@ -12,6 +12,12 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  async checkUsername(username: string) {
+    const valid = /^[a-zA-Z0-9_]{3,30}$/.test(username);
+    const exists = valid ? await this.prisma.profile.findUnique({ where: { username: username.toLowerCase() }, select: { id: true } }) : true;
+    return { available: !exists, message: exists ? 'Nome indisponível ou inválido.' : 'Nome disponível.' };
+  }
+
   async register(dto: RegisterDto) {
     const existingEmail = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase().trim() },
@@ -61,6 +67,7 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role,
+        status: user.status,
         profile: user.profile,
       },
     };
@@ -79,7 +86,7 @@ export class AuthService {
       throw new UnauthorizedException('E-mail ou senha incorretos.');
     }
 
-    if (user.status === 'BANNED') {
+    if (user.status !== 'ACTIVE') {
       throw new UnauthorizedException('Sua conta foi suspensa pela moderação.');
     }
 
@@ -100,10 +107,18 @@ export class AuthService {
         id: user.id,
         email: user.email,
         role: user.role,
+        status: user.status,
         profile: user.profile,
         restaurantMembers: user.restaurantMembers,
       },
     };
+  }
+
+  async changePassword(id: string, currentPassword: string, newPassword: string) {
+    const user = await this.prisma.user.findUnique({ where: { id } });
+    if (!user || !await bcrypt.compare(currentPassword, user.passwordHash)) throw new UnauthorizedException('Senha atual incorreta.');
+    await this.prisma.user.update({ where: { id }, data: { passwordHash: await bcrypt.hash(newPassword, 12) } });
+    return { success: true };
   }
 
   async getMe(userId: string) {

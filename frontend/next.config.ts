@@ -17,13 +17,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  typescript: {
-    // Type checking is validated directly with strict `tsc --noEmit` to bypass Windows path comparison assert in Next.js build worker
-    ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 };
 
 export default nextConfig;

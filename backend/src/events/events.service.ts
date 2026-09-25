@@ -18,6 +18,7 @@ export class EventsService {
     const events = await this.prisma.event.findMany({
       where: {
         restaurantId: restaurant.id,
+        isActive: true,
         date: { gte: new Date(Date.now() - 3600000 * 24) },
       },
       include: {
@@ -51,7 +52,7 @@ export class EventsService {
       where: { id: eventId },
     });
 
-    if (!event) {
+    if (!event || !event.isActive) {
       throw new NotFoundException('Evento não encontrado.');
     }
 

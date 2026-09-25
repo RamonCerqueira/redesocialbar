@@ -1,176 +1,56 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { randomBytes } from 'node:crypto';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CouponStatus } from '@prisma/client';
+import { AccessService, Actor } from '../auth/access.service';
 
 @Injectable()
 export class PromotionsService {
-  constructor(private prisma: PrismaService) {}
-
-  async findAll(restaurantSlug: string, currentUserId?: string) {
-    const restaurant = await this.prisma.restaurant.findUnique({
-      where: { slug: restaurantSlug },
-    });
-
-    if (!restaurant) {
-      throw new NotFoundException(`Estabelecimento "${restaurantSlug}" não encontrado.`);
-    }
-
+  constructor(private prisma: PrismaService, private access: AccessService) {}
+  async findAll(slug: string, userId?: string) {
+    const restaurant = await this.prisma.restaurant.findUnique({ where: { slug } });
+    if (!restaurant) throw new NotFoundException('Restaurante não encontrado.');
     const promotions = await this.prisma.promotion.findMany({
-      where: {
-        restaurantId: restaurant.id,
-        validUntil: { gt: new Date() },
-      },
-      include: {
-        coupons: currentUserId
-          ? {
-              where: { userId: currentUserId },
-            }
-          : false,
-      },
-      orderBy: { createdAt: 'desc' },
+      where: { restaurantId: restaurant.id, isActive: true, validUntil: { gt: new Date() } },
+      include: { coupons: { where: { userId: userId || '' } } }, orderBy: { createdAt: 'desc' },
     });
-
-    return promotions.map((p) => {
-      const userCoupon = currentUserId && p.coupons && p.coupons.length > 0 ? p.coupons[0] : null;
-
-      return {
-        id: p.id,
-        title: p.title,
-        discountText: p.discountText,
-        description: p.description,
-        validUntil: p.validUntil,
-        terms: p.terms,
-        badge: p.badge,
-        totalCoupons: p.totalCoupons,
-        redeemedCount: p.redeemedCount,
-        isAvailable: p.redeemedCount < p.totalCoupons,
-        userCoupon: userCoupon
-          ? {
-              id: userCoupon.id,
-              code: userCoupon.code,
-              status: userCoupon.status,
-              claimedAt: userCoupon.claimedAt,
-            }
-          : null,
-      };
-    });
+    return promotions.map(({ coupons, ...p }) => ({ ...p, isAvailable: p.redeemedCount < p.totalCoupons, userCoupon: coupons[0] || null }));
   }
-
   async claimCoupon(promotionId: string, userId: string) {
-    const promotion = await this.prisma.promotion.findUnique({
-      where: { id: promotionId },
-      include: { restaurant: true },
-    });
-
-    if (!promotion) {
-      throw new NotFoundException('Promoção não encontrada.');
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        return await this.prisma.$transaction(async tx => {
+          const existing = await tx.coupon.findUnique({ where: { promotionId_userId: { promotionId, userId } } });
+          if (existing) return { message: 'Você já resgatou este cupom.', coupon: existing };
+          const promotion = await tx.promotion.findUnique({ where: { id: promotionId } });
+          if (!promotion) throw new NotFoundException('Promoção não encontrada.');
+          if (!promotion.isActive || promotion.validUntil <= new Date()) throw new BadRequestException('Promoção indisponível ou expirada.');
+          const reserved = await tx.promotion.updateMany({
+            where: { id: promotionId, isActive: true, validUntil: { gt: new Date() }, redeemedCount: { lt: promotion.totalCoupons } },
+            data: { redeemedCount: { increment: 1 } },
+          });
+          if (reserved.count !== 1) throw new BadRequestException('Os cupons esgotaram.');
+          const coupon = await tx.coupon.create({ data: { promotionId, userId, code: 'PIRAMBA-' + randomBytes(6).toString('hex').toUpperCase() } });
+          await tx.notification.create({ data: { userId, type: 'COUPON', title: 'Cupom resgatado!', body: promotion.title, link: '/promocoes' } });
+          return { message: 'Cupom resgatado com sucesso!', coupon };
+        }, { maxWait: 10000, timeout: 15000, isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      } catch (error) {
+        if (error instanceof Prisma.PrismaClientKnownRequestError && ['P2034', 'P2002'].includes(error.code) && attempt < 3) continue;
+        throw error;
+      }
     }
-
-    if (new Date() > promotion.validUntil) {
-      throw new BadRequestException('Esta promoção já expirou.');
-    }
-
-    if (promotion.redeemedCount >= promotion.totalCoupons) {
-      throw new BadRequestException('Os cupons desta promoção esgotaram.');
-    }
-
-    const existingCoupon = await this.prisma.coupon.findFirst({
-      where: {
-        promotionId,
-        userId,
-      },
-    });
-
-    if (existingCoupon) {
-      return {
-        message: 'Você já resgatou este cupom anteriormente.',
-        coupon: existingCoupon,
-      };
-    }
-
-    // Gerar código único e legível
-    const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase();
-    const code = `PIRAMBA-${randomSuffix}-${Math.floor(100 + Math.random() * 900)}`;
-
-    const [coupon] = await this.prisma.$transaction([
-      this.prisma.coupon.create({
-        data: {
-          code,
-          promotionId,
-          userId,
-          status: CouponStatus.CLAIMED,
-        },
-      }),
-      this.prisma.promotion.update({
-        where: { id: promotionId },
-        data: { redeemedCount: { increment: 1 } },
-      }),
-      this.prisma.notification.create({
-        data: {
-          userId,
-          type: 'COUPON',
-          title: '🎉 Cupom resgatado com sucesso!',
-          body: `Seu cupom "${promotion.title}" foi gerado. Apresente o código ${code} no bar.`,
-          link: '/promocoes',
-        },
-      }),
-    ]);
-
-    return {
-      message: 'Cupom resgatado com sucesso!',
-      coupon,
-    };
+    throw new BadRequestException('Tente resgatar novamente.');
   }
-
-  async validateCoupon(code: string, restaurantSlug: string) {
-    const coupon = await this.prisma.coupon.findUnique({
-      where: { code },
-      include: {
-        promotion: {
-          include: { restaurant: true },
-        },
-        user: {
-          include: { profile: true },
-        },
-      },
+  async validateCoupon(code: string, slug: string, actor: Actor) {
+    const restaurant = await this.access.restaurant(actor, slug);
+    const coupon = await this.prisma.coupon.findUnique({ where: { code: code.trim().toUpperCase() }, include: { promotion: true, user: { select: { profile: true } } } });
+    if (!coupon || coupon.promotion.restaurantId !== restaurant.id) throw new NotFoundException('Cupom não encontrado neste restaurante.');
+    if (coupon.promotion.validUntil <= new Date()) throw new BadRequestException('Cupom expirado.');
+    const updated = await this.prisma.coupon.updateMany({
+      where: { id: coupon.id, status: 'CLAIMED', promotion: { validUntil: { gt: new Date() } } },
+      data: { status: 'USED', usedAt: new Date() },
     });
-
-    if (!coupon) {
-      throw new NotFoundException('Cupom não encontrado.');
-    }
-
-    if (coupon.promotion.restaurant.slug !== restaurantSlug) {
-      throw new BadRequestException('Este cupom não pertence a este estabelecimento.');
-    }
-
-    if (coupon.status === CouponStatus.USED) {
-      throw new BadRequestException(`Este cupom já foi utilizado em ${coupon.usedAt?.toLocaleString('pt-BR')}.`);
-    }
-
-    if (new Date() > coupon.promotion.validUntil) {
-      throw new BadRequestException('Este cupom expirou.');
-    }
-
-    const validated = await this.prisma.coupon.update({
-      where: { id: coupon.id },
-      data: {
-        status: CouponStatus.USED,
-        usedAt: new Date(),
-      },
-    });
-
-    return {
-      success: true,
-      message: 'Cupom validado com sucesso!',
-      customer: {
-        name: coupon.user.profile?.name,
-        username: coupon.user.profile?.username,
-      },
-      promotion: {
-        title: coupon.promotion.title,
-        discountText: coupon.promotion.discountText,
-      },
-      coupon: validated,
-    };
+    if (updated.count !== 1) throw new BadRequestException('Este cupom já foi utilizado ou expirou.');
+    return { success: true, message: 'Cupom validado!', customer: { name: coupon.user.profile?.name }, promotion: { title: coupon.promotion.title }, coupon: { id: coupon.id, code: coupon.code, status: 'USED' } };
   }
 }

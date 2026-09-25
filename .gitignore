@@ -37,3 +37,7 @@ Thumbs.db
 
 # Deliverable zip
 to-no-piramba.zip
+
+# Local bootstrap credential
+.admin-access.local
+.env.test

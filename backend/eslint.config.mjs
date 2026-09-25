@@ -18,7 +18,12 @@ export default [
       '@typescript-eslint': tsPlugin,
     },
     rules: {
-      '@typescript-eslint/no-unused-vars': 'off',
+      ...tsPlugin.configs.recommended.rules,
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      'no-constant-condition': 'error',
+      'no-duplicate-case': 'error',
+      'no-unreachable': 'error',
       'no-unused-vars': 'off',
     },
   },

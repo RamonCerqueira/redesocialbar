@@ -157,13 +157,13 @@ export class CheckInsService {
         status: CheckInStatus.ACTIVE,
         expiresAt: { gt: now },
         user: {
-          id: { notIn: blockedUserIds },
+          id: { notIn: blockedUserIds, ...(filter === 'friends' ? { in: followedUserIds } : {}) },
+          status: 'ACTIVE',
           profile: {
             invisibleMode: false,
             ...(filter === 'new' ? { checkInCount: { lte: 6 } } : {}),
             ...(filter === 'flirt' ? { showInFlirtRadar: true } : {}),
           },
-          ...(filter === 'friends' ? { id: { in: followedUserIds } } : {}),
         },
       },
       include: {

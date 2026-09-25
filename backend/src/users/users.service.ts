@@ -69,7 +69,11 @@ export class UsersService {
       isBlocked = !!block;
     }
 
-    const activeCheckIn = profile.user.checkIns[0] || null;
+    if (isBlocked) throw new NotFoundException('Perfil indisponível.');
+    const isOwner = currentUserId === profile.userId;
+    const canSeeContent = isOwner || !profile.isPrivate || isFollowing;
+    const activeCheckIn = (isOwner || (!profile.invisibleMode && canSeeContent))
+      ? profile.user.checkIns[0] || null : null;
 
     return {
       id: profile.userId,
@@ -95,7 +99,7 @@ export class UsersService {
         posts: profile.user._count.posts,
         totalCheckIns: profile.user._count.checkIns,
       },
-      recentPosts: profile.user.posts.map((p) => ({
+      recentPosts: (canSeeContent ? profile.user.posts : []).map((p) => ({
         id: p.id,
         content: p.content,
         createdAt: p.createdAt,
