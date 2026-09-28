@@ -11,6 +11,7 @@
 | Banners | Imagem, título, descrição, anunciante, texto/URL do botão, posicionamento, ativação |
 | Agenda | Criar, editar, cancelar eventos com capa, data, horário e categoria |
 | Ajustes | Dados do estabelecimento, horários, contatos, logo, capa e alteração de senha da própria conta |
+| Equipe e acessos | Exclusivo de Ramon: criar contas institucionais, escolher acesso ao app ou administração do restaurante, consultar pendência de primeiro acesso e redefinir senha de membros |
 | Moderação | Denúncias por estabelecimento, remoção de conteúdo, arquivamento; banimento global reservado a SUPERADMIN |
 
 O backend exige vínculo OWNER/MANAGER com o restaurante, além do papel administrativo. Alterar o frontend ou o papel presente em um token não substitui essa verificação. RLS habilitado nas tabelas da aplicação impede acesso direto pelo cliente Supabase anônimo/autenticado. As consultas Prisma são exclusivamente do servidor.
@@ -27,9 +28,19 @@ O backend exige vínculo OWNER/MANAGER com o restaurante, além do papel adminis
 
 ## Limites e próximos incrementos opcionais
 
-Os itens solicitados de conteúdo, cupons, promoções, ajustes e imagens estão implementados. Não há ainda gestão de equipe/convites no painel, recuperação de senha por e-mail, agendamento de publicações, relatórios exportáveis ou integração com vendas/pagamentos. Não foi realizado deploy nesta revisão.
+Os itens solicitados de conteúdo, cupons, promoções, ajustes, imagens e cadastro da equipe estão implementados. Não há ainda envio de convites ou recuperação de senha por e-mail, agendamento de publicações, relatórios exportáveis ou integração com vendas/pagamentos. Não foi realizado deploy nesta revisão.
 
-Rate limiting de autenticação é local ao processo; uma implantação com múltiplas instâncias requer armazenamento compartilhado. JWT expira em um dia; troca de senha não revoga automaticamente tokens já emitidos. Stories expiram da listagem em 24 horas; limpeza física de mídias expiradas deve ser agendada conforme a política de retenção do estabelecimento.
+Rate limiting de autenticação é local ao processo; uma implantação com múltiplas instâncias requer armazenamento compartilhado. JWT normal expira em um dia; sessão de primeiro acesso expira em 15 minutos. Troca ou redefinição de senha incrementa a versão da sessão, invalidando os tokens anteriores. Stories expiram da listagem em 24 horas; limpeza física de mídias expiradas deve ser agendada conforme a política de retenção do estabelecimento.
+
+## Primeiro acesso institucional
+
+Ramon (`ramon@pirambeira.com`) é o superadministrador autorizado a criar contas `@pirambeira.com`. Além do papel, a API verifica sua identidade no banco; outros administradores ou superadministradores não podem cadastrar essas contas. As contas podem receber acesso de usuário ou de administrador vinculado ao restaurante selecionado. O cadastro não permite criar outros superadministradores.
+
+Novas contas institucionais usam `Acesso@123` e ficam com `mustChangePassword=true`. O primeiro login leva à criação de uma senha pessoal. Enquanto a troca estiver pendente, o token só acessa `/auth/me` e `/auth/first-access-password`; recursos públicos continuam disponíveis sem privilégios de sessão. A senha inicial não pode ser escolhida como definitiva. Após a troca, a flag é removida e uma nova sessão é emitida. O login seguinte não pede outra troca.
+
+Em **Equipe e acessos**, Ramon pode redefinir a senha de um membro para a senha inicial, obrigando nova troca e revogando sessões existentes. A redefinição não desbloqueia contas suspensas. A própria senha do Ramon deve ser alterada em **Ajustes**. Para uma recuperação operacional autorizada de Ramon, `node scripts/reset-superadmin.cjs --reset` (na pasta backend) redefine explicitamente sua senha e exige primeiro acesso novamente; não execute esse comando em cada inicialização/deploy.
+
+Validação: `pnpm --filter backend test` cobre as regras isoladas. `node scripts/first-access-smoke.cjs`, executado na pasta backend com a API ligada, testa o fluxo HTTP/banco com contas temporárias e as remove ao terminar. Essa verificação pressupõe Ramon já configurado como SUPERADMIN e sem troca pendente; nunca conclui o primeiro acesso real dele.
 
 Chat desativado: não há páginas `/chat` nem módulo HTTP de chat carregado. As tabelas históricas são preservadas, sem apagar mensagens existentes. Matches direcionam ao perfil e ao mural.
 

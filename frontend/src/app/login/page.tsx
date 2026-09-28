@@ -26,7 +26,7 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       login(data.token, data.user);
-      router.push(data.user.role === 'RESTAURANT_ADMIN' || data.user.role === 'SUPERADMIN' ? '/admin' : '/');
+      router.replace(data.user.mustChangePassword ? '/primeiro-acesso' : data.user.role === 'RESTAURANT_ADMIN' || data.user.role === 'SUPERADMIN' ? '/admin' : '/');
     } catch (err: any) {
       setError(err.message || 'Erro ao entrar na conta.');
     } finally {
@@ -62,13 +62,15 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-bold text-[#FBF8F5] mb-1">
+            <label htmlFor="login-email" className="block text-xs font-bold text-[#FBF8F5] mb-1">
               E-mail
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-[#6E655D] absolute left-3.5 top-3" />
               <input
                 type="email"
+                id="login-email"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -79,13 +81,15 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-[#FBF8F5] mb-1">
+            <label htmlFor="login-password" className="block text-xs font-bold text-[#FBF8F5] mb-1">
               Senha
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-[#6E655D] absolute left-3.5 top-3" />
               <input
                 type="password"
+                id="login-password"
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

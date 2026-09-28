@@ -14,6 +14,7 @@ export interface UserProfile {
 }
 
 export interface User {
+  mustChangePassword?: boolean;
   id: string;
   email: string;
   role: 'USER' | 'RESTAURANT_ADMIN' | 'SUPERADMIN';
@@ -232,4 +233,3 @@ export interface Story {
     isOfficial?: boolean;
   };
 }
-

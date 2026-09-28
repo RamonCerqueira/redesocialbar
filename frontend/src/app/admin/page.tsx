@@ -6,8 +6,10 @@ import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { ImageField, ResourceConfig, ResourceEditor } from '@/components/admin/resource-editor';
 import './admin.css';
+import { TeamPanel } from '@/components/admin/team-panel';
+import { User } from '@/lib/types';
 
-type Section='dashboard'|'posts'|'promotions'|'coupons'|'ads'|'events'|'settings'|'moderation';
+type Section='dashboard'|'posts'|'promotions'|'coupons'|'ads'|'events'|'settings'|'moderation'|'team';
 const navigation=[{id:'dashboard',label:'Visão geral',icon:LayoutDashboard},{id:'posts',label:'Publicações',icon:FileText},{id:'promotions',label:'Promoções',icon:Ticket},{id:'coupons',label:'Cupons emitidos',icon:Ticket},{id:'ads',label:'Banners e anúncios',icon:Megaphone},{id:'events',label:'Agenda de eventos',icon:CalendarDays},{id:'moderation',label:'Moderação',icon:ShieldCheck},{id:'settings',label:'Ajustes',icon:Settings}] as const;
 const configs:Partial<Record<Section,ResourceConfig>>={
   posts:{title:'Publicações oficiais',singular:'Publicação',route:'posts',archiveLabel:'Remover',fields:[
@@ -60,16 +62,17 @@ export default function AdminPage(){
   if(!allowed)return <div className="admin-gate"><div><h1>Painel do restaurante</h1><p>Entre com uma conta autorizada para gerenciar o estabelecimento.</p><Link className="admin-button" href="/login">Entrar</Link> <Link className="admin-button secondary" href="/">Voltar ao aplicativo</Link></div></div>;
   return <div className="admin-workspace">
     <aside className="admin-sidebar"><div className="admin-brand">Pirambeira<span style={{color:'#e4b363'}}>.</span><small>GESTÃO DO RESTAURANTE</small></div>
-      <nav className="admin-nav" aria-label="Menu administrativo">{navigation.map(item=><button key={item.id} aria-current={section===item.id?'page':undefined} onClick={()=>setSection(item.id)}><item.icon size={17}/>{item.label}</button>)}</nav>
+      <nav className="admin-nav" aria-label="Menu administrativo">{navigation.map(item=><button key={item.id} aria-current={section===item.id?'page':undefined} onClick={()=>setSection(item.id)}><item.icon size={17}/>{item.label}</button>)}{user?.role==='SUPERADMIN'&&user.email.toLowerCase()==='ramon@pirambeira.com'&&<button aria-current={section==='team'?'page':undefined} onClick={()=>setSection('team')}><ShieldCheck size={17}/>Equipe e acessos</button>}</nav>
       <footer><p>{user?.profile?.name}</p><p>{user?.email}</p><div className="admin-actions"><Link href="/" target="_blank"><ExternalLink size={14} style={{display:'inline'}}/> Abrir aplicativo</Link><button className="admin-button secondary" onClick={logout}><LogOut size={14}/>Sair</button></div></footer>
     </aside>
-    <main className="admin-main"><header className="admin-topbar"><div><small>ESTABELECIMENTO / ADMINISTRAÇÃO</small><h1>{navigation.find(n=>n.id===section)?.label}</h1></div>
+    <main className="admin-main"><header className="admin-topbar"><div><small>ESTABELECIMENTO / ADMINISTRAÇÃO</small><h1>{section==='team'?'Equipe e acessos':navigation.find(n=>n.id===section)?.label}</h1></div>
       <label className="admin-field">Restaurante<select aria-label="Restaurante" value={slug} onChange={e=>setSlug(e.target.value)} disabled={loading}>{restaurants.map(r=><option key={r.slug} value={r.slug}>{r.name}</option>)}</select></label>
     </header>
       {error&&<div role="alert" className="admin-message error">{error} <button onClick={()=>void loadRestaurants()}>Tentar novamente</button></div>}
       {loading?<p>Carregando estabelecimentos…</p>:!slug?<div className="admin-empty">Esta conta ainda não possui um restaurante gerenciável.</div>:<>
         {configs[section]&&<ResourceEditor key={slug+section} slug={slug} config={configs[section]!}/>}
         {section==='dashboard'&&<Dashboard key={slug} slug={slug}/>}
+        {section==='team'&&user?.role==='SUPERADMIN'&&<TeamPanel key={slug} slug={slug} currentUserId={user.id}/>}
         {section==='coupons'&&<Coupons key={slug} slug={slug}/>}
         {section==='settings'&&<SettingsPanel key={slug} slug={slug}/>}
         {section==='moderation'&&<Moderation key={slug} slug={slug} superadmin={user?.role==='SUPERADMIN'}/>}
@@ -135,8 +138,9 @@ function SettingsPanel({slug}:{slug:string}){
   </>;
 }
 function PasswordForm(){
+  const {login}=useAuth();
   const [currentPassword,setCurrent]=useState('');const [newPassword,setNew]=useState('');const [notice,setNotice]=useState('');const [error,setError]=useState('');const [busy,setBusy]=useState(false);
-  async function save(event:React.FormEvent){event.preventDefault();setBusy(true);setNotice('');setError('');try{await apiRequest('/auth/password',{method:'PUT',body:JSON.stringify({currentPassword,newPassword})});setCurrent('');setNew('');setNotice('Senha alterada.');}catch(error){setError(errorText(error));}finally{setBusy(false);}}
+  async function save(event:React.FormEvent){event.preventDefault();setBusy(true);setNotice('');setError('');try{const session=await apiRequest<{token:string;user:User}>('/auth/password',{method:'PUT',body:JSON.stringify({currentPassword,newPassword})});login(session.token,session.user);setCurrent('');setNew('');setNotice('Senha alterada. As outras sessões foram encerradas.');}catch(error){setError(errorText(error));}finally{setBusy(false);}}
   return <section className="admin-card" style={{marginTop:24}}><h2>Senha da sua conta</h2>{notice&&<p role="status" className="admin-message">{notice}</p>}{error&&<p role="alert" className="admin-message error">{error}</p>}<form className="admin-form" onSubmit={save} style={{maxWidth:420}}><label className="admin-field">Senha atual<input type="password" required autoComplete="current-password" value={currentPassword} onChange={e=>setCurrent(e.target.value)}/></label><label className="admin-field">Nova senha<input type="password" required minLength={8} maxLength={72} autoComplete="new-password" value={newPassword} onChange={e=>setNew(e.target.value)}/></label><button disabled={busy} className="admin-button">{busy?'Salvando…':'Alterar senha'}</button></form></section>;
 }
 type Report={id:string;reason:string;notes:string;targetType:string;status:string;createdAt:string;post?:{content:string};comment?:{content:string};targetedUser?:{profile:{name:string}}};

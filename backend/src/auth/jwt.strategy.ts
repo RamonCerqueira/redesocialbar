@@ -9,6 +9,7 @@ export interface JwtPayload {
   sub: string;
   email: string;
   role: string;
+  version?: number;
 }
 
 @Injectable()
@@ -30,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       },
     });
 
-    if (!user || user.status !== 'ACTIVE') {
+    if (!user || user.status !== 'ACTIVE' || (payload.version ?? 0) !== user.tokenVersion) {
       throw new UnauthorizedException('Usuário não autorizado ou banido');
     }
 
@@ -39,6 +40,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: user.email,
       role: user.role,
       status: user.status,
+      mustChangePassword: user.mustChangePassword,
       username: user.profile?.username,
       name: user.profile?.name,
       restaurantMembers: user.restaurantMembers,

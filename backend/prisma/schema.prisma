@@ -93,6 +93,8 @@ model User {
   id            String         @id @default(uuid())
   email         String         @unique
   passwordHash  String
+  mustChangePassword Boolean    @default(false)
+  tokenVersion  Int            @default(0)
   role          Role           @default(USER)
   status        UserStatus     @default(ACTIVE)
   createdAt     DateTime       @default(now())

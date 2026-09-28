@@ -16,7 +16,9 @@ Aplicativo: http://localhost:3000. Painel: http://localhost:3000/admin. API: htt
 
 O painel independente contém publicações oficiais, promoções, cupons emitidos e validação, banners, agenda, ajustes e moderação. Upload de imagens e textos/endereços dos botões são configuráveis. A conta de `ramon@pirambeira.com` está vinculada como proprietária do Pirambeira. A credencial inicial local fica em `.admin-access.local`, ignorado pelo Git. A senha pode ser alterada em **Ajustes**.
 
-Para preparar outro ambiente vazio: `pnpm --filter backend db:bootstrap email@exemplo.com`. Esse comando preserva a senha de contas existentes e cria uma senha aleatória somente para contas novas. Não execute o seed de demonstração em produção.
+Para preparar outro ambiente vazio: `pnpm --filter backend db:bootstrap ramon@pirambeira.com`. Esse comando preserva a senha de contas existentes; a nova conta do Ramon recebe o papel SUPERADMIN, a senha inicial `Acesso@123` e troca obrigatória. Novas contas `@pirambeira.com` são criadas exclusivamente pelo Ramon em **Equipe e acessos**; o cadastro público bloqueia esse domínio. Não execute o seed de demonstração em produção.
+
+Após entrar com a senha inicial, o usuário é direcionado a `/primeiro-acesso`. A API bloqueia ações protegidas até que uma senha diferente seja criada. A troca é exigida somente no primeiro acesso, ou novamente após uma redefinição explícita. Trocar ou redefinir a senha revoga os tokens anteriores.
 
 ## Aplicativo
 

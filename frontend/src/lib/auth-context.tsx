@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: any;
         status: any;
         profile: any;
+        mustChangePassword: boolean;
         activeCheckIn: CheckIn | null;
       }>('/auth/me');
 
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           role: data.role,
           status: data.status,
           profile: data.profile,
+          mustChangePassword: data.mustChangePassword,
         };
         setUser(validatedUser);
         localStorage.setItem('tonopiramba_user', JSON.stringify(validatedUser));
@@ -92,6 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('tonopiramba_user', JSON.stringify(userData));
     }
     setUser(userData);
+    setActiveCheckIn(null);
   };
 
   const logout = () => {
