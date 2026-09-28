@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
@@ -28,6 +28,39 @@ export default function HomePage() {
   const [storyIndex, setStoryIndex] = useState(0);
   const [greeting, setGreeting] = useState('Boas-vindas,');
   const [visiblePosts, setVisiblePosts] = useState(3);
+  const STORAGE_KEY = 'tonopiramba:viewed-stories:pirambeira';
+  const [viewedStories, setViewedStories] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return new Set();
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? new Set(arr as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const markViewed = useCallback((storyId: string) => {
+    setViewedStories(prev => {
+      if (prev.has(storyId)) return prev;
+      const next = new Set(prev);
+      next.add(storyId);
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next))); } catch {}
+      }
+      return next;
+    });
+  }, [STORAGE_KEY]);
+
+  const sortedStories = useMemo(() => {
+    const unseen: Story[] = [];
+    const seen: Story[] = [];
+    for (const s of stories) {
+      if (viewedStories.has(s.id)) seen.push(s);
+      else unseen.push(s);
+    }
+    return [...unseen, ...seen];
+  }, [stories, viewedStories]);
+
   const checkedIn = activeCheckIn?.restaurant?.slug === 'pirambeira';
 
   const loadPatrons = useCallback(async () => {
@@ -75,10 +108,10 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section aria-labelledby="stories-title"><div className="home-section-heading"><h2 id="stories-title"><span className="home-dash"/>Stories <small>DE AGORA</small></h2><button disabled={!stories.length} onClick={()=>{setStoryIndex(0);setViewer(true);}}>Ver todos <ArrowRight size={15}/></button></div>
+    <section aria-labelledby="deagora-title"><div className="home-section-heading"><h2 id="deagora-title"><span className="home-dash"/>DE AGORA</h2></div>
       <div className="home-stories"><button className="home-story" onClick={()=>user?setCamera(true):window.location.assign('/login')} aria-label="Adicionar story"><span className="home-story-ring own"><Camera size={26}/><i><Plus size={15}/></i></span><span>Seu story</span></button>
-        {stories.map((story,index)=><button className="home-story" key={story.id} onClick={()=>{setStoryIndex(index);setViewer(true);}}><span className="home-story-ring"><img src={story.author.avatarUrl||'/LogoPirambeiraSemFundo.png'} alt=""/></span><span>{story.author.name}</span></button>)}
-        {!stories.length&&<p className="home-muted">{loading?'Carregando momentos…':'A noite começa com você. Compartilhe um momento.'}</p>}
+        {sortedStories.map((story)=><button className="home-story" key={story.id} onClick={()=>{markViewed(story.id);const idx=sortedStories.findIndex(s=>s.id===story.id);setStoryIndex(idx<0?0:idx);setViewer(true);}}><span className="home-story-ring"><img src={story.author.avatarUrl||'/LogoPirambeiraSemFundo.png'} alt=""/></span><span>{story.author.name}</span></button>)}
+        {!sortedStories.length&&<p className="home-muted">{loading?'Carregando momentos…':'A noite começa com você. Compartilhe um momento.'}</p>}
       </div>
     </section>
 

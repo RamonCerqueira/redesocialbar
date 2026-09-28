@@ -18,6 +18,11 @@ import {
   Tag,
   CheckCircle2,
   Beer,
+  Award,
+  Flame,
+  Sparkles,
+  Timer,
+  UserRound,
 } from 'lucide-react';
 
 interface RestaurantPageProps {
@@ -73,6 +78,29 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
     );
   }
 
+  function summarizeHours(hours: Record<string,string> | undefined | null): string {
+    if (!hours || typeof hours !== 'object') return 'Consulte o horário no local';
+    const entries = Object.entries(hours).filter(([,v])=>v && String(v).trim() && !/fechad/i.test(String(v)));
+    if (!entries.length) return 'Fechado agora · consulte o local';
+    if (entries.length === 7) {
+      const sample = entries[0][1];
+      if (entries.every(([,v]) => v === sample)) return sample;
+    }
+    const todayIdx = (new Date().getDay() + 6) % 7;
+    const days = ['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+    const today = days[todayIdx];
+    const todayEntry = entries.find(([k])=>k===today) || entries[0];
+    if (!todayEntry) return entries[0][1];
+    return todayEntry[1] + ' · ' + today.toLowerCase();
+  }
+
+  const fallbackCover = 'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80';
+  const fallbackLogo = '/LogoPirambeiraSemFundo.png';
+  const logoUrl = restaurant.logoUrl || fallbackLogo;
+  const taglineText = restaurant.tagline || 'Bar & Encontros';
+  const subLocality = [restaurant.neighborhood, [restaurant.city, restaurant.state].filter(Boolean).join(' - ')].filter(Boolean).join(' • ') || 'Salvador - BA';
+  const scheduleText = summarizeHours(restaurant.openingHours as Record<string,string> | undefined | null);
+
   if (!restaurant) {
     return (
       <div className="surface-elevated rounded-3xl p-8 text-center border border-[#2C221A]">
@@ -87,8 +115,7 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
       <div className="relative h-[190px] w-full overflow-hidden bg-[#080807]">
         <img
           src={
-            restaurant.coverUrl ||
-            'https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80'
+            restaurant.coverUrl || fallbackCover
           }
           alt={restaurant.name}
           className="w-full h-full object-cover"
@@ -113,8 +140,8 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
           {/* Avatar: width 90, height 90, borderRadius 45, border 4px solid #080807 */}
           <div className="w-[90px] h-[90px] rounded-[45px] border-[4px] border-[#080807] overflow-hidden bg-[#11100F] shadow-2xl relative">
             <img
-              src="/LogoPirambeiraSemFundo.png"
-              alt="Pirambeira"
+              src={logoUrl}
+              alt={restaurant.name}
               className="w-full h-full object-contain p-1.5"
             />
           </div>
@@ -145,7 +172,7 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
             </span>
           </h1>
           <p className="text-xs text-[#AAA49C] mt-0.5 font-medium">
-            Bar & Encontros • Salvador - BA
+            {taglineText} • {subLocality}
           </p>
         </div>
 
@@ -169,7 +196,7 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
           </div>
           <div>
             <span className="font-display font-extrabold text-[16px] text-[#FFB800] block leading-none">
-              17h às 02h
+              {scheduleText}
             </span>
             <span className="text-[10px] text-[#716D68] uppercase font-bold tracking-wider mt-1 block">
               Horário
@@ -256,31 +283,235 @@ export default function RestaurantDetailPage({ params }: RestaurantPageProps) {
         </button>
       </div>
 
-      {/* Tab Content: Cardápio */}
+      {/* Tab Content: Cardápio PREMIUM */}
       {activeTab === 'CARDAPIO' && (
-        <div className="space-y-6">
-          {restaurant.menuCategories?.map((cat: any) => (
-            <div key={cat.name} className="surface-elevated rounded-3xl p-5 sm:p-6 border border-amber-500/15">
-              <h3 className="font-display font-black text-sm uppercase tracking-wider text-amber-400 flex items-center gap-2 pb-3 border-b border-[#2C221A]">
-                {cat.name.includes('Drinks') ? <Wine className="w-4 h-4" /> : <Utensils className="w-4 h-4" />}
-                <span>{cat.name}</span>
-              </h3>
-
-              <div className="grid sm:grid-cols-2 gap-3.5 mt-4">
-                {cat.items.map((item: any) => (
-                  <div key={item.name} className="bg-[#18130F] p-3.5 rounded-2xl border border-[#2C221A]/80 hover:border-amber-500/30 transition-colors">
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-display font-bold text-xs text-[#FBF8F5]">{item.name}</h4>
-                      <span className="font-mono font-black text-xs text-amber-400 shrink-0">{item.price}</span>
-                    </div>
-                    <p className="text-[11px] text-[#A89F96] mt-1 leading-relaxed">
-                      {item.description}
-                    </p>
-                  </div>
-                ))}
-              </div>
+        <div className="premium-menu-space">
+          {(!restaurant.menuCategories || (Array.isArray(restaurant.menuCategories) && restaurant.menuCategories.length===0)) && (
+            <div className="surface-elevated rounded-3xl p-8 sm:p-10 border border-amber-500/15 text-center menu-empty-premium">
+              <div className="menu-empty-ornament">✦ ⋆ ✦ ⋆ ✦</div>
+              <Utensils size={48} className="text-amber-400/70 mx-auto mb-4" />
+              <h3 className="font-display font-black text-[#FBF8F5] text-lg">Cardápio em preparação</h3>
+              <p className="text-[13px] text-[#A89F96] mt-3 max-w-md mx-auto leading-relaxed">Nosso cardápio digital completo estará disponível aqui em breve. Enquanto isso, chame o garçom ou consulte nossas redes sociais!</p>
+              <div className="menu-empty-ornament bottom">✦ ⋆ ✦ ⋆ ✦</div>
             </div>
-          ))}
+          )}
+
+          {/* ========================== HERO DESTAQUE DA SEMANA DO CHEF ========================== */}
+          {(() => {
+            let pick: any = null;
+            let fromCatName = '';
+            (restaurant.menuCategories||[]).forEach((c:any)=>{
+              (c.items||[]).forEach((it:any)=>{
+                if(!pick && !!it.isWeeklyPick){ pick = it; fromCatName = String(c.name||''); }
+              });
+            });
+            if(!pick) return null;
+            const hasImg = !!pick.imageUrl && String(pick.imageUrl).length>4;
+            return (
+              <section className="weekly-pick-hero" aria-label="Destaque da semana do chef">
+                <div className="wp-frame-out">
+                  <div className="wp-frame-in">
+                    <div className="wp-corner tl" aria-hidden/><div className="wp-corner tr" aria-hidden/>
+                    <div className="wp-corner bl" aria-hidden/><div className="wp-corner br" aria-hidden/>
+                    <div className="wp-ribbon-top">
+                      <span/><span className="wp-ribbon-text">DESTAQUE DA SEMANA</span><span/>
+                    </div>
+
+                    <div className={'wp-grid'+(hasImg?'':' noimg')}>
+                      {hasImg && (
+                        <div className="wp-photo">
+                          <img src={String(pick.imageUrl)} alt={String(pick.name||'Destaque da semana')}/>
+                          <div className="wp-photo-vignette" aria-hidden/>
+                          <div className="wp-photo-tag">
+                            <Award size={13}/>
+                            <span>{fromCatName}</span>
+                          </div>
+                          <div className="wp-photo-shimmer" aria-hidden/>
+                        </div>
+                      )}
+
+                      <div className="wp-body">
+                        <div className="wp-kicker">
+                          <span className="wp-kicker-dot"/>
+                          <span>SELECIONADO PELO CHEF</span>
+                          <span className="wp-kicker-dot"/>
+                        </div>
+                        <h2 className="wp-name">{pick.name}</h2>
+                        {pick.weeklyPickNote && (
+                          <blockquote className="wp-chef-note">
+                            <span className="wp-quote-mark">“</span>
+                            <p>{pick.weeklyPickNote}</p>
+                          </blockquote>
+                        )}
+                        {!pick.weeklyPickNote && pick.description && (
+                          <p className="wp-desc">{pick.description}</p>
+                        )}
+                        {pick.description && pick.weeklyPickNote && (
+                          <p className="wp-desc small">{pick.description}</p>
+                        )}
+
+                        <div className="wp-meta">
+                          {pick.portion && (
+                            <span className="wp-meta-chip">
+                              <UserRound size={13}/> {pick.portion}
+                            </span>
+                          )}
+                          {pick.prepTime && (
+                            <span className="wp-meta-chip">
+                              <Timer size={13}/> {pick.prepTime}
+                            </span>
+                          )}
+                          {Array.isArray(pick.tags) && pick.tags.slice(0,4).map((t:string)=>(
+                            <span key={t} className="wp-meta-chip soft">
+                              <Tag size={12}/> {t}
+                            </span>
+                          ))}
+                          {pick.isChefPick && (
+                            <span className="wp-meta-chip accent">
+                              <Sparkles size={13}/> Chef’s Pick
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="wp-price-row">
+                          <div className="wp-price-box">
+                            <small>por</small>
+                            <div className="wp-price">
+                              <span className="wp-price-cur">R$</span>
+                              <span className="wp-price-val">{String(pick.price||'').replace(/^R\$\s*/i,'')}</span>
+                            </div>
+                          </div>
+                          <div className="wp-call">
+                            <Sparkles size={15}/>
+                            <span>Peça agora no garçom</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </section>
+            );
+          })()}
+
+          <div className="menu-hero-deco" aria-hidden>
+            <svg viewBox="0 0 400 18" preserveAspectRatio="none" aria-hidden><defs><linearGradient id="dl" x1="0" x2="1"><stop offset="0%" stopColor="transparent"/><stop offset="50%" stopColor="#f59e0b" stopOpacity=".6"/><stop offset="100%" stopColor="transparent"/></linearGradient></defs><path d="M0 9 H400" stroke="url(#dl)" strokeWidth="1" fill="none"/><circle cx="200" cy="9" r="3.5" fill="#f59e0b" fillOpacity=".85"/></svg>
+          </div>
+
+          {restaurant.menuCategories?.map((cat: any, ci: number) => {
+            const items = Array.isArray(cat.items) ? cat.items : [];
+            const catIcon = (cat.name||'').toLowerCase();
+            const ico = catIcon.includes('drink')||catIcon.includes('bebida')||catIcon.includes('chopp')||catIcon.includes('cocktail') ? Wine : catIcon.includes('petisco')||catIcon.includes('entrada')||catIcon.includes('bar') ? Beer : Utensils;
+            const Icon = ico;
+            return (
+              <section key={(cat.name||'cat')+ci} className={'pm-cat'+(cat.highlight?' highlight':'')}>
+                <header className="pm-cat-head">
+                  <div className="pm-cat-title-row">
+                    <div className="pm-cat-glyph">
+                      {cat.highlight && <Award className="pm-cat-star" size={15}/>}
+                      <Icon size={18}/>
+                    </div>
+                    <div>
+                      <h3 className="pm-cat-title">{String(cat.name||'Categoria').toUpperCase()}</h3>
+                      {cat.description && <p className="pm-cat-desc">{cat.description}</p>}
+                    </div>
+                    <div className="pm-cat-count" aria-hidden>
+                      <small>{items.length}</small>
+                    </div>
+                  </div>
+                  <div className="pm-cat-rule" aria-hidden>
+                    <span/>
+                    <svg viewBox="0 0 40 10" width="40" height="10" preserveAspectRatio="none"><path d="M0 5 H15 M25 5 H40 M20 2 Q20 8 20 8" stroke="#f59e0b" strokeOpacity=".55" strokeWidth="1" fill="none" strokeLinecap="round"/></svg>
+                    <span/>
+                  </div>
+                </header>
+
+                {!items.length && (
+                  <div className="pm-cat-empty">Categoria sem itens ainda.</div>
+                )}
+
+                <ul className="pm-list">
+                  {items.map((item: any, ii: number) => {
+                    const hasImage = !!item.imageUrl && String(item.imageUrl).length>4;
+                    return (
+                      <li key={(item.name||'it')+ii} className={'pm-item'+(item.isChefPick?' chef':'')+(item.isNew?' new':'')+(item.isPromo?' promo':'')+(hasImage?' hasimg':' noimg')}>
+                        <div className="pm-item-imgwrap" aria-hidden={!hasImage}>
+                          {hasImage && (
+                            <>
+                              <img src={String(item.imageUrl)} alt={String(item.name||'')} loading="lazy"/>
+                              <div className="pm-item-img-shine" aria-hidden/>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="pm-item-body">
+                          <div className="pm-item-head">
+                            <div className="pm-item-headline">
+                              <h4 className="pm-item-name">{item.name}</h4>
+                              <div className="pm-item-badges">
+                                {item.isChefPick && (
+                                  <span className="pm-badge chef">
+                                    <Sparkles size={11}/> Chef’s Pick
+                                  </span>
+                                )}
+                                {item.isPromo && (
+                                  <span className="pm-badge promo">
+                                    <Flame size={11}/> Promoção
+                                  </span>
+                                )}
+                                {item.isNew && (
+                                  <span className="pm-badge new">
+                                    <Sparkles size={11}/> Novo
+                                  </span>
+                                )}
+                                {Array.isArray(item.tags) && item.tags.slice(0,3).map((t:string)=>(
+                                  <span key={t} className="pm-badge tag">{t}</span>
+                                ))}
+                              </div>
+                            </div>
+                            <div className="pm-item-price">
+                              <span className="pm-item-price-currency">R$</span>
+                              <span className="pm-item-price-value">{String(item.price||'').replace(/^R\$\s*/i,'')}</span>
+                            </div>
+                          </div>
+
+                          {item.description && (
+                            <p className="pm-item-desc">
+                              {item.description}
+                            </p>
+                          )}
+
+                          <div className="pm-item-meta">
+                            {item.portion && (
+                              <span className="pm-meta">
+                                <UserRound size={12}/> {item.portion}
+                              </span>
+                            )}
+                            {item.prepTime && (
+                              <span className="pm-meta">
+                                <Timer size={12}/> {item.prepTime}
+                              </span>
+                            )}
+                            {Array.isArray(item.tags) && item.tags.length>3 && (
+                              <span className="pm-meta moretags">+ {item.tags.length-3} etiquetas</span>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })}
+
+          {!!restaurant.menuCategories?.length && (
+            <div className="menu-footer-deco">
+              <svg viewBox="0 0 400 26" preserveAspectRatio="none"><defs><linearGradient id="d2" x1="0" x2="1"><stop offset="0%" stopColor="transparent"/><stop offset="50%" stopColor="#f59e0b" stopOpacity=".45"/><stop offset="100%" stopColor="transparent"/></linearGradient></defs><path d="M0 13 H160 M240 13 H400" stroke="url(#d2)" strokeWidth="1" fill="none"/><g transform="translate(200 13)"><path d="M-14 0 L0 -9 L14 0 L0 9 Z" fill="#f59e0b" fillOpacity=".85"/></g></svg>
+              <p className="menu-footer-msg">Cardápio sujeito a alteração sem aviso prévio · Imagens meramente ilustrativas.</p>
+            </div>
+          )}
         </div>
       )}
 

@@ -53,6 +53,26 @@ export class RestaurantSettingsDto {
   @IsOptional() @ValidateIf((_, v) => v !== '') @IsUrl(urlOptions) logoUrl?: string;
   @IsOptional() @ValidateIf((_, v) => v !== '') @IsUrl(urlOptions) coverUrl?: string;
   @IsOptional() @IsObject() openingHours?: Record<string, string>;
+  @IsOptional() @IsArray()
+  menuCategories?: Array<{
+    name: string;
+    description?: string;
+    highlight?: boolean;
+    items: Array<{
+      name: string;
+      description?: string;
+      price: string;
+      imageUrl?: string;
+      portion?: string;
+      prepTime?: string;
+      tags?: string[];
+      isChefPick?: boolean;
+      isNew?: boolean;
+      isPromo?: boolean;
+      isWeeklyPick?: boolean;
+      weeklyPickNote?: string;
+    }>;
+  }>;
 }
 export class ValidateCouponDto {
   @IsString() @IsNotEmpty() @MaxLength(80) code!: string;
