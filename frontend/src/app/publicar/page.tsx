@@ -38,7 +38,12 @@ export default function PublicarPage() {
   const config = screenConfig.screen;
 
   const [patrons, setPatrons] = useState<Patron[]>([]);
-  useEffect(() => { apiRequest<{patrons: Patron[]}>('/check-ins/who-is-here/pirambeira').then(data => setPatrons(data.patrons)).catch(() => setPatrons([])); }, []);
+  useEffect(() => {
+    // Busca apenas quem o usuário segue e está no bar agora
+    apiRequest<{patrons: Patron[]}>('/check-ins/who-is-here/pirambeira?filter=friends')
+      .then(data => setPatrons(data.patrons))
+      .catch(() => setPatrons([]));
+  }, []);
 
   // Media state
   const [selectedPhoto, setSelectedPhoto] = useState<string | null>(null);
@@ -71,6 +76,16 @@ export default function PublicarPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
+  // Assign stream to <video> after it mounts (iOS fix)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !mediaStreamRef.current) return;
+    video.srcObject = mediaStreamRef.current;
+    const handleLoaded = () => { video.play().catch(() => {}); };
+    video.addEventListener('loadedmetadata', handleLoaded);
+    return () => video.removeEventListener('loadedmetadata', handleLoaded);
+  }, [isCameraActive]);
+
   // Camera helpers
   const stopCamera = () => {
     if (mediaStreamRef.current) {
@@ -85,24 +100,32 @@ export default function PublicarPage() {
     setIsCameraActive(true);
 
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Câmera não suportada');
+      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Câmera não suportada');
+
+      // Fallback chain: exact → ideal → any
+      let stream: MediaStream | null = null;
+      for (const constraint of [
+        { facingMode: { exact: facing } },
+        { facingMode: { ideal: facing } },
+        true as true,
+      ]) {
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: constraint === true ? true : {
+              ...constraint,
+              width: { ideal: 1080 },
+              height: { ideal: 1350 },
+            },
+            audio: false,
+          });
+          break;
+        } catch { /* tenta próxima */ }
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: facing,
-          width: { ideal: 1080 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      });
-
+      if (!stream) throw new Error('Câmera inacessível');
       mediaStreamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
+      // useEffect acima atribui ao <video> e chama play()
+      setIsCameraActive(true);
     } catch {
       setIsCameraActive(false);
       cameraInputRef.current?.click();
@@ -119,23 +142,29 @@ export default function PublicarPage() {
     if (!videoRef.current) return;
     const video = videoRef.current;
     const canvas = canvasRef.current || document.createElement('canvas');
-    const size = Math.min(video.videoWidth, video.videoHeight) || 720;
-    canvas.width = size;
-    canvas.height = size;
+
+    // Crop centro para 4:5
+    const srcW = video.videoWidth  || 1080;
+    const srcH = video.videoHeight || 1350;
+    const targetRatio = 4 / 5;
+    let cropW = srcW;
+    let cropH = Math.round(srcW / targetRatio);
+    if (cropH > srcH) { cropH = srcH; cropW = Math.round(srcH * targetRatio); }
+    const offsetX = Math.round((srcW - cropW) / 2);
+    const offsetY = Math.round((srcH - cropH) / 2);
+
+    canvas.width  = cropW;
+    canvas.height = cropH;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const startX = (video.videoWidth - size) / 2;
-    const startY = (video.videoHeight - size) / 2;
-
     if (cameraFacing === 'user') {
-      ctx.translate(size, 0);
+      ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
     }
 
-    ctx.drawImage(video, startX, startY, size, size, 0, 0, size, size);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.88);
-    setSelectedPhoto(dataUrl);
+    ctx.drawImage(video, offsetX, offsetY, cropW, cropH, 0, 0, cropW, cropH);
+    setSelectedPhoto(canvas.toDataURL('image/jpeg', 0.88));
     setMediaType('photo');
     stopCamera();
   };
@@ -269,104 +298,74 @@ export default function PublicarPage() {
         </div>
       </div>
 
-      {/* 2. MEDIA PREVIEW (Exact JSON: margin 0 18px, height 380px, borderRadius 20px, bg #11100F, border 1px dashed #514019) */}
-      <div className="mx-[18px] min-h-[320px] sm:h-[380px] rounded-[20px] bg-[#11100F] border border-dashed border-[#514019] p-3 flex flex-col justify-center items-center relative overflow-hidden">
-        {/* Case A: Camera is Active */}
-        {isCameraActive ? (
-          <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-black flex items-center justify-center border border-[#2C221A]">
+      {/* 2. MEDIA AREA — proporção 4:5 */}
+      <div className="mx-[18px] rounded-[20px] bg-[#0d0b09] border border-[#2a2118] overflow-hidden relative"
+           style={{ aspectRatio: '4/5' }}>
+        {/* Case A: Câmera ao vivo */}
+        {isCameraActive && (
+          <>
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className={`w-full h-full object-cover ${cameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
+              className={`absolute inset-0 w-full h-full object-cover ${cameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
             />
-            {/* Camera Overlay Controls */}
+            {/* Overlay controls */}
             <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">
-              <button
-                type="button"
-                onClick={stopCamera}
-                className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/90"
-              >
+              <button type="button" onClick={stopCamera}
+                className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
-              <button
-                type="button"
-                onClick={toggleCameraFacing}
-                className="w-8 h-8 rounded-full bg-black/70 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/90"
-              >
+              <button type="button" onClick={toggleCameraFacing}
+                className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center">
                 <RotateCcw className="w-3.5 h-3.5" />
               </button>
             </div>
-            {/* Shutter button */}
-            <div className="absolute bottom-3 inset-x-0 flex items-center justify-center z-10">
-              <button
-                type="button"
-                onClick={takeSnapshot}
-                className="w-14 h-14 rounded-full border-4 border-amber-400 flex items-center justify-center p-1 active:scale-90 transition-transform bg-black/40 backdrop-blur-sm"
-              >
-                <div className="w-10 h-10 rounded-full bg-amber-400 shadow-lg glow-amber-sm" />
+            {/* Shutter */}
+            <div className="absolute bottom-5 inset-x-0 flex items-center justify-center z-10">
+              <button type="button" onClick={takeSnapshot}
+                className="w-16 h-16 rounded-full border-[3px] border-white/80 flex items-center justify-center active:scale-90 transition-transform">
+                <div className="w-12 h-12 rounded-full bg-white" />
               </button>
             </div>
+          </>
+        )}
+
+        {/* Case B: Foto selecionada */}
+        {!isCameraActive && selectedPhoto && (
+          <>
+            <img src={selectedPhoto} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+            <button type="button" onClick={() => setSelectedPhoto(null)}
+              className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/65 backdrop-blur-md text-white flex items-center justify-center">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </>
+        )}
+
+        {/* Case C: Estado vazio */}
+        {!isCameraActive && !selectedPhoto && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-[#3a3228]">
+            <Camera className="w-10 h-10 stroke-[1.2]" />
+            <span className="text-[11px] font-semibold tracking-wide">Adicione uma foto</span>
           </div>
-        ) : selectedPhoto ? (
-          /* Case B: Photo or Video Selected / Uploaded */
-          <div className="relative aspect-[4/3] w-full rounded-2xl overflow-hidden bg-black border border-[#2C221A] group">
-            {mediaType === 'video' ? (
-              <video
-                src={selectedPhoto}
-                autoPlay
-                playsInline
-                loop
-                muted
-                controls
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img
-                src={selectedPhoto}
-                alt="Foto do Post"
-                className="w-full h-full object-cover"
-              />
-            )}
+        )}
 
-            {/* Top Controls: Media type badge & "X" remove */}
-            <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10">
-              <span className="px-3 py-1 rounded-xl bg-black/75 text-white text-xs">Foto</span>
-
-              <button
-                type="button"
-                onClick={() => setSelectedPhoto(null)}
-                className="w-7 h-7 rounded-full bg-black/70 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/90 transition-colors border border-white/10"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
+        {/* Floating action pills — câmera + galeria (sempre visíveis, exceto quando câmera ativa) */}
+        {!isCameraActive && (
+          <div className="absolute bottom-3.5 inset-x-0 flex items-center justify-center gap-2.5 z-10">
+            <button type="button" onClick={() => startCamera('environment')}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/65 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold active:scale-95 transition-all">
+              <Camera className="w-3.5 h-3.5 text-[#F5A623]" />
+              <span>Câmera</span>
+            </button>
+            <button type="button" onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/65 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold active:scale-95 transition-all">
+              <ImageIcon className="w-3.5 h-3.5 text-[#F5A623]" />
+              <span>Galeria</span>
+            </button>
           </div>
-        ) : null}
-
-        {/* Action Buttons: "Tirar foto" & "Escolher da galeria" */}
-        <div className="grid grid-cols-2 gap-2 pt-0.5">
-          <button
-            type="button"
-            onClick={() => startCamera('environment')}
-            className="py-3 px-4 rounded-2xl amber-gradient text-[#080706] font-black text-xs flex items-center justify-center gap-2 shadow-md glow-amber-sm active:scale-95 transition-all cursor-pointer"
-          >
-            <Camera className="w-4 h-4 stroke-[2.5]" />
-            <span>Tirar foto</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="py-3 px-4 rounded-2xl bg-[#18130F] hover:bg-[#241B15] active:scale-95 text-[#FBF8F5] border border-[#2C221A] font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-          >
-            <ImageIcon className="w-4 h-4 text-amber-400" />
-            <span>Galeria</span>
-          </button>
-        </div>
-
-        <p className="text-xs text-stone-400">Compartilhe fotos JPEG, PNG ou WebP de até 5 MB.</p>
+        )}
       </div>
 
       {/* 3. AUTHOR ROW & MARCAR AMIGOS */}
@@ -417,8 +416,8 @@ export default function PublicarPage() {
         </div>
       </div>
 
-      {/* 5. QUICK CHIPS: Amigos 🍻, Festa 🎉, Hoje 🔥, Música 🎵, Paquera ❤️ */}
-      <div className="mx-[18px] flex items-center gap-2 overflow-x-auto pb-1 scroll-x-hide">
+      {/* 5. QUICK TAGS */}
+      <div className="mx-[18px] flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
         {config.quickTags.map((tag) => {
           const isSelected = selectedTags.includes(tag.id);
           return (
@@ -426,68 +425,117 @@ export default function PublicarPage() {
               key={tag.id}
               type="button"
               onClick={() => toggleQuickTag(tag.id)}
-              className={`py-1.5 px-3 rounded-full text-xs font-bold whitespace-nowrap flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer ${
+              className={`py-2 px-3.5 rounded-full text-[11px] font-bold whitespace-nowrap flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer shrink-0 ${
                 isSelected
-                  ? 'bg-[#FFB800]/20 text-[#FFB800] border border-[#FFB800]/50 shadow-sm'
-                  : 'bg-[#11100F] text-[#A9A5A0] border border-[#302A20] hover:border-[#FFB800]/30'
+                  ? 'bg-[#FFB800]/15 text-[#FFB800] border border-[#FFB800]/40 shadow-[0_0_12px_rgba(255,184,0,0.15)]'
+                  : 'bg-transparent text-[#7A7267] border border-[#2a2118] hover:border-[#FFB800]/25 hover:text-[#A89F96]'
               }`}
             >
-              <span>{tag.emoji}</span>
+              <span className="text-[13px] leading-none">{tag.emoji}</span>
               <span>{tag.label}</span>
             </button>
           );
         })}
       </div>
 
-      {/* 6. PUBLISH BUTTON (Fixed bottom: 92px, left: 18, right: 18, height: 48, borderRadius: 24, bg: gradient, color: #080807, font: 800) */}
-      <div className="pt-2 pb-16 px-[18px]">
+      {/* 6. PUBLISH BUTTON */}
+      <div className="mx-[18px] pt-2 pb-6">
+        <div className="h-px bg-white/[0.05] mb-5" />
         <button
           type="button"
           onClick={handlePublish}
           disabled={isSubmitting || (!selectedPhoto && !caption.trim())}
-          className="fixed bottom-[92px] left-[18px] right-[18px] max-w-[394px] mx-auto h-[48px] rounded-[24px] text-[#080807] font-display font-extrabold text-xs tracking-wider uppercase flex items-center justify-center gap-2 shadow-[0_0_24px_rgba(255,184,0,0.35)] active:scale-95 transition-all z-40 cursor-pointer disabled:opacity-40"
+          className="w-full h-[52px] rounded-2xl text-[#080807] font-black text-[13px] tracking-widest uppercase flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
           style={{
-            background: 'linear-gradient(90deg, #FFC928 0%, #FF7900 100%)',
+            background: 'linear-gradient(110deg, #FFC928 0%, #FF8200 100%)',
+            boxShadow: '0 4px 28px rgba(255,160,0,0.3), 0 1px 0 rgba(255,255,255,0.15) inset',
           }}
         >
-          <Send className="w-4 h-4 stroke-[2.5]" />
-          <span>{isSubmitting ? 'PUBLICANDO NO FEED...' : 'PUBLICAR NO FEED'}</span>
+          {isSubmitting ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" strokeLinecap="round"/>
+              </svg>
+              <span>Publicando...</span>
+            </>
+          ) : (
+            <>
+              <Send className="w-4 h-4 stroke-[2.5]" />
+              <span>Publicar no Feed</span>
+            </>
+          )}
         </button>
       </div>
 
-      {/* 7. MODAL DE AMIGOS DO BAR */}
+      {/* 7. BOTTOM SHEET — Marcar Amigos */}
       {showFriendSelector && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm animate-fade-in">
-          <div className="rounded-3xl p-5 w-full max-w-sm border border-amber-500/25 shadow-2xl surface-floating space-y-3.5">
-            <div className="flex items-center justify-between pb-2.5 border-b border-[#2C221A]">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-amber-400" />
-                <h3 className="font-display font-black text-sm text-[#FBF8F5]">Marcar Amigos da Mesa</h3>
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            style={{ animation: 'overlayFadeIn .2s ease both' }}
+            onClick={() => setShowFriendSelector(false)}
+          />
+
+          {/* Sheet */}
+          <div
+            className="fixed bottom-0 left-0 right-0 z-[60] max-w-md mx-auto rounded-t-[28px] bg-[#0e0c0a] border-t border-white/[0.07] flex flex-col"
+            style={{ animation: 'sheetSlideUp .28s cubic-bezier(0.16,1,0.3,1) both', maxHeight: '78vh' }}
+          >
+            <style>{`
+              @keyframes overlayFadeIn { from{opacity:0} to{opacity:1} }
+              @keyframes sheetSlideUp  { from{transform:translateY(100%)} to{transform:translateY(0)} }
+            `}</style>
+
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-9 h-1 rounded-full bg-white/20" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-2 pb-4 shrink-0">
+              <div>
+                <h3 className="font-black text-[15px] text-white tracking-tight">Marcar na foto</h3>
+                <p className="text-[11px] text-[#5a5349] mt-0.5">
+                  {patrons.length === 0
+                    ? 'Nenhum amigo no bar agora'
+                    : `${patrons.length} amigo${patrons.length === 1 ? '' : 's'} no bar agora`}
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowFriendSelector(false)}
-                className="text-[#A89F96] hover:text-[#FBF8F5] p-1 rounded-lg"
+                className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.1] text-[#A89F96] hover:text-white flex items-center justify-center transition-all cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Search Input */}
-            <div className="relative">
-              <Search className="w-4 h-4 text-[#6E655D] absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={friendSearch}
-                onChange={(e) => setFriendSearch(e.target.value)}
-                placeholder="Buscar pelo @ ou nome..."
-                className="w-full bg-[#18130F] border border-[#2C221A] rounded-2xl pl-9 pr-3 py-2 text-xs text-[#FBF8F5] placeholder-[#6E655D] focus:outline-none focus:border-amber-500"
-                autoFocus
-              />
+            {/* Search */}
+            <div className="px-5 pb-3 shrink-0">
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-[#4a4540] absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <input
+                  type="text"
+                  value={friendSearch}
+                  onChange={(e) => setFriendSearch(e.target.value)}
+                  placeholder="Buscar amigo..."
+                  className="w-full bg-[#161210] border border-[#252018] rounded-2xl pl-9 pr-4 py-2.5 text-[12px] text-[#EDE9E4] placeholder-[#4a4540] focus:outline-none focus:border-[#FFB800]/30 transition-colors"
+                />
+              </div>
             </div>
 
+            <div className="h-px bg-white/[0.05] mx-5 shrink-0" />
+
             {/* List */}
-            <div className="max-h-56 overflow-y-auto space-y-1.5 scrollbar-none">
+            <div className="flex-1 overflow-y-auto py-2 px-3 space-y-0.5 scrollbar-none">
+              {patrons.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
+                  <Users className="w-8 h-8 text-[#2e2a25] stroke-[1.5]" />
+                  <p className="text-[12px] text-[#4a4540]">Nenhum amigo com check-in ativo</p>
+                  <p className="text-[10px] text-[#3a3530]">Apenas quem você segue aparece aqui</p>
+                </div>
+              )}
               {filteredPatrons.map((p) => {
                 const isTagged = taggedUsers.includes(p.username);
                 return (
@@ -495,44 +543,64 @@ export default function PublicarPage() {
                     key={p.userId}
                     type="button"
                     onClick={() => toggleTagUser(p.username)}
-                    className={`w-full p-2.5 rounded-2xl flex items-center justify-between text-left transition-colors ${isTagged
-                      ? 'bg-amber-500/15 border border-amber-500/40'
-                      : 'hover:bg-[#1C1714]'
-                      }`}
+                    className={`w-full flex items-center gap-3.5 px-3 py-3 rounded-2xl transition-all text-left cursor-pointer ${
+                      isTagged
+                        ? 'bg-[#F5A623]/[0.08] hover:bg-[#F5A623]/[0.13]'
+                        : 'hover:bg-white/[0.04]'
+                    }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
                       <img
                         src={p.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'}
                         alt={p.name}
-                        className="w-8 h-8 rounded-xl object-cover border border-[#2C221A]"
+                        className={`w-11 h-11 rounded-2xl object-cover transition-all ${
+                          isTagged ? 'ring-2 ring-[#F5A623] ring-offset-1 ring-offset-[#0e0c0a]' : ''
+                        }`}
                       />
-                      <div>
-                        <span className="text-xs font-bold text-[#FBF8F5] block">{p.name}</span>
-                        <span className="text-[10px] text-amber-400 font-mono">@{p.username}</span>
-                      </div>
                     </div>
 
-                    <div
-                      className={`w-4 h-4 rounded-full flex items-center justify-center ${isTagged ? 'bg-amber-400 text-[#080706]' : 'border border-[#6E655D]'
-                        }`}
-                    >
-                      {isTagged && <CheckCircle2 className="w-3.5 h-3.5 stroke-[3]" />}
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <span className="text-[13px] font-bold text-[#EDE9E4] block leading-snug">{p.name}</span>
+                      <span className="text-[11px] text-[#5a5349]">@{p.username}</span>
+                    </div>
+
+                    {/* Checkbox */}
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                      isTagged
+                        ? 'bg-[#F5A623]'
+                        : 'border-2 border-[#3a3530]'
+                    }`}>
+                      {isTagged && (
+                        <svg viewBox="0 0 12 10" className="w-3 h-3 fill-none stroke-[#080706] stroke-[2.5] stroke-linecap-round stroke-linejoin-round">
+                          <path d="M1 5l3 3 7-7" />
+                        </svg>
+                      )}
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Confirm Button */}
-            <button
-              type="button"
-              onClick={() => setShowFriendSelector(false)}
-              className="w-full py-2.5 rounded-2xl amber-gradient text-[#080706] font-display font-black text-xs active:scale-95 transition-transform cursor-pointer"
-            >
-              Concluir ({taggedUsers.length} selecionado{taggedUsers.length === 1 ? '' : 's'})
-            </button>
+            {/* Footer */}
+            <div className="shrink-0 px-5 py-4 border-t border-white/[0.05]">
+              <button
+                type="button"
+                onClick={() => setShowFriendSelector(false)}
+                className="w-full h-[48px] rounded-2xl font-black text-[13px] text-[#080807] flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer"
+                style={{
+                  background: 'linear-gradient(110deg, #FFC928 0%, #FF8200 100%)',
+                  boxShadow: '0 4px 20px rgba(255,160,0,0.25)',
+                }}
+              >
+                {taggedUsers.length > 0
+                  ? `Confirmar ${taggedUsers.length} marcad${taggedUsers.length === 1 ? 'o' : 'os'}`
+                  : 'Fechar'}
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

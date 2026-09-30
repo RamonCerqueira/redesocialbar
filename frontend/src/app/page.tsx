@@ -10,7 +10,7 @@ import { SponsoredCard } from '@/components/sponsored-card';
 import { PostCard } from '@/components/post-card';
 import { DeAgoraCameraModal } from '@/components/de-agora-camera-modal';
 import { DeAgoraViewerModal } from '@/components/de-agora-viewer-modal';
-import { Flame, ArrowRight, CalendarDays, Users, Ticket, Plus, ChevronRight, Loader2, MapPin, Camera, Heart } from 'lucide-react';
+import { Flame, ArrowRight, CalendarDays, Ticket, Plus, ChevronRight, Loader2, MapPin, Camera, Users } from 'lucide-react';
 import './home.css';
 
 export default function HomePage() {
@@ -54,7 +54,7 @@ export default function HomePage() {
       const next = new Set(prev);
       next.add(storyId);
       if (typeof window !== 'undefined') {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next).slice(-5000))); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next).slice(-5000))); } catch { }
       }
       return next;
     });
@@ -67,9 +67,9 @@ export default function HomePage() {
   const slides = useMemo(() => [
     {
       image: cover,
-      eyebrow: `👋 ${greeting}`,
+      eyebrow: greeting,
       title: user?.profile?.name?.split(' ')[0] || 'Pírambeiro',
-      sub: 'Sua mesa, seus encontros.\nBora viver essa noite?',
+      sub: 'Sua mesa, seus encontros.\nBora curtir essa noite?',
       accent: '#ffc04f',
       cta: null,
       position: '65% center',
@@ -113,7 +113,7 @@ export default function HomePage() {
   }
 
   const loadPatrons = useCallback(async () => {
-    const data = await apiRequest<{totalActivePatrons:number;patrons:Patron[]}>('/check-ins/who-is-here/pirambeira?filter=all');
+    const data = await apiRequest<{ totalActivePatrons: number; patrons: Patron[] }>('/check-ins/who-is-here/pirambeira?filter=all');
     setPatrons(data.patrons); setActiveCount(data.totalActivePatrons);
   }, []);
 
@@ -124,35 +124,35 @@ export default function HomePage() {
       loadAllMoments(cursor => apiRequest<Story[]>(`/stories/restaurant/pirambeira${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`)).then(setStories),
       apiRequest<Post[]>('/posts/bar/pirambeira').then(setPosts),
       apiRequest<Promotion[]>('/promotions/restaurant/pirambeira').then(setPromotions),
-      apiRequest<{coverUrl?:string}>('/restaurants/pirambeira').then(data => { if(data.coverUrl)setCover(data.coverUrl); }),
+      apiRequest<{ coverUrl?: string }>('/restaurants/pirambeira').then(data => { if (data.coverUrl) setCover(data.coverUrl); }),
     ]);
-    if(results.some(result=>result.status==='rejected')) setError('Não foi possível atualizar parte da página.');
+    if (results.some(result => result.status === 'rejected')) setError('Não foi possível atualizar parte da página.');
     setLoading(false);
   }, [loadPatrons]);
 
   useEffect(() => {
     void load();
-    const hour=Number(new Intl.DateTimeFormat('pt-BR',{hour:'numeric',hourCycle:'h23',timeZone:'America/Bahia'}).format(new Date()));
-    setGreeting(hour<12?'Bom dia,':hour<18?'Boa tarde,':'Boa noite,');
+    const hour = Number(new Intl.DateTimeFormat('pt-BR', { hour: 'numeric', hourCycle: 'h23', timeZone: 'America/Bahia' }).format(new Date()));
+    setGreeting(hour < 12 ? 'Bom dia,' : hour < 18 ? 'Boa tarde,' : 'Boa noite,');
   }, [load, user?.id]);
 
   async function toggleCheckIn() {
-    if(!user){window.location.href='/login';return;}
-    if(checkedIn&&!window.confirm('Deseja encerrar seu check-in no Pirambeira?'))return;
-    setProcessing(true);setError('');
+    if (!user) { window.location.href = '/login'; return; }
+    if (checkedIn && !window.confirm('Deseja encerrar seu check-in no Pirambeira?')) return;
+    setProcessing(true); setError('');
     try {
-      if(checkedIn){await apiRequest('/check-ins/checkout',{method:'POST'});setActiveCheckIn(null);}
-      else {const result=await apiRequest<CheckIn>('/check-ins',{method:'POST',body:JSON.stringify({restaurantSlug:'pirambeira'})});setActiveCheckIn(result);}
+      if (checkedIn) { await apiRequest('/check-ins/checkout', { method: 'POST' }); setActiveCheckIn(null); }
+      else { const result = await apiRequest<CheckIn>('/check-ins', { method: 'POST', body: JSON.stringify({ restaurantSlug: 'pirambeira' }) }); setActiveCheckIn(result); }
       await loadPatrons();
-    } catch(error) { setError(error instanceof Error?error.message:'Não foi possível atualizar seu check-in.'); }
-    finally {setProcessing(false);}
+    } catch (error) { setError(error instanceof Error ? error.message : 'Não foi possível atualizar seu check-in.'); }
+    finally { setProcessing(false); }
   }
 
-  const promotion=promotions.find(item=>item.isAvailable);
+  const promotion = promotions.find(item => item.isAvailable);
   const current = slides[slide];
 
   return <div className="piramba-home">
-    {error&&<div role="alert" className="home-error">{error}<button onClick={()=>void load()}>Tentar novamente</button></div>}
+    {error && <div role="alert" className="home-error">{error}<button onClick={() => void load()}>Tentar novamente</button></div>}
 
     {/* ===== HERO CARROSSEL ===== */}
     <section
@@ -208,10 +208,10 @@ export default function HomePage() {
         {/* Bottom row: presença + check-in (só no slide 0) */}
         <div className="home-hero-bottom">
           <Link href="/aqui" className="home-presence">
-            <i/>
+            <i />
             <span>
-              <strong>{loading ? '…' : activeCount} pessoas</strong>
-              <span> no bar agora</span>
+              <strong>{loading ? '…' : activeCount}</strong>
+              <span> no bar</span>
             </span>
           </Link>
           <button
@@ -219,7 +219,7 @@ export default function HomePage() {
             disabled={processing}
             className={'home-checkin' + (checkedIn ? ' is-present' : '')}
           >
-            {processing ? <Loader2 size={16} className="animate-spin"/> : <MapPin size={16}/>}
+            {processing ? <Loader2 size={16} className="animate-spin" /> : <MapPin size={16} />}
             <span>{checkedIn ? 'ESTOU AQUI ✓' : 'ESTOU AQUI'}</span>
           </button>
         </div>
@@ -240,34 +240,38 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section aria-labelledby="deagora-title"><div className="home-section-heading"><h2 id="deagora-title"><span className="home-dash"/>DE AGORA</h2></div>
-      <div className="home-stories"><button className="home-story" onClick={()=>user?setCamera(true):window.location.assign('/login')} aria-label="Publicar no DE AGORA"><span className="home-story-ring own"><Camera size={26}/><i><Plus size={15}/></i></span><span>Seu momento</span></button>
-        {sortedStories.map((story,index)=><button className="home-story" key={story.id} aria-label={`DE AGORA de ${story.author.name}${viewedStories.has(story.id)?', visto':''}`} onClick={()=>{setViewerStories([...sortedStories]);setStoryIndex(index);setViewer(true);}}><span className={'home-story-ring'+(viewedStories.has(story.id)?' is-viewed':'')}><img src={story.author.avatarUrl||'/LogoPirambeiraSemFundo.png'} alt=""/></span><span>{story.author.name}</span></button>)}
-        {!sortedStories.length&&<p className="home-muted">{loading?'Carregando momentos…':'A noite começa com você. Compartilhe um momento.'}</p>}
+    <section aria-labelledby="deagora-title"><div className="home-section-heading"><h2 id="deagora-title"><span className="home-dash" />DE AGORA</h2></div>
+      <div className="home-stories"><button className="home-story" onClick={() => user ? setCamera(true) : window.location.assign('/login')} aria-label="Publicar no DE AGORA"><span className="home-story-ring own"><Camera size={26} /><i><Plus size={15} /></i></span><span>Seu momento</span></button>
+        {sortedStories.map((story, index) => <button className="home-story" key={story.id} aria-label={`DE AGORA de ${story.author.name}${viewedStories.has(story.id) ? ', visto' : ''}`} onClick={() => { setViewerStories([...sortedStories]); setStoryIndex(index); setViewer(true); }}><span className={'home-story-ring' + (viewedStories.has(story.id) ? ' is-viewed' : '')}><img src={story.author.avatarUrl || '/LogoPirambeiraSemFundo.png'} alt="" /></span><span>{story.author.name}</span></button>)}
+        {!sortedStories.length && <p className="home-muted">{loading ? 'Carregando momentos…' : 'A noite começa com você. Compartilhe um momento.'}</p>}
       </div>
     </section>
 
-    <section className="home-people"><Link className="home-people-heading" href="/aqui"><Users size={28}/><div><h2><i/>No Pirambeira agora</h2><p>{loading?'Atualizando presença…':`${activeCount} pessoas estão aqui neste momento`}</p></div><ChevronRight size={20}/></Link>
-      <div className="home-patrons">{patrons.slice(0,10).map(person=><Link href={`/perfil/${person.username}`} key={person.checkInId} className="home-patron"><span><img src={person.avatarUrl||'/LogoPirambeiraSemFundo.png'} alt=""/><i/></span><span>{person.name.split(' ')[0]}</span></Link>)}
-        {!loading&&!patrons.length&&<p className="home-muted">{checkedIn?'Seu check-in está ativo. Sua visibilidade segue as preferências do seu perfil.':'Chegou? Faça check-in e encontre sua turma.'}</p>}
+    <section className="home-people">
+      <div className="home-people-heading">
+        <h2><i />No Pirambeira agora</h2>
+        <Link href="/aqui" className="home-people-see-all">Ver todos <ChevronRight size={14} /></Link>
+      </div>
+      <div className="home-patrons">{patrons.slice(0, 10).map(person => <Link href={`/perfil/${person.username}`} key={person.checkInId} className="home-patron"><span><img src={person.avatarUrl || '/LogoPirambeiraSemFundo.png'} alt="" /><i /></span><span>{person.name.split(' ')[0]}</span></Link>)}
+        {!loading && !patrons.length && <p className="home-muted">{checkedIn ? 'Seu check-in está ativo. Sua visibilidade segue as preferências do seu perfil.' : 'Chegou? Faça check-in e encontre sua turma.'}</p>}
       </div>
     </section>
 
-    {promotion&&<Link href="/promocoes" className="home-promotion"><img src={promotion.imageUrl||'/happy_hour_drinks.jpg'} alt=""/><div className="home-promotion-shade"/><div className="home-promotion-copy"><span className="home-promo-eyebrow">{promotion.badge||'BOA PEDIDA DA CASA'}</span><h2>{promotion.title}</h2><p>{promotion.discountText}</p><span className="home-promo-button">Ver promoção <ArrowRight size={16}/></span></div></Link>}
-    <SponsoredCard placement="BANNER"/>
+    {promotion && <Link href="/promocoes" className="home-promotion"><img src={promotion.imageUrl || '/happy_hour_drinks.jpg'} alt="" /><div className="home-promotion-shade" /><div className="home-promotion-copy"><span className="home-promo-eyebrow">{promotion.badge || 'BOA PEDIDA DA CASA'}</span><h2>{promotion.title}</h2><p>{promotion.discountText}</p><span className="home-promo-button">Ver promoção <ArrowRight size={16} /></span></div></Link>}
+    <SponsoredCard placement="BANNER" />
 
     <div className="home-shortcuts">
-      <Link href="/aqui"><span className="shortcut-icon people"><Users/></span><div><strong>Quem está aqui</strong><small>Encontre sua turma</small></div><ChevronRight size={15}/></Link>
-      <Link href="/eventos"><span className="shortcut-icon events"><CalendarDays/></span><div><strong>Eventos</strong><small>Não perca nada</small></div><ChevronRight size={15}/></Link>
-      <Link href="/promocoes"><span className="shortcut-icon offers"><Ticket/></span><div><strong>Promoções</strong><small>Ofertas da casa</small></div><ChevronRight size={15}/></Link>
+      <Link href="/aqui"><span className="shortcut-icon people"><Users /></span><div><strong>Quem está aqui</strong><small>Encontre sua turma</small></div><ChevronRight size={15} /></Link>
+      <Link href="/eventos"><span className="shortcut-icon events"><CalendarDays /></span><div><strong>Eventos</strong><small>Não perca nada</small></div><ChevronRight size={15} /></Link>
+      <Link href="/promocoes"><span className="shortcut-icon offers"><Ticket /></span><div><strong>Promoções</strong><small>Ofertas da casa</small></div><ChevronRight size={15} /></Link>
     </div>
-    <section><div className="home-section-heading"><h2><Flame size={20} className="text-orange-400"/>O que está rolando</h2><Link href="/feed">Ver mais <ArrowRight size={15}/></Link></div>
-      <div className="space-y-4">{posts.slice(0,visiblePosts).map(post=><PostCard key={post.id} post={post}/>)}</div>
-      {!loading&&!posts.length&&<div className="home-feed-empty"><Flame size={24}/><p>As novidades da casa aparecem aqui.</p><Link href="/feed">Explorar o feed <ArrowRight size={14}/></Link></div>}
-      {posts.length>visiblePosts&&<button className="home-load-more" onClick={()=>setVisiblePosts(value=>value+3)}>Ver mais publicações</button>}
+    <section><div className="home-section-heading"><h2><Flame size={20} className="text-orange-400" />O que está rolando</h2><Link href="/feed">Ver mais <ArrowRight size={15} /></Link></div>
+      <div className="space-y-4">{posts.slice(0, visiblePosts).map(post => <PostCard key={post.id} post={post} />)}</div>
+      {!loading && !posts.length && <div className="home-feed-empty"><Flame size={24} /><p>As novidades da casa aparecem aqui.</p><Link href="/feed">Explorar o feed <ArrowRight size={14} /></Link></div>}
+      {posts.length > visiblePosts && <button className="home-load-more" onClick={() => setVisiblePosts(value => value + 3)}>Ver mais publicações</button>}
     </section>
-    <SponsoredCard placement="SIDEBAR"/>
-    <DeAgoraCameraModal isOpen={camera} onClose={()=>setCamera(false)} onStoryCreated={story=>{setStories(previous=>[story,...previous]);setViewerStories([story,...sortedStories]);setCamera(false);setStoryIndex(0);setViewer(true);}}/>
-    {viewer&&<DeAgoraViewerModal isOpen stories={viewerStories} initialIndex={storyIndex} onViewed={markViewed} onClose={closeViewer}/>}
+    <SponsoredCard placement="SIDEBAR" />
+    <DeAgoraCameraModal isOpen={camera} onClose={() => setCamera(false)} onStoryCreated={story => { setStories(previous => [story, ...previous]); setViewerStories([story, ...sortedStories]); setCamera(false); setStoryIndex(0); setViewer(true); }} />
+    {viewer && <DeAgoraViewerModal isOpen stories={viewerStories} initialIndex={storyIndex} onViewed={markViewed} onClose={closeViewer} />}
   </div>;
 }

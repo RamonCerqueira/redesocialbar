@@ -47,10 +47,27 @@ export function DeAgoraCameraModal({
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const nativeCameraInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Iniciar câmera WebRTC ao abrir modal
+  // Atribui o stream ao elemento <video> sempre que mudar
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !stream) return;
+
+    video.srcObject = stream;
+
+    const handleLoaded = () => {
+      video.play().catch((err) => {
+        console.warn('play() falhou:', err);
+      });
+    };
+
+    video.addEventListener('loadedmetadata', handleLoaded);
+    return () => video.removeEventListener('loadedmetadata', handleLoaded);
+  }, [stream]);
+
+  // Abre/fecha câmera conforme modal
   useEffect(() => {
     if (isOpen && !capturedImage) {
-      startWebcam(facingMode);
+      void startWebcam(facingMode);
     } else {
       stopWebcam();
     }
@@ -58,6 +75,7 @@ export function DeAgoraCameraModal({
     return () => {
       stopWebcam();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, capturedImage, facingMode]);
 
   const stopWebcam = () => {
@@ -73,24 +91,43 @@ export function DeAgoraCameraModal({
     setIsStartingCamera(true);
 
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (!navigator.mediaDevices?.getUserMedia) {
         throw new Error('Navegador sem suporte a WebRTC');
       }
 
-      const newStream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: mode },
-          width: { ideal: 1080 },
-          height: { ideal: 1920 },
-        },
-        audio: false,
-      });
+      // Estratégia de fallback para facingMode:
+      // 1) exact  — câmera certa ou erro
+      // 2) ideal  — prefere a câmera certa, aceita outra
+      // 3) true   — qualquer câmera disponível
+      let newStream: MediaStream | null = null;
+      const attempts = [
+        { facingMode: { exact: mode } },
+        { facingMode: { ideal: mode } },
+        true as true,
+      ];
+
+      for (const videoConstraint of attempts) {
+        try {
+          newStream = await navigator.mediaDevices.getUserMedia({
+            video: videoConstraint === true
+              ? true
+              : {
+                  ...videoConstraint,
+                  width:  { ideal: 1080 },
+                  height: { ideal: 1920 },
+                },
+            audio: false,
+          });
+          break; // sucesso — sai do loop
+        } catch {
+          // tenta próxima estratégia
+        }
+      }
+
+      if (!newStream) throw new Error('Nenhuma câmera acessível.');
 
       setStream(newStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = newStream;
-        videoRef.current.play().catch(() => {});
-      }
+      // O useEffect acima cuida de atribuir ao <video> e chamar play()
     } catch (err: any) {
       console.warn('Câmera WebRTC não disponível, acionando fallback nativo:', err);
       setCameraError('Câmera em tempo real indisponível. Use a câmera nativa ou galeria.');

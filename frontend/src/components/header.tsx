@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -7,17 +7,14 @@ import { apiRequest } from '@/lib/api';
 import { AppNotification } from '@/lib/types';
 import {
   Bell,
-  MapPin,
-  ChevronDown,
   X,
   Check,
-  Search,
   Beer,
   Heart,
   Music,
   Sparkles,
   ArrowRight,
-  Crown,
+  ChevronRight,
 } from 'lucide-react';
 
 export function Header() {
@@ -50,217 +47,199 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 h-[72px] bg-[#080807]/90 backdrop-blur-xl border-b border-[rgba(255,184,0,0.12)] px-[18px] py-3 transition-all">
-      {/* Glow ambiente sutil superior */}
-      <div className="absolute top-0 left-10 w-48 h-10 bg-amber-500/10 blur-2xl pointer-events-none" />
+    <>
+      <style>{`
+        @keyframes drawerSlideIn {
+          from { transform: translateX(100%); }
+          to   { transform: translateX(0); }
+        }
+        @keyframes drawerSlideOut {
+          from { transform: translateX(0); }
+          to   { transform: translateX(100%); }
+        }
+        @keyframes overlayFadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+      `}</style>
 
-      <div className="max-w-2xl mx-auto h-full flex items-center justify-between relative z-10">
-        {/* Left: Brand Logo & Title (gap: 10px, logo: 46x46, title: 18px/800, subtitle: 9px/600/1.4px) */}
-        <Link href="/" className="flex items-center gap-2 min-w-0 group">
-          {/* Logo Oficial Sem Fundo */}
-          <div className="relative shrink-0">
-            <div className="absolute inset-0 bg-[#FFB800]/20 blur-md rounded-full group-hover:bg-[#FFB800]/35 transition-all" />
-            <img
-              src="/LogoPirambeiraSemFundo.png"
-              alt="Pírambeira"
-              className="relative w-[46px] h-[46px] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_2px_12px_rgba(255,184,0,0.35)]"
-            />
-          </div>
+      <header className="sticky top-0 z-40 h-[72px] bg-[#080807]/90 backdrop-blur-xl border-b border-[rgba(255,184,0,0.12)] px-[18px] py-3 transition-all">
+        {/* Glow ambiente sutil superior */}
+        <div className="absolute top-0 left-10 w-48 h-10 bg-amber-500/10 blur-2xl pointer-events-none" />
 
-          <div className="flex flex-col">
-            <span className="font-display font-black text-[21px] uppercase text-[#ff9c22] leading-tight tracking-tight">
-              Pírambeira
-            </span>
-            <span className="text-[8px] sm:text-[9px] font-semibold tracking-[.8px] text-[#AAA49C] uppercase">
-              BAR & ENCONTROS • SALVADOR
-            </span>
-          </div>
-        </Link>
+        <div className="max-w-2xl mx-auto h-full flex items-center justify-between relative z-10">
+          {/* Left: Brand Logo & Title */}
+          <Link href="/" className="flex items-center gap-2 min-w-0 group">
+            <div className="relative shrink-0">
+              <div className="absolute inset-0 bg-[#FFB800]/20 blur-md rounded-full group-hover:bg-[#FFB800]/35 transition-all" />
+              <img
+                src="/LogoPirambeiraSemFundo.png"
+                alt="Pirambeira"
+                className="relative w-[46px] h-[46px] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_2px_12px_rgba(255,184,0,0.35)]"
+              />
+            </div>
 
-        {/* Right: Actions (gap: 8px, iconButton: 40x40, border: 1px solid #332F2A, bg: #11100F) */}
-        <div className="flex items-center gap-2">
-          {/* Botão Busca (Circular 40x40) */}
-          <Link
-            href="/aqui"
-            className="w-10 h-10 rounded-full border border-[#332F2A] bg-[#11100F] text-white flex items-center justify-center transition-all active:scale-90 hover:border-[#FFB800]/40 shadow-sm"
-            aria-label="Buscar"
-            title="Buscar pessoas e eventos"
-          >
-            <Search className="w-4 h-4 stroke-[2]" />
+            <div className="flex flex-col">
+              <span className="font-display font-black text-[21px] uppercase text-[#ff9c22] leading-tight tracking-tight">
+                Pirambeira
+              </span>
+              <span className="text-[8px] sm:text-[9px] font-semibold tracking-[.8px] text-[#AAA49C] uppercase">
+                BAR &amp; ENCONTROS &bull; SALVADOR
+              </span>
+            </div>
           </Link>
 
-          {/* Bell Icon with Red Dot (Circular 40x40) */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="w-10 h-10 rounded-full border border-[#332F2A] bg-[#11100F] text-white flex items-center justify-center transition-all active:scale-90 hover:border-[#FFB800]/40 shadow-sm relative cursor-pointer"
-              aria-label="Notificações"
-            >
-              <Bell className="w-4 h-4 stroke-[2]" />
-              {unreadCount > 0 && (
-                <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#E52532] border-2 border-[#080807]" />
-              )}
-            </button>
-
-            {/* Overlay para fechar suavemente ao clicar fora */}
-            {showNotifications && (
-              <div
-                className="fixed inset-0 z-40 bg-black/55 backdrop-blur-xs"
-                onClick={() => setShowNotifications(false)}
-              />
+          {/* Right: Bell */}
+          <button
+            onClick={() => setShowNotifications(true)}
+            className="w-10 h-10 rounded-full border border-[#332F2A] bg-[#11100F] text-white flex items-center justify-center transition-all active:scale-90 hover:border-[#FFB800]/40 shadow-sm relative cursor-pointer"
+            aria-label="Notificacoes"
+          >
+            <Bell className="w-4 h-4 stroke-[2]" />
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#E52532] border-2 border-[#080807]" />
             )}
+          </button>
+        </div>
+      </header>
 
-            {/* Notifications Popover Modernizado */}
-            {showNotifications && (
-              <div className="absolute right-0 mt-3 w-[calc(100vw-32px)] max-w-sm sm:w-96 rounded-[28px] bg-[#14100C]/95 backdrop-blur-2xl border border-amber-500/30 shadow-[0_24px_60px_rgba(0,0,0,0.9),0_0_24px_rgba(245,166,35,0.1)] p-4 z-50 animate-in fade-in zoom-in-95 duration-200">
-                {/* Header do Popover */}
-                <div className="flex items-center justify-between pb-3.5 border-b border-[#2C221A]">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-[#F5A623]">
-                      <Bell className="w-4 h-4 stroke-[2.2]" />
+      {/* ===== NOTIFICATION DRAWER ===== */}
+      {showNotifications && (
+        <>
+          {/* Overlay */}
+          <div
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+            style={{ animation: 'overlayFadeIn .25s ease both' }}
+            onClick={() => setShowNotifications(false)}
+          />
+
+          {/* Drawer */}
+          <div
+            className="fixed top-0 right-0 h-full w-full max-w-[360px] z-[70] flex flex-col bg-[#0c0a08] border-l border-white/[0.07] shadow-[-24px_0_60px_rgba(0,0,0,.7)]"
+            style={{ animation: 'drawerSlideIn .3s cubic-bezier(0.16,1,0.3,1) both' }}
+          >
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-white/[0.06] shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-2xl bg-[#F5A623]/15 flex items-center justify-center">
+                  <Bell className="w-4 h-4 text-[#F5A623] stroke-[2.2]" />
+                </div>
+                <div>
+                  <h2 className="font-black text-[15px] text-white tracking-tight leading-none">Notificacoes</h2>
+                  <p className="text-[10px] text-[#6b6560] mt-0.5">
+                    {unreadCount > 0 ? `${unreadCount} nova${unreadCount === 1 ? '' : 's'}` : 'Tudo em dia'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={handleMarkAllRead}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.05] hover:bg-white/[0.09] text-[10px] text-[#A89F96] hover:text-[#F5A623] transition-all cursor-pointer"
+                  >
+                    <Check className="w-3 h-3 stroke-[2.5]" />
+                    <span>Marcar lidas</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowNotifications(false)}
+                  className="w-8 h-8 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-[#A89F96] hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer"
+                  aria-label="Fechar"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Notification List */}
+            <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1 scrollbar-none">
+              {!notifications.length && (
+                <div className="flex flex-col items-center justify-center h-full gap-3 py-20 text-center">
+                  <div className="w-14 h-14 rounded-3xl bg-white/[0.04] border border-white/[0.06] flex items-center justify-center">
+                    <Bell className="w-6 h-6 text-[#4a4540] stroke-[1.5]" />
+                  </div>
+                  <p className="text-sm text-[#6b6560]">
+                    {user ? 'Nenhuma notificacao ainda.' : 'Entre na sua conta para ver.'}
+                  </p>
+                </div>
+              )}
+
+              {notifications.map((notif) => {
+                const isPromo = notif.type === 'PROMO';
+                const isFlirt = notif.type === 'FLIRT';
+                const isEvent = notif.type === 'EVENT';
+
+                return (
+                  <Link
+                    key={notif.id}
+                    href={notif.link || '#'}
+                    onClick={() => {
+                      setNotifications((prev) =>
+                        prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
+                      );
+                      if (!notif.isRead) setUnreadCount((c) => Math.max(0, c - 1));
+                      setShowNotifications(false);
+                    }}
+                    className={`flex items-start gap-3.5 px-3.5 py-3.5 rounded-2xl transition-all group ${
+                      !notif.isRead
+                        ? 'bg-[#F5A623]/[0.07] hover:bg-[#F5A623]/[0.12]'
+                        : 'hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {/* Icon */}
+                    <div className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 mt-0.5 ${
+                      isPromo  ? 'bg-amber-500/20 text-[#F5A623]'
+                      : isFlirt ? 'bg-rose-500/20 text-rose-400'
+                      : isEvent ? 'bg-violet-500/20 text-violet-300'
+                      : 'bg-white/10 text-white'
+                    }`}>
+                      {isPromo   ? <Beer     className="w-4 h-4 stroke-[2]" />
+                      : isFlirt  ? <Heart    className="w-4 h-4 stroke-[2]" />
+                      : isEvent  ? <Music    className="w-4 h-4 stroke-[2]" />
+                      :            <Sparkles className="w-4 h-4 stroke-[2]" />}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="font-display font-black text-sm text-white tracking-tight leading-none">
-                          Notificações
-                        </h3>
-                        {unreadCount > 0 ? (
-                          <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full font-bold border border-amber-500/30">
-                            {unreadCount} nova{unreadCount === 1 ? '' : 's'}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-[#A89F96] font-semibold px-2 py-0.5 rounded-full bg-white/[0.04]">
-                            Tudo lido
-                          </span>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="font-bold text-[13px] text-[#EDE9E4] group-hover:text-[#F5A623] transition-colors leading-snug">
+                          {notif.title}
+                        </p>
+                        {!notif.isRead && (
+                          <span className="w-2 h-2 rounded-full bg-[#F5A623] shrink-0 mt-1" />
                         )}
                       </div>
-                      <span className="text-[10px] text-[#A89F96] mt-0.5 block">
-                        Novidades e avisos do bar
+                      <p className="text-[12px] text-[#7A7067] mt-1 leading-relaxed line-clamp-3">
+                        {notif.body}
+                      </p>
+                      <span className="text-[10px] text-[#4a4540] mt-1.5 block">
+                        {notif.createdAt}
                       </span>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2">
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        className="px-2.5 py-1 rounded-full bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-[10px] text-[#F5A623] font-bold flex items-center gap-1 transition-all active:scale-95 cursor-pointer"
-                      >
-                        <Check className="w-3 h-3 stroke-[2.5]" />
-                        <span>Marcar lidas</span>
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => setShowNotifications(false)}
-                      className="w-7 h-7 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-[#A89F96] hover:text-white flex items-center justify-center transition-all active:scale-90 cursor-pointer"
-                      aria-label="Fechar"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Lista de Notificações com Ícones e Design de Alta Qualidade */}
-                <div className="divide-y divide-white/[0.05] max-h-84 overflow-y-auto mt-2 space-y-1.5 scrollbar-none pr-0.5">
-                  {!notifications.length && <p className="py-8 text-center text-sm text-stone-400">{user ? 'Nenhuma notificação por enquanto.' : 'Entre na sua conta para ver as notificações.'}</p>}
-                  {notifications.map((notif) => {
-                    const isPromo = notif.type === 'PROMO';
-                    const isFlirt = notif.type === 'FLIRT';
-                    const isEvent = notif.type === 'EVENT';
-
-                    return (
-                      <Link
-                        key={notif.id}
-                        href={notif.link || '#'}
-                        onClick={() => {
-                          // Marca esta como lida
-                          setNotifications((prev) =>
-                            prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
-                          );
-                          if (!notif.isRead) {
-                            setUnreadCount((c) => Math.max(0, c - 1));
-                          }
-                          setShowNotifications(false);
-                        }}
-                        className={`p-3 rounded-2xl flex items-start gap-3 transition-all cursor-pointer group mt-1.5 block ${
-                          !notif.isRead
-                            ? 'bg-gradient-to-r from-amber-500/[0.14] via-amber-500/[0.04] to-transparent border border-amber-500/30 shadow-sm'
-                            : 'bg-white/[0.02] hover:bg-white/[0.06] border border-transparent'
-                        }`}
-                      >
-                        {/* Ícone Estilizado da Notificação */}
-                        <div
-                          className={`w-9 h-9 rounded-2xl flex items-center justify-center shrink-0 shadow-sm mt-0.5 ${
-                            isPromo
-                              ? 'bg-amber-500/20 text-[#F5A623] border border-amber-500/35'
-                              : isFlirt
-                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/35'
-                              : isEvent
-                              ? 'bg-purple-500/20 text-purple-300 border border-purple-500/35'
-                              : 'bg-white/10 text-white border border-white/20'
-                          }`}
-                        >
-                          {isPromo ? (
-                            <Beer className="w-4 h-4 stroke-[2]" />
-                          ) : isFlirt ? (
-                            <Heart className="w-4 h-4 stroke-[2] fill-rose-500/30" />
-                          ) : isEvent ? (
-                            <Music className="w-4 h-4 stroke-[2]" />
-                          ) : (
-                            <Sparkles className="w-4 h-4 stroke-[2]" />
-                          )}
-                        </div>
-
-                        {/* Textos da Notificação */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1.5">
-                            <p className="font-bold text-xs text-[#FBF8F5] group-hover:text-[#F5A623] transition-colors line-clamp-1">
-                              {notif.title}
-                            </p>
-                            {!notif.isRead && (
-                              <span className="w-2 h-2 rounded-full bg-[#F5A623] shrink-0 indicator-pulse-amber" />
-                            )}
-                          </div>
-
-                          <p className="text-[11px] text-[#A89F96] mt-0.5 leading-relaxed line-clamp-2">
-                            {notif.body}
-                          </p>
-
-                          <div className="flex items-center justify-between mt-1.5 pt-1 border-t border-white/[0.04]">
-                            <span className="text-[10px] text-[#7A7067] font-mono">
-                              {notif.createdAt}
-                            </span>
-                            <span className="text-[10px] text-[#F5A623] font-bold flex items-center gap-0.5 group-hover:translate-x-0.5 transition-transform">
-                              <span>Ver detalhe</span>
-                              <ArrowRight className="w-2.5 h-2.5" />
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                {/* Footer do Popover */}
-                <div className="pt-2.5 mt-2 border-t border-[#2C221A] flex items-center justify-between text-[11px]">
-                  <span className="text-[#8E867E]">
-                    Pirambeira Bar & Encontros
-                  </span>
-                  <Link
-                    href="/promocoes"
-                    onClick={() => setShowNotifications(false)}
-                    className="text-[#F5A623] font-bold hover:underline flex items-center gap-1"
-                  >
-                    <span>Ver promoções</span>
-                    <ArrowRight className="w-3 h-3" />
+                    <ChevronRight className="w-4 h-4 text-[#3a3530] group-hover:text-[#F5A623] shrink-0 mt-1 transition-colors" />
                   </Link>
-                </div>
+                );
+              })}
+            </div>
+
+            {/* Drawer Footer */}
+            {notifications.length > 0 && (
+              <div className="shrink-0 border-t border-white/[0.06] px-5 py-4">
+                <Link
+                  href="/promocoes"
+                  onClick={() => setShowNotifications(false)}
+                  className="flex items-center justify-between w-full py-3 px-4 rounded-2xl bg-[#F5A623]/10 hover:bg-[#F5A623]/18 border border-[#F5A623]/20 transition-all group"
+                >
+                  <span className="text-[12px] text-[#F5A623] font-bold">Ver todas as promocoes</span>
+                  <ArrowRight className="w-4 h-4 text-[#F5A623] group-hover:translate-x-1 transition-transform" />
+                </Link>
               </div>
             )}
           </div>
-        </div>
-      </div>
-    </header>
+        </>
+      )}
+    </>
   );
 }
