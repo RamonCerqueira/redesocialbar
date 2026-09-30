@@ -103,7 +103,7 @@ export function DeAgoraCameraModal({
       const attempts = [
         { facingMode: { exact: mode } },
         { facingMode: { ideal: mode } },
-        true as true,
+        true as const,
       ];
 
       for (const videoConstraint of attempts) {
