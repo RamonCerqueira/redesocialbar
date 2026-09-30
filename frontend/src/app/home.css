@@ -63,7 +63,7 @@
 .home-stories>.home-muted{max-width:210px}
 
 /* ===== PEOPLE ===== */
-.home-people{border:1px solid #6a532655;border-radius:22px;padding:18px;background:linear-gradient(135deg,#15140e88,#070806)}
+.home-people{border:1px solid #6a532655;;padding:18px;background:linear-gradient(135deg,#15140e88,#070806)}
 .home-people-heading{display:flex;align-items:center;gap:10px;color:#38dd90}
 .home-people-heading>div{flex:1}
 .home-people-heading h2{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:850;text-transform:uppercase}
