@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
@@ -10,7 +10,7 @@ import { SponsoredCard } from '@/components/sponsored-card';
 import { PostCard } from '@/components/post-card';
 import { DeAgoraCameraModal } from '@/components/de-agora-camera-modal';
 import { DeAgoraViewerModal } from '@/components/de-agora-viewer-modal';
-import { Flame, ArrowRight, CalendarDays, Users, Ticket, Plus, ChevronRight, Loader2, MapPin, Camera } from 'lucide-react';
+import { Flame, ArrowRight, CalendarDays, Users, Ticket, Plus, ChevronRight, Loader2, MapPin, Camera, Heart } from 'lucide-react';
 import './home.css';
 
 export default function HomePage() {
@@ -33,6 +33,13 @@ export default function HomePage() {
   const [visiblePosts, setVisiblePosts] = useState(3);
   const STORAGE_KEY = `tonopiramba:de-agora:pirambeira:${user?.id || 'guest'}`;
   const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
+
+  // Carrossel
+  const [slide, setSlide] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchStartX = useRef<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -54,13 +61,62 @@ export default function HomePage() {
   }, [STORAGE_KEY]);
 
   const sortedStories = useMemo(() => unseenFirst(stories, viewedStories), [stories, viewedStories]);
-
   const checkedIn = activeCheckIn?.restaurant?.slug === 'pirambeira';
+
+  // Slides do carrossel — 3 slides temáticos
+  const slides = useMemo(() => [
+    {
+      image: cover,
+      eyebrow: `👋 ${greeting}`,
+      title: user?.profile?.name?.split(' ')[0] || 'Pírambeiro',
+      sub: 'Sua mesa, seus encontros.\nBora viver essa noite?',
+      accent: '#ffc04f',
+      cta: null,
+      position: '65% center',
+    },
+    {
+      image: '/pirambeira_night_crowd.jpg',
+      eyebrow: '🍺 Hoje no Pirambeira',
+      title: `${activeCount > 0 ? activeCount : 'Várias'} pessoas`,
+      sub: 'estão por aqui agora.\nVenha fazer parte!',
+      accent: '#41e995',
+      cta: { label: 'Quem está aqui →', href: '/aqui' },
+      position: 'center center',
+    },
+    {
+      image: '/happy_hour_banner_full.png',
+      eyebrow: '❤️ Mural da Paquera',
+      title: 'Deixe um recadinho',
+      sub: 'Encontre alguém especial\nnessa noite.',
+      accent: '#ff6faa',
+      cta: { label: 'Ir para Paquera →', href: '/paquera' },
+      position: 'center 40%',
+    },
+  ], [cover, greeting, user, activeCount]);
+
+  // Auto-play
+  useEffect(() => {
+    if (paused) return;
+    intervalRef.current = setInterval(() => {
+      setSlide(s => (s + 1) % slides.length);
+    }, 5000);
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [paused, slides.length]);
+
+  function goTo(idx: number) {
+    setSlide(idx);
+    // Reset timer
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (!paused) {
+      intervalRef.current = setInterval(() => setSlide(s => (s + 1) % slides.length), 5000);
+    }
+  }
 
   const loadPatrons = useCallback(async () => {
     const data = await apiRequest<{totalActivePatrons:number;patrons:Patron[]}>('/check-ins/who-is-here/pirambeira?filter=all');
     setPatrons(data.patrons); setActiveCount(data.totalActivePatrons);
   }, []);
+
   const load = useCallback(async () => {
     setLoading(true); setError('');
     const results = await Promise.allSettled([
@@ -73,6 +129,7 @@ export default function HomePage() {
     if(results.some(result=>result.status==='rejected')) setError('Não foi possível atualizar parte da página.');
     setLoading(false);
   }, [loadPatrons]);
+
   useEffect(() => {
     void load();
     const hour=Number(new Intl.DateTimeFormat('pt-BR',{hour:'numeric',hourCycle:'h23',timeZone:'America/Bahia'}).format(new Date()));
@@ -90,15 +147,96 @@ export default function HomePage() {
     } catch(error) { setError(error instanceof Error?error.message:'Não foi possível atualizar seu check-in.'); }
     finally {setProcessing(false);}
   }
+
   const promotion=promotions.find(item=>item.isAvailable);
+  const current = slides[slide];
+
   return <div className="piramba-home">
     {error&&<div role="alert" className="home-error">{error}<button onClick={()=>void load()}>Tentar novamente</button></div>}
-    <section className="home-hero" aria-labelledby="welcome-title">
-      <img src={cover} alt="Um brinde no Pirambeira" className="home-hero-photo"/>
-      <div className="home-hero-shade"/>
-      <div className="home-welcome"><p>👋 {greeting}</p><h1 id="welcome-title">{user?.profile?.name?.split(' ')[0]||'Pírambeiro'}!</h1><span>Sua mesa, seus encontros.<br/>Bora viver essa noite?</span></div>
-      <div className="home-hero-bottom"><Link href="/aqui" className="home-presence"><i/><span><strong>{loading?'…':activeCount} pessoas</strong><span> no bar agora</span></span></Link>
-        <button onClick={toggleCheckIn} disabled={processing} className={'home-checkin'+(checkedIn?' is-present':'')}>{processing?<Loader2 size={16} className="animate-spin"/>:<MapPin size={16}/>}<span>{checkedIn?'ESTOU AQUI ✓':'ESTOU AQUI'}</span></button>
+
+    {/* ===== HERO CARROSSEL ===== */}
+    <section
+      className="home-hero"
+      aria-labelledby="welcome-title"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={e => { touchStartX.current = e.touches[0].clientX; }}
+      onTouchEnd={e => {
+        if (touchStartX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchStartX.current;
+        if (Math.abs(dx) > 50) goTo((slide + (dx < 0 ? 1 : -1) + slides.length) % slides.length);
+        touchStartX.current = null;
+      }}
+    >
+      {/* Slides — crossfade via opacity */}
+      {slides.map((s, i) => (
+        <div
+          key={i}
+          className={`home-slide ${i === slide ? 'home-slide--active' : ''}`}
+          aria-hidden={i !== slide}
+        >
+          <img
+            src={s.image}
+            alt=""
+            className={`home-slide-img ${i === slide ? 'home-slide-img--zoom' : ''}`}
+            style={{ objectPosition: s.position }}
+          />
+          <div className="home-hero-shade" />
+          {/* Glow colorido por slide */}
+          <div
+            className="home-slide-glow"
+            style={{ background: `radial-gradient(ellipse 70% 60% at 15% 80%, ${s.accent}22 0%, transparent 70%)` }}
+          />
+        </div>
+      ))}
+
+      {/* Conteúdo — sempre por cima */}
+      <div className="home-hero-content">
+        <div className="home-welcome">
+          <p style={{ color: current.accent }}>{current.eyebrow}</p>
+          <h1 id="welcome-title" style={{ color: current.accent === '#ffc04f' ? '#ffc04f' : '#ffffff' }}>
+            {current.title}!
+          </h1>
+          <span style={{ whiteSpace: 'pre-line' }}>{current.sub}</span>
+          {current.cta && (
+            <Link href={current.cta.href} className="home-hero-cta" style={{ borderColor: `${current.accent}55`, color: current.accent }}>
+              {current.cta.label}
+            </Link>
+          )}
+        </div>
+
+        {/* Bottom row: presença + check-in (só no slide 0) */}
+        <div className="home-hero-bottom">
+          <Link href="/aqui" className="home-presence">
+            <i/>
+            <span>
+              <strong>{loading ? '…' : activeCount} pessoas</strong>
+              <span> no bar agora</span>
+            </span>
+          </Link>
+          <button
+            onClick={toggleCheckIn}
+            disabled={processing}
+            className={'home-checkin' + (checkedIn ? ' is-present' : '')}
+          >
+            {processing ? <Loader2 size={16} className="animate-spin"/> : <MapPin size={16}/>}
+            <span>{checkedIn ? 'ESTOU AQUI ✓' : 'ESTOU AQUI'}</span>
+          </button>
+        </div>
+
+        {/* Indicadores de slide */}
+        <div className="home-carousel-dots" role="tablist" aria-label="Slides do hero">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              role="tab"
+              aria-selected={i === slide}
+              aria-label={`Slide ${i + 1}`}
+              className={`home-carousel-dot ${i === slide ? 'home-carousel-dot--active' : ''}`}
+              onClick={() => goTo(i)}
+            />
+          ))}
+        </div>
       </div>
     </section>
 
