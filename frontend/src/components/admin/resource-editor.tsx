@@ -1,6 +1,8 @@
 'use client';
 import { useEffect, useMemo, useState, useRef } from 'react';
 import { apiRequest, uploadImage } from '@/lib/api';
+import { photoFromFile } from '@/lib/camera-photo';
+import { PhotoEditor } from '../photo-editor';
 import { Pencil, Plus, Trash2, Check, Megaphone, FileText, Ticket, Calendar, Search, X } from 'lucide-react';
 import { AdminModal, AdminModalGrid, AdminModalFooter } from './admin-modal';
 
@@ -61,34 +63,24 @@ export function ImageField({
   sizeText?: string; typeLabel?: string;
 }) {
   const [error, setError] = useState('');
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [dims, setDims] = useState<{w:number;h:number}|null>(null);
   async function upload(file?: File) {
     if (!file) return;
-    setError(''); setDims(null);
-    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5*1024*1024) {
-      setError('Envie JPEG, PNG ou WebP de até 5 MB.');
-      return;
-    }
+    setError('');
     setBusy(true); onBusy(true);
-    try {
-      const data = await new Promise<string>((resolve,reject) => {
-        const reader=new FileReader();
-        reader.onload=()=>resolve(String(reader.result));
-        reader.onerror=()=>reject(new Error('Não foi possível ler a imagem.'));
-        reader.readAsDataURL(file);
-      });
-      const d = await new Promise<{w:number;h:number}>((resolve) => {
-        const img = new Image();
-        img.onload = () => resolve({ w: img.naturalWidth, h: img.naturalHeight });
-        img.onerror = () => resolve({ w: 0, h: 0 });
-        img.src = data;
-      });
-      setDims(d);
-      onChange(await uploadImage(data));
-    } catch(err) { setError(message(err)); }
+    try { setPendingPhoto(await photoFromFile(file)); }
+    catch (cause) { setError(message(cause)); setBusy(false); onBusy(false); }
+  }
+  async function confirmPhoto(data: string) {
+    setPendingPhoto(null);
+    try { onChange(await uploadImage(data)); }
+    catch (cause) { setError(message(cause)); }
     finally { setBusy(false); onBusy(false); }
   }
+  const size = sizeText?.match(/(\d+)\s*[x×]\s*(\d+)/i);
+  const aspect = size ? Number(size[1]) / Number(size[2]) : /logo/i.test(label) ? 1 : /capa/i.test(label) ? 16 / 9 : undefined;
   useEffect(() => {
     if (!value) { setDims(null); return; }
     let cancelled = false;
@@ -100,12 +92,13 @@ export function ImageField({
   }, [value]);
   return (
     <div className="admin-field">
+      {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={aspect} allowOriginal onCancel={() => { setPendingPhoto(null); setBusy(false); onBusy(false); }} onConfirm={data => { void confirmPhoto(data); }} />}
       <label>
         {label}
-        <input aria-label={label} type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}} />
+        <input aria-label={label} type="file" accept="image/*" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}} />
       </label>
       <small className="admin-muted">
-        {busy ? 'Carregando imagem…' : 'JPEG, PNG ou WebP · até 5 MB'}
+        {busy ? 'Carregando imagem…' : 'Ajuste a foto antes de enviar · até 20 MB'}
         {sizeText && <> · <span className="admin-image-size">Tamanho recomendado para {typeLabel || 'este formato'}: <strong>{sizeText}</strong></span></>}
       </small>
       {value && (

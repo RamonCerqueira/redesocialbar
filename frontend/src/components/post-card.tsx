@@ -347,11 +347,11 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
         </div>
       ) : post.media && post.media.length > 0 ? (
         /* FOTO INDIVIDUAL */
-        <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] overflow-hidden bg-black">
+        <div className="post-feed-media">
           <img
             src={post.media[0]}
             alt="Momento no Piramba"
-            className="w-full h-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+            className="w-full h-full object-contain"
             loading="lazy"
           />
         </div>
@@ -383,7 +383,7 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
             title="Comentários"
           >
             <MessageCircle className="w-5 h-5 text-white/80 group-hover:text-white" />
-            <span className="text-xs font-bold text-white/90">{comments.length || 18}</span>
+            <span className="text-xs font-bold text-white/90">{comments.length}</span>
           </button>
 
           {/* Compartilhar */}

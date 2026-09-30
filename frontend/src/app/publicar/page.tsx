@@ -8,6 +8,9 @@ import { Patron } from '@/lib/types';
 import { submitPost } from '@/lib/publish/publish.actions';
 import { PostModel } from '@/lib/publish/post.schema';
 import screenConfig from '@/lib/publish/publish-screen.json';
+import { CameraCapture } from '@/components/camera-capture';
+import { PhotoEditor } from '@/components/photo-editor';
+import { photoFromFile } from '@/lib/camera-photo';
 import {
   ArrowLeft,
   Camera,
@@ -52,7 +55,9 @@ export default function PublicarPage() {
 
   // Live Camera states
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [cameraFacing, setCameraFacing] = useState<'environment' | 'user'>('environment');
+  const [photoError, setPhotoError] = useState('');
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
+  const [photoSource, setPhotoSource] = useState<string | null>(null);
 
   // Form states
   const [caption, setCaption] = useState('');
@@ -69,127 +74,20 @@ export default function PublicarPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // References
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
-  // Assign stream to <video> after it mounts (iOS fix)
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !mediaStreamRef.current) return;
-    video.srcObject = mediaStreamRef.current;
-    const handleLoaded = () => { video.play().catch(() => {}); };
-    video.addEventListener('loadedmetadata', handleLoaded);
-    return () => video.removeEventListener('loadedmetadata', handleLoaded);
-  }, [isCameraActive]);
-
-  // Camera helpers
-  const stopCamera = () => {
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      mediaStreamRef.current = null;
-    }
-    setIsCameraActive(false);
-  };
-
-  const startCamera = async (facing: 'environment' | 'user' = cameraFacing) => {
-    stopCamera();
-    setIsCameraActive(true);
-
-    try {
-      if (!navigator.mediaDevices?.getUserMedia) throw new Error('Câmera não suportada');
-
-      // Fallback chain: exact → ideal → any
-      let stream: MediaStream | null = null;
-      for (const constraint of [
-        { facingMode: { exact: facing } },
-        { facingMode: { ideal: facing } },
-        true as const,
-      ]) {
-        try {
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: constraint === true ? true : {
-              ...constraint,
-              width: { ideal: 1080 },
-              height: { ideal: 1350 },
-            },
-            audio: false,
-          });
-          break;
-        } catch { /* tenta próxima */ }
-      }
-
-      if (!stream) throw new Error('Câmera inacessível');
-      mediaStreamRef.current = stream;
-      // useEffect acima atribui ao <video> e chama play()
-      setIsCameraActive(true);
-    } catch {
-      setIsCameraActive(false);
-      cameraInputRef.current?.click();
-    }
-  };
-
-  const toggleCameraFacing = () => {
-    const nextFacing = cameraFacing === 'environment' ? 'user' : 'environment';
-    setCameraFacing(nextFacing);
-    startCamera(nextFacing);
-  };
-
-  const takeSnapshot = () => {
-    if (!videoRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current || document.createElement('canvas');
-
-    // Crop centro para 4:5
-    const srcW = video.videoWidth  || 1080;
-    const srcH = video.videoHeight || 1350;
-    const targetRatio = 4 / 5;
-    let cropW = srcW;
-    let cropH = Math.round(srcW / targetRatio);
-    if (cropH > srcH) { cropH = srcH; cropW = Math.round(srcH * targetRatio); }
-    const offsetX = Math.round((srcW - cropW) / 2);
-    const offsetY = Math.round((srcH - cropH) / 2);
-
-    canvas.width  = cropW;
-    canvas.height = cropH;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    if (cameraFacing === 'user') {
-      ctx.translate(canvas.width, 0);
-      ctx.scale(-1, 1);
-    }
-
-    ctx.drawImage(video, offsetX, offsetY, cropW, cropH, 0, 0, cropW, cropH);
-    setSelectedPhoto(canvas.toDataURL('image/jpeg', 0.88));
-    setMediaType('photo');
-    stopCamera();
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
     if (!file) return;
-
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) { alert('Envie uma imagem JPEG, PNG ou WebP de até 5 MB.'); return; }
-    setMediaType('photo');
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      setSelectedPhoto(event.target?.result as string);
-      stopCamera();
-    };
-    reader.readAsDataURL(file);
-    e.target.value = '';
+    setPhotoError('');
+    try {
+      setPendingPhoto(await photoFromFile(file));
+      setMediaType('photo');
+    } catch (cause) {
+      setPhotoError(cause instanceof Error ? cause.message : 'Não foi possível abrir a foto.');
+    }
   };
-
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, []);
 
   const toggleQuickTag = (tagId: string) => {
     setSelectedTags((prev) =>
@@ -250,19 +148,13 @@ export default function PublicarPage() {
       <input
         type="file"
         ref={fileInputRef}
-        accept={'image/jpeg,image/png,image/webp'}
-        onChange={handleFileChange}
-        className="hidden"
-      />
-      <input
-        type="file"
-        ref={cameraInputRef}
         accept="image/*"
-        capture="environment"
-        onChange={handleFileChange}
+        onChange={event => { void handleFileChange(event); }}
         className="hidden"
       />
-      <canvas ref={canvasRef} className="hidden" />
+      {isCameraActive && <CameraCapture title="Foto do seu momento" onClose={() => setIsCameraActive(false)} onCapture={photo => { setPendingPhoto(photo); setPhotoError(''); setIsCameraActive(false); }} />}
+      {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={4 / 5} allowOriginal onCancel={() => setPendingPhoto(null)} onConfirm={photo => { setSelectedPhoto(photo); setPhotoSource(pendingPhoto); setMediaType('photo'); setPendingPhoto(null); }} />}
+      {photoError && <p role="alert" className="px-5 text-sm text-rose-300">{photoError}</p>}
 
       {/* 1. HEADER (height: 60px, padding: 0 18px, display: flex, items-center, justify-between) */}
       <div className="h-[60px] px-[18px] flex items-center justify-between">
@@ -301,41 +193,11 @@ export default function PublicarPage() {
       {/* 2. MEDIA AREA — proporção 4:5 */}
       <div className="mx-[18px] rounded-[20px] bg-[#0d0b09] border border-[#2a2118] overflow-hidden relative"
            style={{ aspectRatio: '4/5' }}>
-        {/* Case A: Câmera ao vivo */}
-        {isCameraActive && (
-          <>
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className={`absolute inset-0 w-full h-full object-cover ${cameraFacing === 'user' ? 'scale-x-[-1]' : ''}`}
-            />
-            {/* Overlay controls */}
-            <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">
-              <button type="button" onClick={stopCamera}
-                className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center">
-                <X className="w-4 h-4" />
-              </button>
-              <button type="button" onClick={toggleCameraFacing}
-                className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center">
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            {/* Shutter */}
-            <div className="absolute bottom-5 inset-x-0 flex items-center justify-center z-10">
-              <button type="button" onClick={takeSnapshot}
-                className="w-16 h-16 rounded-full border-[3px] border-white/80 flex items-center justify-center active:scale-90 transition-transform">
-                <div className="w-12 h-12 rounded-full bg-white" />
-              </button>
-            </div>
-          </>
-        )}
-
         {/* Case B: Foto selecionada */}
-        {!isCameraActive && selectedPhoto && (
+        {selectedPhoto && (
           <>
-            <img src={selectedPhoto} alt="Preview" className="absolute inset-0 w-full h-full object-cover" />
+            <button type="button" onClick={() => setPendingPhoto(photoSource || selectedPhoto)} className="absolute top-3 left-3 z-10 rounded-full bg-black/70 px-3 py-2 text-xs text-amber-300">Ajustar foto</button>
+            <img src={selectedPhoto} alt="Preview" className="absolute inset-0 w-full h-full object-contain" />
             <button type="button" onClick={() => setSelectedPhoto(null)}
               className="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/65 backdrop-blur-md text-white flex items-center justify-center">
               <X className="w-3.5 h-3.5" />
@@ -344,7 +206,7 @@ export default function PublicarPage() {
         )}
 
         {/* Case C: Estado vazio */}
-        {!isCameraActive && !selectedPhoto && (
+        {!selectedPhoto && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-[#3a3228]">
             <Camera className="w-10 h-10 stroke-[1.2]" />
             <span className="text-[11px] font-semibold tracking-wide">Adicione uma foto</span>
@@ -354,7 +216,7 @@ export default function PublicarPage() {
         {/* Floating action pills — câmera + galeria (sempre visíveis, exceto quando câmera ativa) */}
         {!isCameraActive && (
           <div className="absolute bottom-3.5 inset-x-0 flex items-center justify-center gap-2.5 z-10">
-            <button type="button" onClick={() => startCamera('environment')}
+            <button type="button" onClick={() => setIsCameraActive(true)}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/65 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold active:scale-95 transition-all">
               <Camera className="w-3.5 h-3.5 text-[#F5A623]" />
               <span>Câmera</span>

@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Plus, Trash2, Camera as CameraIcon, ChefHat, Sparkles, Tag, Clock, Users } from 'lucide-react';
 import { AdminModal, AdminModalGrid, AdminModalFooter } from './admin-modal';
 import { uploadImage } from '@/lib/api';
+import { photoFromFile } from '@/lib/camera-photo';
+import { PhotoEditor } from '../photo-editor';
 
 export type MenuItemInput = {
   name: string;
@@ -74,6 +76,7 @@ export function MenuItemModal({
   const [form, setForm] = useState<MenuItemInput>(EMPTY_ITEM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [justSaved, setJustSaved] = useState(false);
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const uploadVersion = useRef(0);
   const savedFlash = useRef<number | null>(null);
@@ -117,16 +120,25 @@ export function MenuItemModal({
 
   async function handleImage(file: File) {
     const version = ++uploadVersion.current;
-    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-      setErrors(previous=>({...previous,imageUrl:'Envie JPEG, PNG ou WebP de até 5 MB.'})); return;
-    }
     setUploading(true);
     try {
-      const data = await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Não foi possível ler a foto.'));reader.readAsDataURL(file);});
+      const data = await photoFromFile(file);
+      if (version === uploadVersion.current) setPendingPhoto(data);
+    } catch (error) {
+      if (version === uploadVersion.current) {
+        setErrors(previous => ({ ...previous, imageUrl: error instanceof Error ? error.message : 'Não foi possível abrir a foto.' }));
+        setUploading(false);
+      }
+    }
+  }
+  async function confirmPhoto(data: string) {
+    const version = uploadVersion.current;
+    setPendingPhoto(null);
+    try {
       const url = await uploadImage(data);
-      if(version===uploadVersion.current)update('imageUrl',url);
-    } catch(error) { if(version===uploadVersion.current)setErrors(previous=>({...previous,imageUrl:error instanceof Error?error.message:'Não foi possível enviar a foto.'})); }
-    finally { if(version===uploadVersion.current)setUploading(false); }
+      if (version === uploadVersion.current) update('imageUrl', url);
+    } catch (error) { if (version === uploadVersion.current) setErrors(previous => ({ ...previous, imageUrl: error instanceof Error ? error.message : 'Não foi possível enviar a foto.' })); }
+    finally { if (version === uploadVersion.current) setUploading(false); }
   }
 
   function validate(): boolean {
@@ -273,7 +285,7 @@ export function MenuItemModal({
           <input
             id="mi-image"
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             disabled={uploading}
             hidden
             onChange={e => {
@@ -455,6 +467,7 @@ export function MenuItemModal({
         />
       }
     >
+      {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={1} onCancel={() => { ++uploadVersion.current; setPendingPhoto(null); setUploading(false); }} onConfirm={data => { void confirmPhoto(data); }} />}
       <AdminModalGrid left={LeftCol} right={RightCol} />
     </AdminModal>
   );

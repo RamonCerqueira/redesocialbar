@@ -222,6 +222,38 @@ h1, h2, h3, h4, h5, h6, .font-display {
   animation: pageFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
+/* Camera uses a native modal in the browser's top layer, outside page animations. */
+.camera-dialog { position: fixed; inset: 0; margin: 0; padding: 0; border: 0; width: 100%; max-width: none; height: 100dvh; max-height: none; background: #080706; color: white; overflow: hidden; }
+.camera-dialog::backdrop { background: #000; }
+.camera-screen { position: relative; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; isolation: isolate; }
+.camera-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; }
+.camera-video-mirrored { transform: scaleX(-1); }
+.camera-preview-image { object-fit: contain; }
+.camera-shade { position: absolute; inset: 0; background: linear-gradient(#0009, transparent 25%, transparent 60%, #000c); pointer-events: none; z-index: -1; }
+.camera-topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: max(16px, env(safe-area-inset-top)) 16px 12px; }
+.camera-title { color: #ffc547; font-size: 12px; font-weight: 800; text-align: center; }
+.camera-icon-button { width: 44px; height: 44px; border: 1px solid #ffffff30; border-radius: 50%; background: #0008; display: grid; place-items: center; flex-shrink: 0; }
+.camera-controls { display: flex; align-items: center; justify-content: space-evenly; gap: 12px; padding: 24px 16px max(24px, env(safe-area-inset-bottom)); }
+.camera-secondary { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-width: 72px; min-height: 56px; font-size: 10px; font-weight: 600; }
+.camera-shutter { width: 78px; height: 78px; border-radius: 50%; border: 4px solid #ffc547; padding: 5px; flex-shrink: 0; background: #0004; }
+.camera-shutter span { display: block; width: 100%; height: 100%; border-radius: 50%; background: white; }
+.camera-shutter:disabled { opacity: .4; }
+.camera-status { position: absolute; inset: 90px 24px 136px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; text-align: center; font-size: 14px; }
+.camera-retry { min-height: 44px; padding: 10px 20px; border-radius: 24px; background: #ffc547; color: #080706; font-weight: 700; }
+.camera-preview-controls { width: 100%; max-width: 520px; margin: 0 auto; padding: 20px 20px max(24px, env(safe-area-inset-bottom)); overflow-y: auto; max-height: 65%; }
+.post-feed-media { position: relative; width: 100%; aspect-ratio: 4 / 5; max-height: min(460px, 65dvh); overflow: hidden; background: #000; }
+.post-feed-media > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center; }
+.photo-editor { height: 100%; display: flex; flex-direction: column; overflow-y: auto; }
+.photo-editor-workspace { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px; }
+.photo-editor-frame { position: relative; overflow: hidden; background: #080706; border: 1px solid #ffffff40; touch-action: none; cursor: grab; flex-shrink: 0; }
+.photo-editor-frame:active { cursor: grabbing; }
+.photo-editor-image { position: absolute; height: auto; max-width: none; transform: translate(-50%, -50%); user-select: none; pointer-events: none; }
+.photo-editor-circle { position: absolute; inset: 0; border: 2px solid #ffc547; border-radius: 50%; box-shadow: 0 0 0 200px #0009; pointer-events: none; }
+.photo-editor-grid { position: absolute; inset: 0; background: linear-gradient(90deg, transparent 33.1%, #ffffff30 33.3%, transparent 33.5%, transparent 66.4%, #ffffff30 66.6%, transparent 66.8%), linear-gradient(transparent 33.1%, #ffffff30 33.3%, transparent 33.5%, transparent 66.4%, #ffffff30 66.6%, transparent 66.8%); pointer-events: none; }
+.photo-editor-controls { padding: 16px 20px max(24px, env(safe-area-inset-bottom)); width: 100%; max-width: 520px; margin: 0 auto; }
+.photo-editor-option { padding: 10px 12px; min-height: 44px; border-radius: 24px; border: 1px solid #ffffff30; font-size: 11px; color: #ffc547; }
+@media (min-width: 640px) { .post-feed-media { max-height: 520px; } }
+
 /* SKELETON SHIMMER MODERNO */
 @keyframes shimmerWave {
   0% { background-position: -200% 0; }

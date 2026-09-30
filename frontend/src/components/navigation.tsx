@@ -44,10 +44,10 @@ export function Navigation() {
     <>
       <nav
         aria-label="Navegação principal"
-        className="lg:hidden fixed bottom-2 inset-x-3 z-50 rounded-3xl border border-[#FFB800]/20 bg-[#0E0C09]/85 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.8),0_0_20px_rgba(255,184,0,0.08)]"
-        style={{ paddingBottom: 'max(4px, env(safe-area-inset-bottom))' }}
+        className="lg:hidden fixed inset-x-3 z-50 rounded-3xl border border-[#FFB800]/20 bg-[#0E0C09]/85 backdrop-blur-2xl shadow-[0_12px_36px_rgba(0,0,0,0.8),0_0_20px_rgba(255,184,0,0.08)]"
+        style={{ bottom: 'max(10px, env(safe-area-inset-bottom))', paddingBottom: '4px' }}
       >
-        <div className="max-w-md mx-auto flex items-center justify-around h-[62px] px-2 relative">
+        <div className="max-w-md mx-auto flex items-center justify-around h-[58px] px-2 relative">
           <Link href="/" className={navClass(pathname === '/')} aria-current={pathname === '/' ? 'page' : undefined}>
             <Home size={20} className={pathname === '/' ? 'stroke-[2.5]' : 'stroke-2'} />
             <span>Início</span>
@@ -70,7 +70,7 @@ export function Navigation() {
                 window.dispatchEvent(new CustomEvent('open-recadinho-modal'));
               }
             }}
-            className="flex items-center justify-center w-13 h-13 -mt-6 rounded-full border-2 border-[#120F0B] ring-2 ring-[#FFB800] bg-gradient-to-tr from-[#FFB800] to-[#FFA800] text-[#120F0B] shadow-[0_4px_22px_rgba(255,184,0,0.45)] active:scale-90 transition-transform"
+            className="flex items-center justify-center w-13 h-13 -mt-8 rounded-full border-2 border-[#120F0B] ring-2 ring-[#FFB800] bg-gradient-to-tr from-[#FFB800] to-[#FFA800] text-[#120F0B] shadow-[0_4px_22px_rgba(255,184,0,0.45)] active:scale-90 transition-transform"
           >
             <Plus size={26} strokeWidth={2.8} />
           </Link>

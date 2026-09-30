@@ -24,6 +24,8 @@ import {
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest, uploadImage } from '@/lib/api';
 import '../profile.css';
+import { PhotoEditor } from '@/components/photo-editor';
+import { photoFromFile } from '@/lib/camera-photo';
 
 export default function EditProfilePage() {
   const { user, isLoading, refreshUser } = useAuth();
@@ -44,8 +46,8 @@ export default function EditProfilePage() {
 
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [interestSearch, setInterestSearch] = useState('');
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [preview, setPreview] = useState('');
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -105,24 +107,11 @@ export default function EditProfilePage() {
     setSelectedInterests(Array.isArray(p.interests) ? p.interests.slice(0, 10) : []);
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    if (!photo) {
-      setPreview('');
-      return;
-    }
-    const url = URL.createObjectURL(photo);
-    setPreview(url);
-    return () => URL.revokeObjectURL(url);
-  }, [photo]);
-
-  function selectPhoto(file?: File) {
+  async function selectPhoto(file?: File) {
     if (!file) return;
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
-      setError('Escolha uma foto JPEG, PNG ou WebP de até 5 MB.');
-      return;
-    }
-    setPhoto(file);
     setError('');
+    try { setPendingPhoto(await photoFromFile(file)); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível abrir a foto.'); }
   }
 
   function toggleInterest(item: string) {
@@ -173,13 +162,7 @@ export default function EditProfilePage() {
 
       let avatarUrl = form.avatarUrl;
       if (photo) {
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result));
-          reader.onerror = () => reject(new Error('Não foi possível ler a foto.'));
-          reader.readAsDataURL(photo);
-        });
-        avatarUrl = await uploadImage(dataUrl);
+        avatarUrl = await uploadImage(photo);
         setForm((value) => ({ ...value, avatarUrl }));
         setPhoto(null);
       }
@@ -215,7 +198,7 @@ export default function EditProfilePage() {
   }
 
   const back = `/perfil/${encodeURIComponent(user.profile.username)}`;
-  const currentAvatar = preview || form.avatarUrl;
+  const currentAvatar = photo || form.avatarUrl;
 
   const filteredPopular = POPULAR_INTERESTS.filter((item) =>
     item.toLowerCase().includes(interestSearch.trim().toLowerCase())
@@ -227,6 +210,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="profile-page edit-profile-view pb-16">
+      {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={1} circular onCancel={() => setPendingPhoto(null)} onConfirm={adjusted => { setPhoto(adjusted); setPendingPhoto(null); }} />}
       {/* Top Header */}
       <header className="profile-heading sticky top-0 z-10 bg-[#080807]/90 backdrop-blur-md py-3 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-[#302a20]/60 sm:border-0 sm:static sm:bg-transparent">
         <Link href={back} className="profile-icon" aria-label="Voltar ao meu perfil">
@@ -266,11 +250,11 @@ export default function EditProfilePage() {
             <input
               ref={fileInput}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
+              accept="image/*"
               hidden
               aria-label="Selecionar foto de perfil"
               onChange={(e) => {
-                selectPhoto(e.target.files?.[0]);
+                void selectPhoto(e.target.files?.[0]);
                 e.target.value = '';
               }}
             />
@@ -284,6 +268,7 @@ export default function EditProfilePage() {
                 <Camera size={15} />
                 Alterar foto
               </button>
+              {currentAvatar && <button type="button" className="profile-btn-pill" onClick={() => setPendingPhoto(currentAvatar)}>Ajustar foto</button>}
               {(photo || form.avatarUrl) && (
                 <button
                   type="button"

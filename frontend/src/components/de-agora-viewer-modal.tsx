@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Story } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
+import { FullscreenDialog } from './fullscreen-dialog';
 import {
   X,
   Send,
@@ -48,7 +49,6 @@ export function DeAgoraViewerModal({
   useEffect(() => {
     if (!isOpen) return;
     const listener = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
       if (event.target instanceof HTMLInputElement) return;
       if (event.key === 'ArrowLeft') setCurrentIndex(index => Math.max(0, index - 1));
       if (event.key === 'ArrowRight') {
@@ -130,7 +130,8 @@ export function DeAgoraViewerModal({
   const isOfficial = currentStory.author?.isOfficial;
 
   return (
-    <div role="dialog" aria-modal="true" aria-label="DE AGORA" className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md animate-in fade-in select-none">
+    <FullscreenDialog title="DE AGORA" onClose={onClose}>
+    <div className="relative w-full h-full flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md select-none">
       {/* Botões Laterais de Navegação (Desktop) */}
       {currentIndex > 0 && (
         <button
@@ -171,7 +172,7 @@ export function DeAgoraViewerModal({
           alt={currentStory.author.name}
           onLoad={() => { setLoadedId(currentStory.id); onViewed?.(currentStory.id); }}
           onError={() => setFailedId(currentStory.id)}
-          className="absolute inset-0 w-full h-full object-cover animate-in fade-in duration-300"
+          className="absolute inset-0 w-full h-full object-contain animate-in fade-in duration-300"
         />
         {failedId === currentStory.id && <div role="alert" className="absolute inset-0 flex items-center justify-center text-white text-sm">Não foi possível carregar este momento.</div>}
 
@@ -307,5 +308,6 @@ export function DeAgoraViewerModal({
         </div>
       </div>
     </div>
+    </FullscreenDialog>
   );
 }

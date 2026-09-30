@@ -63,7 +63,7 @@ export function Header() {
         }
       `}</style>
 
-      <header className="sticky top-0 z-40 h-[72px] bg-[#080807]/90 backdrop-blur-xl border-b border-[rgba(255,184,0,0.12)] px-[18px] py-3 transition-all">
+      <header className="sticky top-0 z-40 h-[64px] bg-[#080807]/90 backdrop-blur-xl border-b border-[rgba(255,184,0,0.12)] px-[18px] py-2 transition-all">
         {/* Glow ambiente sutil superior */}
         <div className="absolute top-0 left-10 w-48 h-10 bg-amber-500/10 blur-2xl pointer-events-none" />
 
@@ -75,7 +75,7 @@ export function Header() {
               <img
                 src="/LogoPirambeiraSemFundo.png"
                 alt="Pirambeira"
-                className="relative w-[46px] h-[46px] object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_2px_12px_rgba(255,184,0,0.35)]"
+                className="relative w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_2px_12px_rgba(255,184,0,0.35)]"
               />
             </div>
 
