@@ -107,7 +107,7 @@ export default function PublicarPage() {
       for (const constraint of [
         { facingMode: { exact: facing } },
         { facingMode: { ideal: facing } },
-        true as true,
+        true as const,
       ]) {
         try {
           stream = await navigator.mediaDevices.getUserMedia({
