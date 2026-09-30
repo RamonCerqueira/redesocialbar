@@ -1,0 +1,25 @@
+[Unit]
+Description=Pirambeira Web
+After=network-online.target pirambeira-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pirambeira
+Group=pirambeira
+WorkingDirectory=/opt/pirambeira/current/frontend
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+ExecStart=/opt/pirambeira/runtime/bin/node node_modules/next/dist/bin/next start -p 3210 -H 127.0.0.1
+Restart=on-failure
+RestartSec=5
+MemoryMax=768M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/pirambeira
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

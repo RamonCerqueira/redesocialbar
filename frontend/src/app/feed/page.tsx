@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Post } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
+import { LoadError } from '@/components/load-error';
 import { PostCard } from '@/components/post-card';
 import {
   Flame,
@@ -18,12 +19,14 @@ export default function FeedPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [visibleCount, setVisibleCount] = useState(3);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const loadPosts = async () => {
+    setLoadError('');
     try {
       const data = await apiRequest<Post[]>('/posts/feed/pirambeira');
       if (data && data.length > 0) {
@@ -34,8 +37,7 @@ export default function FeedPage() {
         setHasMore(false);
       }
     } catch (err) {
-      setPosts([]);
-      setHasMore(false);
+      setLoadError(err instanceof Error ? err.message : 'Não foi possível carregar o feed.');
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
@@ -80,7 +82,8 @@ export default function FeedPage() {
   }, [isLoadingMore, hasMore, posts.length]);
 
   return (
-    <div className="w-full max-w-[430px] mx-auto pb-24 px-3 sm:px-0">
+    <div className="w-full max-w-[430px] mx-auto pb-6">
+      {loadError&&<LoadError message={loadError} retry={()=>void loadPosts()}/>}
       <SponsoredCard />
       {/* 1. Header do Feed estilo Instagram Clean */}
       <div className="flex items-center justify-between gap-3 pt-3 pb-3 px-1 mb-2 border-b border-[#2A231C]">

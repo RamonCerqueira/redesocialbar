@@ -47,3 +47,14 @@ Chat desativado: não há páginas `/chat` nem módulo HTTP de chat carregado. A
 ## Dados e referência visual
 
 Fotos e números da referência são direção visual, não dados operacionais. Sem conteúdo publicado ou check-ins, o app apresenta estados vazios. Para exibir o banner de promoção na home, crie uma promoção ativa com saldo e validade futura; banners publicitários são gerenciados separadamente em Banners e anúncios.
+# Cardápio e galeria do restaurante
+
+As categorias cadastradas em **Cardápio digital** alimentam o menu horizontal do aplicativo. Os produtos usam cards de altura uniforme, duas colunas no celular e três em telas a partir de 640px. A foto ocupa o fundo com degradê escuro; o toque abre imagem e informações completas.
+
+Na página pública, contas autorizadas veem **Editar página do restaurante**, que abre **Ajustes** no estabelecimento correto. Essa área reúne atalhos para categorias/produtos, eventos, promoções e prévia pública. Nome, frase de apresentação, descrição, endereço, telefone, Instagram, horários, capa e logotipo podem ser editados ali. A seção pública **Sobre o restaurante e horários** mostra os dados completos. As fotos dos produtos são enviadas pelo serviço de mídia antes de salvar o cardápio.
+
+As etiquetas **2X** e **HOJE** podem ser combinadas. 2X significa dobrado; HOJE deve ser retirada pelo administrador ao encerrar a oferta. As duas têm prioridade no card compacto, e os demais selos continuam disponíveis nos detalhes.
+
+Em **Ajustes → Galeria de fotos do restaurante**, envie, ordene ou remova até 20 fotos e clique em **Salvar galeria**. As fotos aparecem sem legendas na faixa acima do cardápio. Somente superadministradores e gestores autorizados do estabelecimento podem alterar a galeria. As imagens usam o upload existente (JPEG, PNG ou WebP, até 5 MB); os endereços e a ordem são persistidos no Supabase.
+
+DE AGORA não tem botão “Ver todos”. Carrega todas as páginas de momentos ativos, respeitando privacidade e bloqueios. Momentos vistos ficam no fim da faixa; o histórico é local a este navegador e separado por conta.

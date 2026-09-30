@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Meetup } from '@/lib/types';
+import { LoadError } from '@/components/load-error';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/lib/auth-context';
 import { MeetupCard } from '@/components/meetup-card';
@@ -11,6 +12,7 @@ export default function EncontrosPage() {
   const { user } = useAuth();
   const [meetups, setMeetups] = useState<Meetup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Form states
@@ -20,11 +22,12 @@ export default function EncontrosPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const loadMeetups = async () => {
+    setIsLoading(true); setLoadError('');
     try {
       const data = await apiRequest<Meetup[]>('/meetups/restaurant/pirambeira');
       setMeetups(data);
     } catch (err) {
-      console.error('Erro ao buscar encontros:', err);
+      setLoadError(err instanceof Error ? err.message : 'Não foi possível carregar os encontros.');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +98,7 @@ export default function EncontrosPage() {
       </div>
 
       {/* 2. Meetups List */}
-      {isLoading ? (
+      {loadError ? <LoadError message={loadError} retry={() => void loadMeetups()}/> : isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
             <div key={i} className="surface-ambient rounded-3xl p-5 h-44 animate-pulse border border-amber-500/10" />

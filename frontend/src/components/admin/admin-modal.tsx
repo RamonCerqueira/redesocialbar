@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, ReactNode } from 'react';
+import React, { useEffect, useRef, ReactNode } from 'react';
 import { X } from 'lucide-react';
 
 export type AdminModalSize = 'sm' | 'md' | 'lg' | 'xl';
@@ -75,14 +75,27 @@ export function AdminModal({
   closeOnBackdrop = true,
   ariaLabelledBy,
 }: AdminModalProps) {
+  const shell = useRef<HTMLDivElement>(null);
+  const close = useRef(onClose);
+  close.current = onClose;
   useEffect(() => {
     if (!isOpen) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    shell.current?.querySelector<HTMLElement>('button,input,select,textarea,a[href]')?.focus();
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') close.current();
+      if (e.key === 'Tab') {
+        const elements = Array.from(shell.current?.querySelectorAll<HTMLElement>('button:not([disabled]),input:not([disabled]):not([type=hidden]),select:not([disabled]),textarea:not([disabled]),a[href]') || []).filter(element=>element.getClientRects().length);
+        const first=elements[0],last=elements.at(-1);
+        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+      }
     };
     window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
-  }, [isOpen, onClose]);
+    return () => { window.removeEventListener('keydown', handler);document.body.style.overflow=overflow;previous?.focus(); };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -101,6 +114,7 @@ export function AdminModal({
     >
       <div
         className={'admin-modal-shell ' + SIZE_CLASS[size]}
+        ref={shell}
         onClick={e => e.stopPropagation()}
       >
         <header className="admin-modal-head">

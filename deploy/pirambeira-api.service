@@ -1,0 +1,24 @@
+[Unit]
+Description=Pirambeira API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pirambeira
+Group=pirambeira
+WorkingDirectory=/opt/pirambeira/current/backend
+EnvironmentFile=/opt/pirambeira/shared/backend.env
+ExecStart=/opt/pirambeira/runtime/bin/node dist/main.js
+Restart=on-failure
+RestartSec=5
+MemoryMax=512M
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/pirambeira
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -2,6 +2,13 @@
   "name": "to-no-piramba-monorepo",
   "version": "1.0.0",
   "private": true,
+  "pnpm": {
+    "overrides": {
+      "postcss": "8.5.23",
+      "multer": "2.4.0",
+      "deepmerge-ts": "8.0.0"
+    }
+  },
   "description": "Plataforma de comunidade social exclusiva para frequentadores de bares e restaurantes - Tô no Piramba",
   "scripts": {
     "dev:backend": "pnpm --filter backend dev",

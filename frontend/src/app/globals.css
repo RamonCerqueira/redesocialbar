@@ -52,6 +52,10 @@ body {
   min-height: 100vh;
 }
 
+/* Margens compartilhadas pelas páginas do app; home e restaurante já têm o mesmo recuo. */
+.app-page-spacing { padding: 14px 18px calc(100px + env(safe-area-inset-bottom)); }
+@media(min-width: 1024px) { .app-page-spacing { padding: 20px 34px 40px; } }
+
 h1, h2, h3, h4, h5, h6, .font-display {
   font-family: var(--font-display), 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }

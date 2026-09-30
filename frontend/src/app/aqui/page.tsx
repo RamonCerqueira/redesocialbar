@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Patron } from '@/lib/types';
+import { LoadError } from '@/components/load-error';
 import { apiRequest } from '@/lib/api';
 import { PatronCard } from '@/components/patron-card';
 import { Users, Filter, Sparkles, UserPlus, Heart, MapPin, Beer } from 'lucide-react';
@@ -11,9 +12,11 @@ export default function QuemEstaAquiPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState<'all' | 'new' | 'friends' | 'flirt'>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const fetchPatrons = async (currentFilter: 'all' | 'new' | 'friends' | 'flirt') => {
     setIsLoading(true);
+    setIsLoading(true); setLoadError('');
     try {
       const data = await apiRequest<{ totalActivePatrons: number; patrons: Patron[] }>(
         `/check-ins/who-is-here/pirambeira?filter=${currentFilter}`,
@@ -21,7 +24,7 @@ export default function QuemEstaAquiPage() {
       setPatrons(data.patrons);
       setTotalCount(data.totalActivePatrons);
     } catch (err) {
-      console.error('Erro ao buscar presentes:', err);
+      setLoadError(err instanceof Error ? err.message : 'Não foi possível atualizar quem está aqui.');
     } finally {
       setIsLoading(false);
     }
@@ -90,7 +93,7 @@ export default function QuemEstaAquiPage() {
       </div>
 
       {/* 3. Grid of Frequentadores */}
-      {isLoading ? (
+      {loadError ? <LoadError message={loadError} retry={() => void fetchPatrons(filter)}/> : isLoading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 sm:gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} className="surface-ambient rounded-3xl p-4 h-64 animate-pulse border border-amber-500/10" />

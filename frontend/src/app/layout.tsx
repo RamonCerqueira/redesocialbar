@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Tô no Piramba - O que está rolando agora?',
     description: 'A rede social exclusiva do Restaurante Pirambeira na Pituba, Salvador.',
-    url: 'https://tonopiramba.com.br',
+    url: process.env.NEXT_PUBLIC_APP_URL || undefined,
     siteName: 'Tô no Piramba',
     locale: 'pt_BR',
     type: 'website',
@@ -44,8 +44,6 @@ export const viewport: Viewport = {
   themeColor: '#080706',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 };
 
 export default function RootLayout({

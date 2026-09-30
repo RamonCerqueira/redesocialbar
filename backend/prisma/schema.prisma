@@ -185,6 +185,7 @@ model Restaurant {
   approxLongitude Float?
   openingHours    Json?
   menuCategories  Json?
+  galleryPhotos   String[] @default([])
   isActive        Boolean  @default(true)
   
   createdAt       DateTime @default(now())

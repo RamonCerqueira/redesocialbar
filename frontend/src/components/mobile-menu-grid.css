@@ -1,0 +1,54 @@
+.mobile-menu { padding: 4px 0 24px; min-width: 0; }
+.dish-category-nav { display: flex; gap: 8px; overflow-x: auto; padding: 10px 0 14px; margin-bottom: 12px; scrollbar-width: thin; scrollbar-color: #594326 transparent; }
+.dish-category-nav button { flex-shrink: 0; border: 1px solid #453522; border-radius: 999px; padding: 10px 16px; background: #171310; color: #c7bbae; font-size: 12px; font-weight: 700; cursor: pointer; min-height: 44px; }
+.dish-category-nav button[aria-pressed=true] { background: linear-gradient(110deg,#ffcc31,#ff9f00); border-color: #ffd467; color: #100d03; box-shadow: 0 4px 20px #ffa20025; }
+.dish-category-nav button:focus-visible, .dish-card:focus-visible { outline: 2px solid #ffb800; outline-offset: 3px; }
+.dish-hint { font-size: 12px; color: #aaa198; margin: 0 0 22px; }
+.dish-category + .dish-category { margin-top: 28px; }
+.dish-category header { margin-bottom: 14px; }
+.dish-category h3 { display: flex; align-items: center; gap: 8px; font-family: var(--font-display),sans-serif; font-size: 14px; font-weight: 850; letter-spacing: .2px; text-transform: uppercase; color: #fff4e4; }
+.dish-category h3::before { content: ''; width: 12px; height: 2px; flex-shrink: 0; background: #fb6150; }
+.dish-category header p { color: #aaa198; font-size: 12px; margin-top: 4px; }
+.dish-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; list-style: none; padding: 0; }
+.dish-list li { min-width: 0; }
+.dish-card { position: relative; isolation: isolate; width: 100%; height: 300px; display: flex; flex-direction: column; justify-content: flex-end; padding: 0; text-align: left; background: #100c08; border: 1px solid #9b5c2380; border-radius: 22px; overflow: hidden; color: #faf6ef; cursor: pointer; transition: border-color .2s, transform .2s; }
+.dish-card:hover { border-color: #aa7119; transform: translateY(-2px); }
+.dish-photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; overflow: hidden; background: radial-gradient(ellipse at top,#50391f,#211a13); display: flex; align-items: flex-start; padding-top: 32px; justify-content: center; color: #b99b73; }
+.dish-photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.dish-expand { position: absolute; top: 10px; right: 10px; display: flex; padding: 7px; border-radius: 50%; color: #fff; background: #0008; border: 1px solid #ffffff40; }
+.dish-summary { position: relative; display: flex; width: 100%; min-width: 0; height: 188px; padding: 13px; flex-direction: column; align-items: flex-start; gap: 9px; text-shadow: 0 1px 4px #000; }
+.dish-summary::before { content: ''; position: absolute; inset: -58px 0 0; z-index: -1; background: linear-gradient(180deg,transparent 0%,#0009 20%,#000d 46%,#000f 100%); pointer-events: none; }
+.dish-name { width: 100%; height: 38px; flex-shrink: 0; font-family: var(--font-display),sans-serif; font-size: 13px; font-weight: 800; line-height: 19px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dish-description { width: 100%; height: 36px; flex-shrink: 0; font-size: 12px; color: #e0d7ce; line-height: 18px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dish-summary .dish-tags { max-height: 21px; flex-wrap: nowrap; width: 100%; overflow: hidden; flex-shrink: 0; }
+.dish-summary .dish-tags span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.dish-price { font-size: 16px; font-weight: 800; color: #ffbf43; }
+.dish-summary .dish-price { margin-top: auto; max-width: 100%; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.dish-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.dish-tags:empty { display: none; }
+.dish-tags span { font-size: 9px; font-weight: 800; letter-spacing: .03em; padding: 3px 5px; border: 1px solid #695029; color: #ffd78b; border-radius: 5px; text-transform: uppercase; white-space: nowrap; }
+.dish-tags .double { background: #ffb800; border-color: #ffb800; color: #1c1400; text-shadow: none; }
+.dish-tags .today { background: #183d2a; border-color: #2c7751; color: #79e4aa; }
+.dish-dialog { padding: 0; border: 1px solid #594326; background: #14110f; color: #fff4e4; border-radius: 24px; max-width: 560px; width: calc(100% - 24px); max-height: 90dvh; margin: auto; overflow: auto; overscroll-behavior: contain; }
+.dish-dialog::backdrop { background: #000c; backdrop-filter: blur(6px); }
+.dish-dialog article { position: relative; }
+.dish-close { position: absolute; right: 12px; top: 12px; z-index: 1; border: 1px solid #ffffff40; background: #14110fdd; color: white; border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; }
+.dish-full-photo { width: 100%; max-height: 52dvh; object-fit: contain; background: #080706; }
+.dish-details { padding: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+.dish-details h2 { font-size: 24px; font-weight: 800; line-height: 1.2; padding-right: 20px; }
+.dish-details p, .dish-details blockquote { font-size: 14px; line-height: 1.65; color: #c4b9ad; white-space: pre-line; }
+.dish-details .dish-price { font-size: 22px; }
+.dish-details .dish-double-note { color: #80e0a7; }
+.dish-details .dish-extra { font-size: 12px; color: #9e9286; }
+.dish-empty { padding: 40px 20px; display: grid; justify-items: center; gap: 12px; text-align: center; color: #bbb0a4; }
+.dish-empty h3 { color: #ffcd75; font-weight: 700; }
+@media(min-width: 640px) { .dish-list { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media(max-width: 360px) { .dish-list { gap: 9px; } .dish-summary { padding: 10px; height: 186px; } .dish-name { font-size: 13px; } .dish-price { font-size: 14px; } }
+@media(prefers-reduced-motion: reduce) { .dish-card { transition: none; } .dish-card:hover { transform: none; } }
+.restaurant-detail { width: 100%; max-width: 720px; margin: auto; padding: 14px 18px calc(120px + env(safe-area-inset-bottom)); min-width: 0; }
+.restaurant-cover { border-radius: 24px; border: 1px solid #9b5c2380; }
+.restaurant-tabs { border-color: #6a532655; background: #100c08; }
+.restaurant-tabs button { min-height: 44px; gap: 5px; font-size: 10px; }
+.restaurant-tabs button span { white-space: nowrap; }
+.restaurant-tabs button svg { width: 12px; height: 12px; flex-shrink: 0; }
+@media(min-width: 640px) { .restaurant-detail { padding-top: 20px; } .dish-category h3 { font-size: 16px; } .restaurant-tabs button { font-size: 12px; } }

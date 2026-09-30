@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { FlirtNote } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
+import { LoadError } from '@/components/load-error';
 import { FlirtNoteCard } from '@/components/flirt-note-card';
 import { RecadinhoModal } from '@/components/recadinho-modal';
 import {
@@ -17,9 +18,11 @@ import {
 export default function RecadosGuardanapoPage() {
   const [notes, setNotes] = useState<FlirtNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [showRecadinhoModal, setShowRecadinhoModal] = useState(false);
 
   const loadNotes = async () => {
+    setIsLoading(true); setLoadError('');
     try {
       const data = await apiRequest<FlirtNote[]>('/flirt/notes/pirambeira');
       if (data && data.length > 0) {
@@ -28,8 +31,7 @@ export default function RecadosGuardanapoPage() {
         setNotes([]);
       }
     } catch (err) {
-      // Mantém o mural vazio quando a consulta falha.
-      setNotes([]);
+      setLoadError(err instanceof Error ? err.message : 'Não foi possível carregar o mural.');
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +50,8 @@ export default function RecadosGuardanapoPage() {
   };
 
   return (
-    <div className="max-w-xl mx-auto pb-24 px-[18px]">
+    <div className="max-w-xl mx-auto pb-24">
+      {loadError&&<LoadError message={loadError} retry={()=>void loadNotes()}/>}
       {/* Header Principal da Página */}
       <div className="pt-5 pb-4 flex items-center justify-between gap-3 border-b border-[#2C221A] mb-4">
         <div>

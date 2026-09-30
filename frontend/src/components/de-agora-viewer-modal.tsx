@@ -19,6 +19,7 @@ interface DeAgoraViewerModalProps {
   stories: Story[];
   initialIndex?: number;
   onClose: () => void;
+  onViewed?: (id: string) => void;
 }
 
 export function DeAgoraViewerModal({
@@ -26,22 +27,49 @@ export function DeAgoraViewerModal({
   stories,
   initialIndex = 0,
   onClose,
+  onViewed,
 }: DeAgoraViewerModalProps) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [replyText, setReplyText] = useState('');
   const [isSendingReply, setIsSendingReply] = useState(false);
   const [replySent, setReplySent] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [focusedReply, setFocusedReply] = useState(false);
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const [failedId, setFailedId] = useState<string | null>(null);
+  const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
-  }, [initialIndex]);
+    setElapsed(0);
+  }, [initialIndex, isOpen]);
+
+  useEffect(() => { setElapsed(0); }, [currentIndex]);
+  useEffect(() => {
+    if (!isOpen) return;
+    const listener = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.target instanceof HTMLInputElement) return;
+      if (event.key === 'ArrowLeft') setCurrentIndex(index => Math.max(0, index - 1));
+      if (event.key === 'ArrowRight') {
+        if (currentIndex < stories.length - 1) setCurrentIndex(index => index + 1);
+        else onClose();
+      }
+    };
+    window.addEventListener('keydown', listener);
+    return () => window.removeEventListener('keydown', listener);
+  }, [isOpen, currentIndex, stories.length, onClose]);
 
   // Passagem automática de stories a cada 5 segundos se não estiver pausado
   useEffect(() => {
-    if (!isOpen || isPaused || stories.length === 0) return;
+    if (!isOpen || isPaused || focusedReply || isSendingReply || loadedId !== stories[currentIndex]?.id) return;
+    const timer = setInterval(() => { if (!document.hidden) setElapsed(value => Math.min(5000, value + 50)); }, 50);
+    return () => clearInterval(timer);
+  }, [isOpen, isPaused, focusedReply, isSendingReply, currentIndex, stories, loadedId]);
 
-    const timer = setTimeout(() => {
+  useEffect(() => {
+    if (!isOpen || elapsed < 5000) return;
+    setElapsed(0);
       if (currentIndex < stories.length - 1) {
         setCurrentIndex((prev) => prev + 1);
         setReplySent(false);
@@ -49,10 +77,7 @@ export function DeAgoraViewerModal({
       } else {
         onClose();
       }
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, [isOpen, currentIndex, isPaused, stories.length, onClose]);
+  }, [isOpen, elapsed, currentIndex, stories.length, onClose]);
 
   if (!isOpen || stories.length === 0) return null;
 
@@ -105,14 +130,14 @@ export function DeAgoraViewerModal({
   const isOfficial = currentStory.author?.isOfficial;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md animate-in fade-in select-none">
+    <div role="dialog" aria-modal="true" aria-label="DE AGORA" className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-4 bg-black/95 backdrop-blur-md animate-in fade-in select-none">
       {/* Botões Laterais de Navegação (Desktop) */}
       {currentIndex > 0 && (
         <button
           type="button"
           onClick={handlePrev}
           className="hidden sm:flex absolute left-6 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white items-center justify-center transition-all cursor-pointer z-50"
-          aria-label="Story anterior"
+          aria-label="Momento anterior"
         >
           <ChevronLeft className="w-6 h-6" />
         </button>
@@ -123,7 +148,7 @@ export function DeAgoraViewerModal({
           type="button"
           onClick={handleNext}
           className="hidden sm:flex absolute right-6 w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-white items-center justify-center transition-all cursor-pointer z-50"
-          aria-label="Próximo story"
+          aria-label="Próximo momento"
         >
           <ChevronRight className="w-6 h-6" />
         </button>
@@ -131,19 +156,24 @@ export function DeAgoraViewerModal({
 
       {/* Card do Story 9:16 */}
       <div
-        className="relative w-full max-w-sm aspect-[9/16] rounded-3xl overflow-hidden bg-[#080706] border border-amber-500/30 shadow-2xl flex flex-col justify-between p-4 sm:p-5"
+        className="relative w-full max-w-sm max-h-[96dvh] aspect-[9/16] rounded-3xl overflow-hidden bg-[#080706] border border-amber-500/30 shadow-2xl flex flex-col justify-between p-4 sm:p-5"
         onMouseDown={() => setIsPaused(true)}
         onMouseUp={() => setIsPaused(false)}
         onTouchStart={() => setIsPaused(true)}
         onTouchEnd={() => setIsPaused(false)}
+        onTouchCancel={() => setIsPaused(false)}
+        onMouseLeave={() => setIsPaused(false)}
       >
         {/* Imagem de Fundo em Tela Cheia */}
         <img
           key={currentStory.id}
           src={currentStory.mediaUrl}
           alt={currentStory.author.name}
+          onLoad={() => { setLoadedId(currentStory.id); onViewed?.(currentStory.id); }}
+          onError={() => setFailedId(currentStory.id)}
           className="absolute inset-0 w-full h-full object-cover animate-in fade-in duration-300"
         />
+        {failedId === currentStory.id && <div role="alert" className="absolute inset-0 flex items-center justify-center text-white text-sm">Não foi possível carregar este momento.</div>}
 
         {/* Gradientes Superior e Inferior para Leitura Perfeita */}
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/70 pointer-events-none" />
@@ -170,13 +200,8 @@ export function DeAgoraViewerModal({
                 className="flex-1 h-1 bg-white/25 rounded-full overflow-hidden"
               >
                 <div
-                  className={`h-full bg-amber-400 rounded-full transition-all duration-100 ${
-                    idx < currentIndex
-                      ? 'w-full'
-                      : idx === currentIndex
-                      ? 'w-full animate-[progress_5s_linear]'
-                      : 'w-0'
-                  }`}
+                  className="h-full bg-amber-400 rounded-full"
+                  style={{ width: `${idx < currentIndex ? 100 : idx === currentIndex ? elapsed / 50 : 0}%` }}
                 />
               </div>
             ))}
@@ -229,7 +254,7 @@ export function DeAgoraViewerModal({
               type="button"
               onClick={onClose}
               className="p-2 rounded-full bg-black/50 backdrop-blur-md text-white hover:bg-black/80 transition-colors cursor-pointer border border-white/10"
-              aria-label="Fechar story"
+              aria-label="Fechar DE AGORA"
             >
               <X className="w-4 h-4 stroke-[2.5]" />
             </button>
@@ -253,6 +278,8 @@ export function DeAgoraViewerModal({
               type="text"
               value={replyText}
               onChange={(e) => setReplyText(e.target.value)}
+              onFocus={() => setFocusedReply(true)}
+              onBlur={() => setFocusedReply(false)}
               placeholder={`Mandar mensagem para ${currentStory.author.name.split(' ')[0]}...`}
               className="flex-1 bg-black/60 backdrop-blur-md border border-white/25 rounded-full px-4 py-2.5 text-xs text-white placeholder-white/60 focus:outline-none focus:border-amber-400 transition-colors shadow-inner"
             />

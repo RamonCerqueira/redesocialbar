@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { assertSocialAccess } from '../auth/social-access';
 
 @Injectable()
 export class UsersService {
@@ -24,14 +25,14 @@ export class UsersService {
             posts: {
               where: { isDeleted: false, type: { not: 'FLIRT' } },
               include: { media: true },
-              orderBy: { createdAt: 'desc' },
+              orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
               take: 12,
             },
             _count: {
               select: {
                 followers: true,
                 following: true,
-                posts: true,
+                posts: { where: { isDeleted: false, type: { not: 'FLIRT' } } },
                 checkIns: true,
               },
             },
@@ -40,7 +41,7 @@ export class UsersService {
       },
     });
 
-    if (!profile) {
+    if (!profile || profile.user.status !== 'ACTIVE') {
       throw new NotFoundException(`Usuário @${username} não encontrado.`);
     }
 
@@ -71,7 +72,7 @@ export class UsersService {
 
     if (isBlocked) throw new NotFoundException('Perfil indisponível.');
     const isOwner = currentUserId === profile.userId;
-    const canSeeContent = isOwner || !profile.isPrivate || isFollowing;
+    const canSeeContent = isOwner || !profile.isPrivate;
     const activeCheckIn = (isOwner || (!profile.invisibleMode && canSeeContent))
       ? profile.user.checkIns[0] || null : null;
 
@@ -83,6 +84,8 @@ export class UsersService {
       city: profile.city,
       avatarUrl: profile.avatarUrl,
       interests: profile.interests,
+      isPrivate: profile.isPrivate,
+      ...(isOwner ? { showInFlirtRadar: profile.showInFlirtRadar, invisibleMode: profile.invisibleMode, allowFlirtFrom: profile.allowFlirtFrom } : {}),
       checkInCount: profile.checkInCount,
       isFollowing,
       isBlocked,
@@ -96,7 +99,7 @@ export class UsersService {
       counts: {
         followers: profile.user._count.followers,
         following: profile.user._count.following,
-        posts: profile.user._count.posts,
+        posts: canSeeContent ? profile.user._count.posts : 0,
         totalCheckIns: profile.user._count.checkIns,
       },
       recentPosts: (canSeeContent ? profile.user.posts : []).map((p) => ({
@@ -121,16 +124,28 @@ export class UsersService {
         showInFlirtRadar: dto.showInFlirtRadar,
         allowFlirtFrom: dto.allowFlirtFrom,
         invisibleMode: dto.invisibleMode,
+        isPrivate: dto.isPrivate,
       },
     });
 
     return updated;
   }
 
+  async profilePosts(username: string, userId?: string, cursor?: string) {
+    const profile = await this.getProfileByUsername(username, userId);
+    if (profile.isPrivate && profile.id !== userId) return { items: [], nextCursor: null };
+    const where = { authorId: profile.id, isDeleted: false, type: { not: 'FLIRT' as const } };
+    if (cursor && !await this.prisma.post.findFirst({ where: { ...where, id: cursor }, select: { id: true } })) throw new BadRequestException('Publicação de referência indisponível. Atualize o perfil.');
+    const rows = await this.prisma.post.findMany({ where, include: { media: true }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 13, ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}) });
+    const items = rows.slice(0,12).map(post=>({id:post.id,content:post.content,createdAt:post.createdAt,likesCount:post.likesCount,media:post.media.map(media=>media.url)}));
+    return { items, nextCursor: rows.length>12 ? items.at(-1)?.id : null };
+  }
+
   async toggleFollow(targetUserId: string, currentUserId: string) {
     if (targetUserId === currentUserId) {
       throw new BadRequestException('Você não pode seguir a si mesmo.');
     }
+    await assertSocialAccess(this.prisma, currentUserId, targetUserId);
 
     const existing = await this.prisma.follow.findUnique({
       where: {
@@ -177,6 +192,7 @@ export class UsersService {
     if (targetUserId === currentUserId) {
       throw new BadRequestException('Você não pode bloquear a si mesmo.');
     }
+    if (!await this.prisma.user.findUnique({ where: { id: targetUserId }, select: { id: true } })) throw new NotFoundException('Usuário não encontrado.');
 
     const existing = await this.prisma.block.findUnique({
       where: {

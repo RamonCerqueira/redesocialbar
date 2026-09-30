@@ -73,6 +73,19 @@ async function user(index, role = 'USER') {
   check('titular ainda vê seu check-in', !!(await request('/auth/me', a.token)).data.activeCheckIn);
   await request('/users/' + a.id + '/block', b.token, 'POST');
   check('perfil bloqueado é indisponível', (await request('/users/profile/' + username, b.token)).status === 404);
+  check('bloqueado não segue novamente', (await request('/users/' + a.id + '/follow', b.token, 'POST')).status === 404);
+  check('bloqueado não reage pelo ID do post', (await request('/posts/' + regular.data.id + '/react', b.token, 'POST', {type:'CHEERS'})).status === 404);
+  check('bloqueado não comenta pelo ID do post', (await request('/posts/' + regular.data.id + '/comments', b.token, 'POST', {content:'Não permitido'})).status === 404);
+  check('mural oculta recados de bloqueados', !(await request('/flirt/notes/'+r.slug,b.token)).data.some(n=>n.id===secretNote.data.id));
+  check('enum inválido na reação retorna 400', (await request('/posts/'+regular.data.id+'/react',c.token,'POST',{type:'INVALID'})).status === 400);
+  check('enum inválido no feed retorna 400', (await request('/posts/feed/'+r.slug+'?type=INVALID')).status === 400);
+  const doubleCheckIn = await Promise.all([1,2].map(()=>request('/check-ins',c.token,'POST',{restaurantSlug:r.slug})));
+  check('check-ins simultâneos mantêm uma única presença', doubleCheckIn.every(result=>result.status===201) && await prisma.checkIn.count({where:{userId:c.id,status:'ACTIVE'}})===1);
+  const pastMeetup = await request('/meetups',c.token,'POST',{title:'Passado',description:'QA',restaurantSlug:r.slug,scheduledFor:'2020-01-01T00:00:00Z'});
+  check('encontro no passado é recusado',pastMeetup.status===400);
+  await prisma.profile.update({where:{userId:c.id},data:{allowFlirtFrom:'NONE'}});
+  check('preferência de não receber paquera é respeitada', (await request('/flirt/interest',a.token,'POST',{restaurantSlug:r.slug,targetUserId:c.id})).status===400);
+  await prisma.profile.update({where:{userId:c.id},data:{allowFlirtFrom:'EVERYONE'}});
 
   const promoBody = { title: 'Último cupom', discountText: '10%', description: 'Fixture', validUntil: new Date(Date.now() + 86400000).toISOString(), totalCoupons: 1, buttonText: 'Pegar oferta', imageUrl: media.data.url, isActive: true };
   const promo = await request(adminPath + '/promotions', owner.token, 'POST', promoBody);

@@ -78,3 +78,7 @@ export class ValidateCouponDto {
   @IsString() @IsNotEmpty() @MaxLength(80) code!: string;
   @IsString() @IsNotEmpty() @MaxLength(100) restaurantSlug!: string;
 }
+export class RestaurantGalleryDto {
+  @IsArray() @ArrayMaxSize(20) @IsUrl(urlOptions, { each: true })
+  photos!: string[];
+}

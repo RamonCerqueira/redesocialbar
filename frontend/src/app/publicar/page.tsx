@@ -31,7 +31,10 @@ import {
 
 export default function PublicarPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading, activeCheckIn } = useAuth();
+  useEffect(() => {
+    if (!isLoading && !user) router.replace('/login');
+  }, [isLoading, user, router]);
   const config = screenConfig.screen;
 
   const [patrons, setPatrons] = useState<Patron[]>([]);
@@ -210,6 +213,8 @@ export default function PublicarPage() {
     return p.name.toLowerCase().includes(q) || p.username.toLowerCase().includes(q);
   });
 
+  if (isLoading || !user) return <p className="py-8 text-center text-sm text-neutral-400">Verificando acesso...</p>;
+
   return (
     <div className="max-w-md mx-auto pb-12 space-y-4 text-[#FBF8F5]">
       {/* Hidden file and camera inputs */}
@@ -258,7 +263,7 @@ export default function PublicarPage() {
               Pirambeira
             </span>
             <span className="text-[9px] text-[#FFB800] font-extrabold block">
-              Check-in ativo
+              {activeCheckIn ? 'Check-in ativo' : 'Sem check-in ativo'}
             </span>
           </div>
         </div>

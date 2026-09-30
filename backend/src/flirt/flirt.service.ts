@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../prisma/prisma.service';
 import { ExpressInterestDto } from './dto/express-interest.dto';
 import { InterestStatus, PostType } from '@prisma/client';
+import { blockedIds } from '../auth/social-access';
 
 @Injectable()
 export class FlirtService {
@@ -25,14 +26,15 @@ export class FlirtService {
       include: { profile: true },
     });
 
-    if (!targetUser || !targetUser.profile) {
+    if (!targetUser || targetUser.status !== 'ACTIVE' || !targetUser.profile) {
       throw new NotFoundException('Usuário de destino não encontrado.');
     }
 
     // Verificar se o usuário alvo permite paquera
-    if (!targetUser.profile.showInFlirtRadar || targetUser.profile.invisibleMode) {
+    if (!targetUser.profile.showInFlirtRadar || targetUser.profile.invisibleMode || targetUser.profile.isPrivate || targetUser.profile.allowFlirtFrom === 'NONE') {
       throw new BadRequestException('Este usuário optou por não participar da paquera.');
     }
+    if (targetUser.profile.allowFlirtFrom === 'FOLLOWERS' && !await this.prisma.follow.findUnique({ where: { followerId_followingId: { followerId: fromUserId, followingId: dto.targetUserId } } })) throw new BadRequestException('Este usuário permite interesse somente de seguidores.');
 
     // Verificar se há bloqueio mútuo
     const block = await this.prisma.block.findFirst({
@@ -152,9 +154,12 @@ export class FlirtService {
   }
 
   async getMyMatches(userId: string) {
+    const blocked = await blockedIds(this.prisma, userId);
     const matches = await this.prisma.match.findMany({
       where: {
         OR: [{ user1Id: userId }, { user2Id: userId }],
+        user1Id: { notIn: blocked }, user2Id: { notIn: blocked },
+        user1: { status: 'ACTIVE' }, user2: { status: 'ACTIVE' },
       },
       include: {
         user1: { include: { profile: true } },
@@ -182,6 +187,7 @@ export class FlirtService {
   }
 
   async getFlirtNotes(restaurantSlug: string, currentUserId?: string) {
+    const blocked = await blockedIds(this.prisma, currentUserId);
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { slug: restaurantSlug },
     });
@@ -195,6 +201,8 @@ export class FlirtService {
         restaurantId: restaurant.id,
         type: PostType.FLIRT,
         isDeleted: false,
+        authorId: { notIn: blocked },
+        author: { status: 'ACTIVE', profile: { isPrivate: false } },
       },
       include: {
         author: { include: { profile: true } },

@@ -4,6 +4,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { AccessService } from '../auth/access.service';
 import { ReactionType, PostType } from '@prisma/client';
+import { assertSocialAccess, blockedIds } from '../auth/social-access';
 
 @Injectable()
 export class PostsService {
@@ -73,6 +74,7 @@ export class PostsService {
           });
 
           if (targetUser && targetUser.id !== userId) {
+            await assertSocialAccess(this.prisma, userId, targetUser.id);
             const sender = await this.prisma.user.findUnique({
               where: { id: userId },
               include: { profile: true },
@@ -125,6 +127,7 @@ export class PostsService {
         restaurantId: restaurant.id,
         isDeleted: false,
         authorId: { notIn: blockedUserIds },
+        author: { status: 'ACTIVE', OR: [{ profile: { isPrivate: false } }, ...(currentUserId ? [{ id: currentUserId }] : [])] },
         type: postType && postType !== PostType.FLIRT ? postType : { not: PostType.FLIRT },
       },
       include: {
@@ -136,7 +139,7 @@ export class PostsService {
         },
         reactions: true,
         comments: {
-          where: { isDeleted: false },
+          where: { isDeleted: false, authorId: { notIn: blockedUserIds }, author: { status: 'ACTIVE' } },
           include: {
             author: { include: { profile: true } },
           },
@@ -201,6 +204,7 @@ export class PostsService {
   }
 
   async getBarOfficialPosts(restaurantSlug: string, currentUserId?: string) {
+    const blocked = await blockedIds(this.prisma, currentUserId);
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { slug: restaurantSlug },
     });
@@ -214,6 +218,8 @@ export class PostsService {
         restaurantId: restaurant.id,
         isDeleted: false,
         isOfficial: true,
+        authorId: { notIn: blocked },
+        author: { status: 'ACTIVE' },
       },
       include: {
         author: {
@@ -224,7 +230,7 @@ export class PostsService {
         },
         reactions: true,
         comments: {
-          where: { isDeleted: false },
+          where: { isDeleted: false, authorId: { notIn: blocked }, author: { status: 'ACTIVE' } },
           include: {
             author: { include: { profile: true } },
           },
@@ -295,6 +301,7 @@ export class PostsService {
     if (!post || post.isDeleted) {
       throw new NotFoundException('Publicação não encontrada.');
     }
+    await assertSocialAccess(this.prisma, userId, post.authorId);
 
     const existing = await this.prisma.reaction.findUnique({
       where: {
@@ -373,6 +380,8 @@ export class PostsService {
     if (!post || post.isDeleted) {
       throw new NotFoundException('Publicação não encontrada.');
     }
+    await assertSocialAccess(this.prisma, userId, post.authorId);
+    if (dto.parentId && !await this.prisma.comment.findFirst({ where: { id: dto.parentId, postId, isDeleted: false } })) throw new NotFoundException('Comentário original indisponível.');
 
     const comment = await this.prisma.comment.create({
       data: {

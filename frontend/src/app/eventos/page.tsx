@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { BarEvent } from '@/lib/types';
+import { LoadError } from '@/components/load-error';
 import { apiRequest } from '@/lib/api';
 import { EventCard } from '@/components/event-card';
 import { Calendar, Music, Sparkles } from 'lucide-react';
@@ -9,13 +10,15 @@ import { Calendar, Music, Sparkles } from 'lucide-react';
 export default function EventosPage() {
   const [events, setEvents] = useState<BarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const loadEvents = async () => {
+    setIsLoading(true); setLoadError('');
     try {
       const data = await apiRequest<BarEvent[]>('/events/restaurant/pirambeira');
       setEvents(data);
     } catch (err) {
-      console.error('Erro ao buscar eventos:', err);
+      setLoadError(err instanceof Error ? err.message : 'Não foi possível carregar os eventos.');
     } finally {
       setIsLoading(false);
     }
@@ -68,7 +71,7 @@ export default function EventosPage() {
 
       {/* EventList: padding 0 18px, display flex, flex-col, gap 10 */}
       <div className="px-[18px] flex flex-col gap-2.5">
-        {isLoading ? (
+        {loadError ? <LoadError message={loadError} retry={() => void loadEvents()}/> : isLoading ? (
           <div className="flex flex-col gap-2.5">
             {[1, 2, 3].map((i) => (
               <div key={i} className="h-[94px] rounded-[18px] bg-[#14110E]/60 border border-white/[0.06] animate-pulse backdrop-blur-md" />

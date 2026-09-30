@@ -21,7 +21,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Navigation />
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         <Header />
-        <main className="flex-1 w-full max-w-[720px] mx-auto min-w-0 lg:py-2 lg:px-4">{children}</main>
+        <main className={'flex-1 w-full max-w-[720px] mx-auto min-w-0 '+(pathname==='/'||pathname.startsWith('/restaurante/')?'lg:py-2 lg:px-4':'app-page-spacing')}>{children}</main>
       </div>
     </div>
   </>;

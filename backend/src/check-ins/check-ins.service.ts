@@ -16,25 +16,13 @@ export class CheckInsService {
       throw new NotFoundException(`Estabelecimento "${dto.restaurantSlug}" não encontrado.`);
     }
 
-    // Encerrar check-ins ativos anteriores do usuário
-    await this.prisma.checkIn.updateMany({
-      where: {
-        userId,
-        status: CheckInStatus.ACTIVE,
-      },
-      data: {
-        status: CheckInStatus.CHECKED_OUT,
-        endedAt: new Date(),
-      },
-    });
-
     const now = new Date();
     // Duração padrão: 4 horas
     const expiresAt = new Date(now.getTime() + 4 * 3600000);
 
     // Calcular distância aproximada se fornecida
     let approxDistanceMeters: number | null = null;
-    if (dto.approxLatitude && dto.approxLongitude && restaurant.approxLatitude && restaurant.approxLongitude) {
+    if (dto.approxLatitude != null && dto.approxLongitude != null && restaurant.approxLatitude != null && restaurant.approxLongitude != null) {
       approxDistanceMeters = this.calculateDistance(
         dto.approxLatitude,
         dto.approxLongitude,
@@ -43,7 +31,11 @@ export class CheckInsService {
       );
     }
 
-    const checkIn = await this.prisma.checkIn.create({
+    return this.prisma.$transaction(async tx => {
+      // A atualização do perfil serializa check-ins simultâneos da mesma conta.
+      await tx.profile.update({ where: { userId }, data: { checkInCount: { increment: 1 } } });
+      await tx.checkIn.updateMany({ where: { userId, status: CheckInStatus.ACTIVE }, data: { status: CheckInStatus.CHECKED_OUT, endedAt: now } });
+      return tx.checkIn.create({
       data: {
         userId,
         restaurantId: restaurant.id,
@@ -55,17 +47,8 @@ export class CheckInsService {
       include: {
         restaurant: true,
       },
+      });
     });
-
-    // Incrementar contagem de check-ins no perfil
-    await this.prisma.profile.update({
-      where: { userId },
-      data: {
-        checkInCount: { increment: 1 },
-      },
-    });
-
-    return checkIn;
   }
 
   async checkOut(userId: string) {
@@ -161,6 +144,7 @@ export class CheckInsService {
           status: 'ACTIVE',
           profile: {
             invisibleMode: false,
+            isPrivate: false,
             ...(filter === 'new' ? { checkInCount: { lte: 6 } } : {}),
             ...(filter === 'flirt' ? { showInFlirtRadar: true } : {}),
           },

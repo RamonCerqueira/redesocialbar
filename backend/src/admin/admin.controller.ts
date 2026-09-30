@@ -6,7 +6,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { Role } from '@prisma/client';
 import { Actor } from '../auth/access.service';
-import { AdminPostDto, AdvertisementDto, EventDto, PromotionDto, RestaurantSettingsDto } from './admin.dto';
+import { AdminPostDto, AdvertisementDto, EventDto, PromotionDto, RestaurantSettingsDto, RestaurantGalleryDto } from './admin.dto';
 
 @Controller('admin')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -16,6 +16,7 @@ export class AdminController {
   @Get('restaurants') restaurants(@CurrentUser() actor: Actor) { return this.service.restaurants(actor); }
   @Get('dashboard/:slug') dashboard(@Param('slug') slug: string, @CurrentUser() actor: Actor) { return this.service.dashboard(actor, slug); }
   @Get(':slug/settings') settings(@Param('slug') slug: string, @CurrentUser() actor: Actor) { return this.service.settings(actor, slug); }
+  @Put(':slug/gallery') saveGallery(@Param('slug') slug: string, @CurrentUser() actor: Actor, @Body() dto: RestaurantGalleryDto) { return this.service.saveGallery(actor, slug, dto.photos); }
   @Put(':slug/settings') saveSettings(@Param('slug') slug: string, @CurrentUser() actor: Actor, @Body() dto: RestaurantSettingsDto) { return this.service.saveSettings(actor, slug, dto); }
   @Get(':slug/coupons') coupons(@Param('slug') slug: string, @CurrentUser() actor: Actor, @Query('cursor') cursor?: string) { return this.service.coupons(actor, slug, cursor); }
   @Get(':slug/posts') posts(@Param('slug') slug: string, @CurrentUser() actor: Actor) { return this.service.posts(actor, slug); }

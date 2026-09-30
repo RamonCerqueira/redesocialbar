@@ -1,10 +1,12 @@
 export interface UserProfile {
+  isPrivate?: boolean;
   id: string;
   name: string;
   username: string;
   bio?: string;
   avatarUrl?: string;
   coverUrl?: string;
+  galleryPhotos?: string[];
   city: string;
   interests: string[];
   checkInCount: number;

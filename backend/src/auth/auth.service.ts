@@ -30,6 +30,7 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
+    if (Buffer.byteLength(dto.password, 'utf8') > 72) throw new BadRequestException('A senha deve ter no máximo 72 bytes.');
     if (isInstitutionalEmail(dto.email)) {
       throw new ForbiddenException('Contas @pirambeira.com são cadastradas exclusivamente pelo superadministrador.');
     }

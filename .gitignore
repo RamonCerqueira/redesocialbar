@@ -5,6 +5,7 @@ node_modules/
 # Builds and Output
 dist/
 .next/
+.next-check/
 out/
 build/
 coverage/
@@ -41,3 +42,6 @@ to-no-piramba.zip
 # Local bootstrap credential
 .admin-access.local
 .env.test
+.deploy/
+backend/uploads/
+.profile-qa.json

@@ -1,0 +1,1 @@
+ALTER TABLE "Restaurant" ADD COLUMN "galleryPhotos" TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];

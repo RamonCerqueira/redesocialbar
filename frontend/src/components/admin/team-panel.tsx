@@ -355,7 +355,7 @@ export function TeamPanel({ slug, currentUser }: { slug: string; currentUser: Us
                 const status = u.inviteStatus || (u.status === 'ACTIVE' ? 'ACTIVE' : u.status === 'SUSPENDED' ? 'REVOKED' : 'ACTIVE');
                 return (
                   <tr key={u.email} className="admin-table-row">
-                    <td>
+                    <td data-label="Membro">
                       <div className="admin-table-avatar-wrap">
                         <div className="admin-avatar">
                           {displayPhoto(u)
@@ -368,7 +368,7 @@ export function TeamPanel({ slug, currentUser }: { slug: string; currentUser: Us
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Função">
                       <select
                         className="admin-select-role"
                         value={role}
@@ -386,15 +386,15 @@ export function TeamPanel({ slug, currentUser }: { slug: string; currentUser: Us
                         <small className="admin-muted">{roleLabel(role)}</small>
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {status === 'PENDING'
                         ? <span className="admin-badge wait">Pendente</span>
                         : status === 'REVOKED'
                         ? <span className="admin-badge off">Revogado</span>
                         : <span className="admin-badge on">Ativo</span>}
                     </td>
-                    <td>
-                      <div className="admin-actions" style={{ margin: 0, gap: 4, flexWrap: 'nowrap' }}>
+                    <td data-label="Ações">
+                      <div className="admin-actions" style={{ margin: 0, gap: 4, flexWrap: 'wrap' }}>
                         <button
                           className="admin-button secondary tiny"
                           onClick={() => openEdit(u)}

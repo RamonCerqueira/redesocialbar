@@ -7,6 +7,7 @@ import compression from 'compression';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, { bodyParser: false });
+  if (process.env.TRUST_LOCAL_PROXY === 'true') app.set('trust proxy', 'loopback');
 
   app.useBodyParser('json', { limit: '7mb' });
 
@@ -45,7 +46,7 @@ async function bootstrap() {
   );
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, process.env.HOST || '0.0.0.0');
   console.log(`🚀 Tô no Piramba Backend executando em http://localhost:${port}/api`);
 }
 

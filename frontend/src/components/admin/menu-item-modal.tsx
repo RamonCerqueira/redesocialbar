@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Check, Plus, Trash2, Camera as CameraIcon, ChefHat, Sparkles, Tag, Clock, Users } from 'lucide-react';
 import { AdminModal, AdminModalGrid, AdminModalFooter } from './admin-modal';
+import { uploadImage } from '@/lib/api';
 
 export type MenuItemInput = {
   name: string;
@@ -20,6 +21,8 @@ export type MenuItemInput = {
 };
 
 export const MENU_TAG_LIBRARY = [
+  { key: '2X', color: '#b45309' },
+  { key: 'HOJE', color: '#15803d' },
   { key: 'Picante', color: '#dc2626' },
   { key: 'Apimentado', color: '#ea580c' },
   { key: 'Vegano', color: '#15803d' },
@@ -71,9 +74,13 @@ export function MenuItemModal({
   const [form, setForm] = useState<MenuItemInput>(EMPTY_ITEM);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [justSaved, setJustSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const uploadVersion = useRef(0);
   const savedFlash = useRef<number | null>(null);
 
   useEffect(() => {
+    uploadVersion.current++;
+    setUploading(false);
     if (isOpen) {
       setForm(initial ?? EMPTY_ITEM);
       setErrors({});
@@ -108,14 +115,23 @@ export function MenuItemModal({
     update('tags', list);
   }
 
-  function handleImage(file: File) {
-    const reader = new FileReader();
-    reader.onload = () => update('imageUrl', String(reader.result || ''));
-    reader.readAsDataURL(file);
+  async function handleImage(file: File) {
+    const version = ++uploadVersion.current;
+    if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setErrors(previous=>({...previous,imageUrl:'Envie JPEG, PNG ou WebP de até 5 MB.'})); return;
+    }
+    setUploading(true);
+    try {
+      const data = await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error('Não foi possível ler a foto.'));reader.readAsDataURL(file);});
+      const url = await uploadImage(data);
+      if(version===uploadVersion.current)update('imageUrl',url);
+    } catch(error) { if(version===uploadVersion.current)setErrors(previous=>({...previous,imageUrl:error instanceof Error?error.message:'Não foi possível enviar a foto.'})); }
+    finally { if(version===uploadVersion.current)setUploading(false); }
   }
 
   function validate(): boolean {
     const next: Record<string, string> = {};
+    if(uploading) next.imageUrl = 'Aguarde o envio da foto antes de salvar.';
     if (!form.name.trim()) next.name = 'Informe o nome do prato.';
     if (!form.price.trim()) next.price = 'Informe o preço do prato.';
     if (form.isWeeklyPick && !form.weeklyPickNote?.trim()) {
@@ -257,23 +273,25 @@ export function MenuItemModal({
           <input
             id="mi-image"
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={uploading}
             hidden
             onChange={e => {
               const f = e.target.files?.[0];
-              if (f) handleImage(f);
+              if (f) void handleImage(f);
               e.currentTarget.value = '';
             }}
           />
           <label htmlFor="mi-image" className="admin-button secondary tiny">
-            <CameraIcon size={12} /> Anexar foto
+            <CameraIcon size={12} /> {uploading?'Enviando foto…':'Anexar foto'}
           </label>
           {form.imageUrl && (
-            <button type="button" className="admin-button danger tiny" onClick={() => update('imageUrl', '')}>
+            <button type="button" disabled={uploading} className="admin-button danger tiny" onClick={() => update('imageUrl', '')}>
               <Trash2 size={12} /> Remover
             </button>
           )}
         </div>
+        {errors.imageUrl&&<p role="alert" className="admin-field-error">{errors.imageUrl}</p>}
       </div>
 
       <div className="admin-modal-section">
@@ -311,7 +329,8 @@ export function MenuItemModal({
       </div>
 
       <div className="admin-modal-section">
-        <div className="admin-modal-section-title"><Tag size={12} /><span>Etiquetas (dietas + ocasião)</span></div>
+        <div className="admin-modal-section-title"><Tag size={12} /><span>Etiquetas do produto</span></div>
+        <p className="admin-field-hint">Combine 2X + HOJE para indicar dobrado só hoje. As duas aparecem juntas no cardápio. Retire HOJE ao encerrar a oferta.</p>
         <div className="admin-modal-tags">
           {MENU_TAG_LIBRARY.map(t => {
             const on = Array.isArray(form.tags) && form.tags.includes(t.key);

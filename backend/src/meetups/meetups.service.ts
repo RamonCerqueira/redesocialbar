@@ -1,13 +1,15 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateMeetupDto } from './dto/create-meetup.dto';
 import { MeetupStatus } from '@prisma/client';
+import { assertSocialAccess, blockedIds } from '../auth/social-access';
 
 @Injectable()
 export class MeetupsService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, dto: CreateMeetupDto) {
+    if (new Date(dto.scheduledFor).getTime() <= Date.now()) throw new BadRequestException('Escolha uma data futura para o encontro.');
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { slug: dto.restaurantSlug },
     });
@@ -42,6 +44,7 @@ export class MeetupsService {
   }
 
   async findAll(restaurantSlug: string, currentUserId?: string) {
+    const blocked = await blockedIds(this.prisma, currentUserId);
     const restaurant = await this.prisma.restaurant.findUnique({
       where: { slug: restaurantSlug },
     });
@@ -54,6 +57,8 @@ export class MeetupsService {
       where: {
         restaurantId: restaurant.id,
         status: { not: MeetupStatus.CANCELLED },
+        creatorId: { notIn: blocked },
+        creator: { status: 'ACTIVE', profile: { isPrivate: false } },
         scheduledFor: { gte: new Date(Date.now() - 3600000 * 6) }, // últimas 6 horas ou futuro
       },
       include: {
@@ -86,7 +91,7 @@ export class MeetupsService {
           username: m.creator.profile?.username,
           avatarUrl: m.creator.profile?.avatarUrl,
         },
-        participants: m.participants.map((p) => ({
+        participants: m.participants.filter(p => !blocked.includes(p.userId) && p.user.status === 'ACTIVE' && !p.user.profile?.invisibleMode && !p.user.profile?.isPrivate).map((p) => ({
           userId: p.user.id,
           name: p.user.profile?.name,
           avatarUrl: p.user.profile?.avatarUrl,
@@ -100,9 +105,10 @@ export class MeetupsService {
       where: { id: meetupId },
     });
 
-    if (!meetup) {
+    if (!meetup || meetup.status === MeetupStatus.CANCELLED || meetup.scheduledFor < new Date(Date.now() - 6 * 3600000)) {
       throw new NotFoundException('Encontro não encontrado.');
     }
+    await assertSocialAccess(this.prisma, userId, meetup.creatorId);
 
     const existing = await this.prisma.meetupParticipant.findUnique({
       where: {

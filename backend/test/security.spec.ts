@@ -35,7 +35,7 @@ describe('Autorização por estabelecimento',()=>{
 
 function profile(invisibleMode=true) {
   return {userId:'owner',name:'Pessoa',username:'pessoa',invisibleMode,isPrivate:false,checkInCount:1,
-    user:{checkIns:[{startedAt:new Date(),restaurant:{name:'Bar',slug:'bar'}}],posts:[],_count:{followers:0,following:0,posts:0,checkIns:1}}};
+    user:{status:'ACTIVE',checkIns:[{startedAt:new Date(),restaurant:{name:'Bar',slug:'bar'}}],posts:[],_count:{followers:0,following:0,posts:0,checkIns:1}}};
 }
 describe('Privacidade do perfil',()=>{
   it('oculta check-in invisível de visitante anônimo',async()=>{

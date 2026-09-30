@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Promotion } from '@/lib/types';
+import { LoadError } from '@/components/load-error';
 import { apiRequest } from '@/lib/api';
 import { CouponCard } from '@/components/coupon-card';
 import { Tag, Sparkles, Percent, Beer } from 'lucide-react';
@@ -9,13 +10,15 @@ import { Tag, Sparkles, Percent, Beer } from 'lucide-react';
 export default function PromocoesPage() {
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const loadPromos = async () => {
+    setIsLoading(true); setLoadError('');
     try {
       const data = await apiRequest<Promotion[]>('/promotions/restaurant/pirambeira');
       setPromotions(data);
     } catch (err) {
-      console.error('Erro ao buscar promoções:', err);
+      setLoadError(err instanceof Error ? err.message : 'Não foi possível carregar as promoções.');
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +43,7 @@ export default function PromocoesPage() {
         </p>
       </div>
 
-      {isLoading ? (
+      {loadError ? <LoadError message={loadError} retry={() => void loadPromos()}/> : isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
             <div key={i} className="surface-ambient rounded-3xl h-44 animate-pulse border border-amber-500/10" />
@@ -53,7 +56,7 @@ export default function PromocoesPage() {
             Nenhuma promoção ativa no momento
           </h3>
           <p className="text-xs text-[#A89F96] mt-1.5 max-w-sm mx-auto leading-relaxed">
-            Fique ligado! Em breve teremos novas rodadas de chopp e petiscos do chef Edu Moraes com desconto especial.
+            As próximas ofertas da casa serão publicadas aqui.
           </p>
         </div>
       ) : (

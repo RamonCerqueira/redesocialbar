@@ -13,8 +13,24 @@ export class AdminService {
     });
   }
   settings(actor: Actor, slug: string) { return this.access.restaurant(actor, slug); }
+  async saveGallery(actor: Actor, slug: string, photos: string[]) {
+    const restaurant = await this.access.restaurant(actor, slug);
+    return this.prisma.restaurant.update({ where: { id: restaurant.id }, data: { galleryPhotos: [...new Set(photos)] }, select: { galleryPhotos: true } });
+  }
   async saveSettings(actor: Actor, slug: string, dto: RestaurantSettingsDto) {
     const r = await this.access.restaurant(actor, slug);
+    if (dto.openingHours && Object.entries(dto.openingHours).some(([day, hours]) => day.length > 40 || typeof hours !== 'string' || hours.length > 120)) {
+      throw new BadRequestException('Informe os horários como textos de até 120 caracteres.');
+    }
+    const text = (value: unknown, limit: number, required = false) => typeof value === 'string' ? value.length <= limit && (!required || !!value.trim()) : !required && value == null;
+    if (dto.menuCategories && (dto.menuCategories.length > 40 || dto.menuCategories.some(category =>
+      !category || !text(category.name, 100, true) || !text(category.description, 1000) || !Array.isArray(category.items) || category.items.length > 200 || category.items.some(item =>
+        !item || !text(item.name, 140, true) || !text(item.price, 80, true) || !text(item.description, 3000) ||
+        !text(item.portion, 120) || !text(item.prepTime, 120) || !text(item.weeklyPickNote, 300) ||
+        (item.imageUrl && (!text(item.imageUrl, 2000) || !/^https?:\/\//i.test(item.imageUrl))) ||
+        (item.tags != null && (!Array.isArray(item.tags) || item.tags.length > 12 || item.tags.some(tag => !text(tag, 50, true))))
+      )
+    ))) throw new BadRequestException('Revise as categorias, produtos, fotos e tags do cardápio.');
     return this.prisma.restaurant.update({ where: { id: r.id }, data: dto });
   }
   async dashboard(actor: Actor, slug: string) {

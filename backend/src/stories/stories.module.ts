@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Module, NotFoundException, Param, Post, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Module, NotFoundException, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { IsOptional, IsString, IsUrl, MaxLength, IsIn } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -11,17 +11,19 @@ class StoryDto {
   @IsOptional() @IsString() @MaxLength(500) caption?: string;
 }
 class ReplyDto { @IsString() @MaxLength(1000) content!: string; }
+class StoryPageDto { @IsOptional() @IsString() @MaxLength(100) cursor?: string; }
 
 @Controller('stories')
 export class StoriesController {
   constructor(private prisma: PrismaService) {}
   @Get('restaurant/:slug') @UseGuards(OptionalJwtAuthGuard)
-  async list(@Param('slug') slug: string, @CurrentUser('id') userId?: string) {
+  async list(@Param('slug') slug: string, @CurrentUser('id') userId?: string, @Query() page: StoryPageDto = {}) {
     const blocked = userId ? await this.prisma.block.findMany({ where: { OR: [{ blockerId: userId }, { blockedId: userId }] } }) : [];
     const ids = blocked.map(b => b.blockerId === userId ? b.blockedId : b.blockerId);
     const stories = await this.prisma.story.findMany({
       where: { restaurant: { slug }, expiresAt: { gt: new Date() }, authorId: { notIn: ids }, author: { status: 'ACTIVE', profile: { invisibleMode: false, isPrivate: false } } },
-      include: { author: { select: { id: true, profile: true, restaurantMembers: true, role: true } } }, orderBy: { createdAt: 'desc' }, take: 100,
+      include: { author: { select: { id: true, profile: true, restaurantMembers: true, role: true } } }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 100,
+      ...(page.cursor ? { cursor: { id: page.cursor }, skip: 1 } : {}),
     });
     return stories.map(({ author, ...story }) => ({ ...story, mediaType: 'IMAGE', author: {
       id: author.id, name: author.profile?.name, username: author.profile?.username, avatarUrl: author.profile?.avatarUrl,

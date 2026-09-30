@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
+import { loadAllMoments, unseenFirst } from '@/lib/de-agora';
 import { Post, Story, Patron, Promotion, CheckIn } from '@/lib/types';
 import { SponsoredCard } from '@/components/sponsored-card';
 import { PostCard } from '@/components/post-card';
@@ -26,18 +27,19 @@ export default function HomePage() {
   const [camera, setCamera] = useState(false);
   const [viewer, setViewer] = useState(false);
   const [storyIndex, setStoryIndex] = useState(0);
+  const [viewerStories, setViewerStories] = useState<Story[]>([]);
+  const closeViewer = useCallback(() => setViewer(false), []);
   const [greeting, setGreeting] = useState('Boas-vindas,');
   const [visiblePosts, setVisiblePosts] = useState(3);
-  const STORAGE_KEY = 'tonopiramba:viewed-stories:pirambeira';
-  const [viewedStories, setViewedStories] = useState<Set<string>>(() => {
-    if (typeof window === 'undefined') return new Set();
+  const STORAGE_KEY = `tonopiramba:de-agora:pirambeira:${user?.id || 'guest'}`;
+  const [viewedStories, setViewedStories] = useState<Set<string>>(new Set());
+  useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return new Set();
-      const arr = JSON.parse(raw);
-      return Array.isArray(arr) ? new Set(arr as string[]) : new Set();
-    } catch { return new Set(); }
-  });
+      const arr: unknown = raw ? JSON.parse(raw) : [];
+      setViewedStories(new Set(Array.isArray(arr) ? arr.filter((id): id is string => typeof id === 'string') : []));
+    } catch { setViewedStories(new Set()); }
+  }, [STORAGE_KEY]);
 
   const markViewed = useCallback((storyId: string) => {
     setViewedStories(prev => {
@@ -45,21 +47,13 @@ export default function HomePage() {
       const next = new Set(prev);
       next.add(storyId);
       if (typeof window !== 'undefined') {
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next))); } catch {}
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(next).slice(-5000))); } catch {}
       }
       return next;
     });
   }, [STORAGE_KEY]);
 
-  const sortedStories = useMemo(() => {
-    const unseen: Story[] = [];
-    const seen: Story[] = [];
-    for (const s of stories) {
-      if (viewedStories.has(s.id)) seen.push(s);
-      else unseen.push(s);
-    }
-    return [...unseen, ...seen];
-  }, [stories, viewedStories]);
+  const sortedStories = useMemo(() => unseenFirst(stories, viewedStories), [stories, viewedStories]);
 
   const checkedIn = activeCheckIn?.restaurant?.slug === 'pirambeira';
 
@@ -71,7 +65,7 @@ export default function HomePage() {
     setLoading(true); setError('');
     const results = await Promise.allSettled([
       loadPatrons(),
-      apiRequest<Story[]>('/stories/restaurant/pirambeira').then(setStories),
+      loadAllMoments(cursor => apiRequest<Story[]>(`/stories/restaurant/pirambeira${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`)).then(setStories),
       apiRequest<Post[]>('/posts/bar/pirambeira').then(setPosts),
       apiRequest<Promotion[]>('/promotions/restaurant/pirambeira').then(setPromotions),
       apiRequest<{coverUrl?:string}>('/restaurants/pirambeira').then(data => { if(data.coverUrl)setCover(data.coverUrl); }),
@@ -109,8 +103,8 @@ export default function HomePage() {
     </section>
 
     <section aria-labelledby="deagora-title"><div className="home-section-heading"><h2 id="deagora-title"><span className="home-dash"/>DE AGORA</h2></div>
-      <div className="home-stories"><button className="home-story" onClick={()=>user?setCamera(true):window.location.assign('/login')} aria-label="Adicionar story"><span className="home-story-ring own"><Camera size={26}/><i><Plus size={15}/></i></span><span>Seu story</span></button>
-        {sortedStories.map((story)=><button className="home-story" key={story.id} onClick={()=>{markViewed(story.id);const idx=sortedStories.findIndex(s=>s.id===story.id);setStoryIndex(idx<0?0:idx);setViewer(true);}}><span className="home-story-ring"><img src={story.author.avatarUrl||'/LogoPirambeiraSemFundo.png'} alt=""/></span><span>{story.author.name}</span></button>)}
+      <div className="home-stories"><button className="home-story" onClick={()=>user?setCamera(true):window.location.assign('/login')} aria-label="Publicar no DE AGORA"><span className="home-story-ring own"><Camera size={26}/><i><Plus size={15}/></i></span><span>Seu momento</span></button>
+        {sortedStories.map((story,index)=><button className="home-story" key={story.id} aria-label={`DE AGORA de ${story.author.name}${viewedStories.has(story.id)?', visto':''}`} onClick={()=>{setViewerStories([...sortedStories]);setStoryIndex(index);setViewer(true);}}><span className={'home-story-ring'+(viewedStories.has(story.id)?' is-viewed':'')}><img src={story.author.avatarUrl||'/LogoPirambeiraSemFundo.png'} alt=""/></span><span>{story.author.name}</span></button>)}
         {!sortedStories.length&&<p className="home-muted">{loading?'Carregando momentos…':'A noite começa com você. Compartilhe um momento.'}</p>}
       </div>
     </section>
@@ -135,7 +129,7 @@ export default function HomePage() {
       {posts.length>visiblePosts&&<button className="home-load-more" onClick={()=>setVisiblePosts(value=>value+3)}>Ver mais publicações</button>}
     </section>
     <SponsoredCard placement="SIDEBAR"/>
-    <DeAgoraCameraModal isOpen={camera} onClose={()=>setCamera(false)} onStoryCreated={story=>{setStories(previous=>[story,...previous]);setCamera(false);setStoryIndex(0);setViewer(true);}}/>
-    <DeAgoraViewerModal isOpen={viewer} stories={stories} initialIndex={storyIndex} onClose={()=>setViewer(false)}/>
+    <DeAgoraCameraModal isOpen={camera} onClose={()=>setCamera(false)} onStoryCreated={story=>{setStories(previous=>[story,...previous]);setViewerStories([story,...sortedStories]);setCamera(false);setStoryIndex(0);setViewer(true);}}/>
+    {viewer&&<DeAgoraViewerModal isOpen stories={viewerStories} initialIndex={storyIndex} onViewed={markViewed} onClose={closeViewer}/>}
   </div>;
 }

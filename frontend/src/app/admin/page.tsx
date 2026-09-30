@@ -5,8 +5,11 @@ import { LayoutDashboard, FileText, Ticket, Megaphone, CalendarDays, Settings, S
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { ImageField, ResourceConfig, ResourceEditor } from '@/components/admin/resource-editor';
+import { GalleryPanel } from '@/components/admin/gallery-panel';
 import './admin.css';
+import './mobile.css';
 import { TeamPanel } from '@/components/admin/team-panel';
+import { AdminMobileNavigation } from '@/components/admin/mobile-navigation';
 import { User } from '@/lib/types';
 import { CategoryModal, MenuCategoryInput } from '@/components/admin/category-modal';
 import { MenuItemModal, MenuItemInput, MENU_TAG_LIBRARY } from '@/components/admin/menu-item-modal';
@@ -58,13 +61,15 @@ export default function AdminPage(){
   const allowed=user?.role==='RESTAURANT_ADMIN'||user?.role==='SUPERADMIN';
   async function loadRestaurants(){
     setLoading(true);setError('');
-    try{const list=await apiRequest<{slug:string;name:string}[]>('/admin/restaurants');setRestaurants(list);setSlug(list[0]?.slug||'');}
+    try{const list=await apiRequest<{slug:string;name:string}[]>('/admin/restaurants');setRestaurants(list);const requested=new URLSearchParams(window.location.search).get('restaurant');setSlug(list.find(item=>item.slug===requested)?.slug||list[0]?.slug||'');}
     catch(error){setError(errorText(error));}finally{setLoading(false);}
   }
   useEffect(()=>{if(!isLoading&&allowed)void loadRestaurants();},[isLoading,allowed]);
+  useEffect(()=>{const requested=new URLSearchParams(window.location.search).get('section');if(navigation.some(item=>item.id===requested))setSection(requested as Section);},[]);
   if(isLoading)return <div className="admin-gate">Verificando acesso…</div>;
   if(!allowed)return <div className="admin-gate"><div><h1>Painel do restaurante</h1><p>Entre com uma conta autorizada para gerenciar o estabelecimento.</p><Link className="admin-button" href="/login">Entrar</Link> <Link className="admin-button secondary" href="/">Voltar ao aplicativo</Link></div></div>;
   return <div className="admin-workspace">
+    <AdminMobileNavigation items={user?.role==='SUPERADMIN'&&user.email.toLowerCase()==='ramon@pirambeira.com'?[...navigation,{id:'team',label:'Equipe e acessos',icon:ShieldCheck}]:navigation} section={section} onNavigate={id=>setSection(id as Section)} name={user?.profile?.name||'Administração'} onLogout={logout}/>
     <aside className="admin-sidebar"><div className="admin-brand">Pirambeira<span style={{color:'#e4b363'}}>.</span><small>GESTÃO DO RESTAURANTE</small></div>
       <nav className="admin-nav" aria-label="Menu administrativo">{navigation.map(item=><button key={item.id} aria-current={section===item.id?'page':undefined} onClick={()=>setSection(item.id)}><item.icon size={17}/>{item.label}</button>)}{user?.role==='SUPERADMIN'&&user.email.toLowerCase()==='ramon@pirambeira.com'&&<button aria-current={section==='team'?'page':undefined} onClick={()=>setSection('team')}><ShieldCheck size={17}/>Equipe e acessos</button>}</nav>
       <footer><p>{user?.profile?.name}</p><p>{user?.email}</p><div className="admin-actions"><Link href="/" target="_blank"><ExternalLink size={14} style={{display:'inline'}}/> Abrir aplicativo</Link><button className="admin-button secondary" onClick={logout}><LogOut size={14}/>Sair</button></div></footer>
@@ -79,7 +84,7 @@ export default function AdminPage(){
         {section==='dashboard'&&<Dashboard key={slug} slug={slug}/>}
         {section==='team'&&user?.role==='SUPERADMIN'&&<TeamPanel key={slug} slug={slug} currentUser={user}/>}
         {section==='coupons'&&<Coupons key={slug} slug={slug}/>}
-        {section==='settings'&&<SettingsPanel key={slug} slug={slug}/>}
+        {section==='settings'&&<SettingsPanel key={slug} slug={slug} onNavigate={setSection}/>}
         {section==='moderation'&&<Moderation key={slug} slug={slug} superadmin={user?.role==='SUPERADMIN'}/>}
       </>}
     </main>
@@ -118,7 +123,7 @@ function Coupons({slug}:{slug:string}){
   return <>{error&&<p role="alert" className="admin-message error">{error}</p>}{notice&&<p role="status" className="admin-message">{notice}</p>}
     <section className="admin-card" style={{marginBottom:22}}><h2>Validar cupom no atendimento</h2><p className="admin-muted">A confirmação registra o uso e impede que o código seja utilizado novamente.</p><form onSubmit={validate} className="admin-actions"><input aria-label="Código do cupom" placeholder="PIRAMBA-…" required value={code} onChange={e=>setCode(e.target.value.toUpperCase())} style={{maxWidth:360}}/><button className="admin-button" disabled={busy}>{busy?'Aguarde…':'Confirmar utilização'}</button></form></section>
     <section className="admin-card"><div className="admin-toolbar"><h2>Histórico de emissão</h2><button className="admin-button secondary" onClick={()=>void load()} disabled={busy}>Atualizar</button></div>
-      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Código</th><th>Promoção</th><th>Cliente</th><th>Status</th><th>Emissão</th><th>Utilização</th></tr></thead><tbody>{items.map(c=><tr key={c.id}><td><code>{c.code}</code></td><td>{c.promotion.title}</td><td>{c.user.profile?.name||'Cliente'}</td><td>{c.status==='USED'?'Utilizado':new Date(c.promotion.validUntil)<new Date()?'Expirado':'Disponível'}</td><td>{new Date(c.claimedAt).toLocaleString('pt-BR')}</td><td>{c.usedAt?new Date(c.usedAt).toLocaleString('pt-BR'):'—'}</td></tr>)}</tbody></table></div>
+      <div className="admin-table-wrap"><table className="admin-table"><thead><tr><th>Código</th><th>Promoção</th><th>Cliente</th><th>Status</th><th>Emissão</th><th>Utilização</th></tr></thead><tbody>{items.map(c=><tr key={c.id}><td data-label="Código"><code>{c.code}</code></td><td data-label="Promoção">{c.promotion.title}</td><td data-label="Cliente">{c.user.profile?.name||'Cliente'}</td><td data-label="Status">{c.status==='USED'?'Utilizado':new Date(c.promotion.validUntil)<new Date()?'Expirado':'Disponível'}</td><td data-label="Emissão">{new Date(c.claimedAt).toLocaleString('pt-BR')}</td><td data-label="Utilização">{c.usedAt?new Date(c.usedAt).toLocaleString('pt-BR'):'—'}</td></tr>)}</tbody></table></div>
       {!items.length&&!busy&&<div className="admin-empty">Nenhum cupom emitido. Crie uma promoção para disponibilizar o primeiro lote.</div>}{cursor&&<button disabled={busy} className="admin-button secondary" onClick={()=>void load(cursor)}>Carregar mais</button>}
     </section>
   </>;
@@ -126,19 +131,21 @@ function Coupons({slug}:{slug:string}){
 
 const settingFields=[['name','Nome do restaurante'],['tagline','Frase de apresentação'],['description','Descrição'],['address','Endereço'],['neighborhood','Bairro'],['city','Cidade'],['state','UF'],['phone','Telefone'],['instagram','Instagram']] as const;
 const days=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
-function SettingsPanel({slug}:{slug:string}){
+function SettingsPanel({slug,onNavigate}:{slug:string;onNavigate:(section:Section)=>void}){
   const [values,setValues]=useState<Record<string,string>>({});const [hours,setHours]=useState<Record<string,string>>({});const [loaded,setLoaded]=useState(false);const [error,setError]=useState('');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [uploading,setUploading]=useState(false);
   async function load(){try{const data=await apiRequest<Record<string,unknown>>('/admin/'+slug+'/settings');setValues(Object.fromEntries([...settingFields.map(([key])=>key),'logoUrl','coverUrl'].map(key=>[key,String(data[key]||'')])));setHours((data.openingHours as Record<string,string>)||{});setLoaded(true);setError('');}catch(error){setError(errorText(error));}}
   useEffect(()=>{void load();},[slug]);
   async function save(event:React.FormEvent){event.preventDefault();setBusy(true);setError('');setNotice('');try{await apiRequest('/admin/'+slug+'/settings',{method:'PUT',body:JSON.stringify({...values,openingHours:hours})});setNotice('Dados do restaurante atualizados.');}catch(error){setError(errorText(error));}finally{setBusy(false);}}
   if(!loaded)return <p role={error?'alert':undefined}>{error||'Carregando ajustes…'}{error&&<button onClick={()=>void load()}>Tentar novamente</button>}</p>;
   return <>{error&&<p role="alert" className="admin-message error">{error}</p>}{notice&&<p role="status" className="admin-message">{notice}</p>}
+    <section className="admin-card admin-form" style={{marginBottom:20}}><h2>Página do restaurante</h2><p className="admin-muted">Gerencie o conteúdo exibido em /restaurante/{slug}. Os dados abaixo, a capa, o logotipo e a galeria são publicados no aplicativo ao salvar.</p><div className="admin-actions"><button type="button" className="admin-button secondary" onClick={()=>onNavigate('menu')}><UtensilsCrossed size={16}/>Categorias e produtos</button><button type="button" className="admin-button secondary" onClick={()=>onNavigate('events')}><CalendarDays size={16}/>Eventos</button><button type="button" className="admin-button secondary" onClick={()=>onNavigate('promotions')}><Ticket size={16}/>Promoções</button><Link className="admin-button secondary" target="_blank" href={'/restaurante/'+encodeURIComponent(slug)}><ExternalLink size={16}/>Ver página publicada</Link></div></section>
     <form onSubmit={save}><div className="admin-grid">
       <section className="admin-card admin-form"><h2>Dados do estabelecimento</h2>{settingFields.map(([key,label])=><label className="admin-field" key={key}>{label}{key==='description'?<textarea value={values[key]} maxLength={5000} onChange={e=>setValues({...values,[key]:e.target.value})}/>:<input required={key==='name'||key==='address'} maxLength={key==='state'?2:key==='name'?140:300} value={values[key]} onChange={e=>setValues({...values,[key]:e.target.value})}/>}</label>)}</section>
       <section className="admin-card admin-form"><h2>Identidade e atendimento</h2><ImageField label="Logotipo" value={values.logoUrl} onChange={logoUrl=>setValues(prev=>({...prev,logoUrl}))} onBusy={setUploading}/><ImageField label="Imagem de capa" value={values.coverUrl} onChange={coverUrl=>setValues(prev=>({...prev,coverUrl}))} onBusy={setUploading}/>
         <h2>Horários de funcionamento</h2>{days.map(day=><label className="admin-field" key={day}>{day}<input placeholder="Ex.: 17h às 23h ou Fechado" value={hours[day]||''} onChange={e=>setHours({...hours,[day]:e.target.value})}/></label>)}
       </section>
     </div><button className="admin-button" style={{marginTop:20}} disabled={busy||uploading}>{busy?'Salvando…':'Salvar ajustes'}</button></form>
+    <GalleryPanel slug={slug}/>
     <PasswordForm/>
   </>;
 }

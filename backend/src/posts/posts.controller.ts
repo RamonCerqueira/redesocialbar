@@ -1,4 +1,5 @@
-import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, ParseEnumPipe } from '@nestjs/common';
+import { IsEnum, IsOptional } from 'class-validator';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -6,6 +7,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { ReactionType, PostType } from '@prisma/client';
+class ReactionDto { @IsOptional() @IsEnum(ReactionType) type?: ReactionType; }
 
 @Controller('posts')
 export class PostsController {
@@ -22,7 +24,7 @@ export class PostsController {
   async getFeed(
     @Param('slug') slug: string,
     @CurrentUser('id') userId?: string,
-    @Query('type') postType?: PostType,
+    @Query('type', new ParseEnumPipe(PostType, { optional: true })) postType?: PostType,
   ) {
     return this.postsService.getFeed(slug, userId, postType);
   }
@@ -42,9 +44,9 @@ export class PostsController {
   async react(
     @Param('id') postId: string,
     @CurrentUser('id') userId: string,
-    @Body('type') type?: ReactionType,
+    @Body() dto: ReactionDto,
   ) {
-    return this.postsService.toggleReaction(postId, userId, type);
+    return this.postsService.toggleReaction(postId, userId, dto.type);
   }
 
   @Post(':id/comments')
