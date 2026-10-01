@@ -127,7 +127,9 @@ export class PostsService {
         restaurantId: restaurant.id,
         isDeleted: false,
         authorId: { notIn: blockedUserIds },
-        author: { status: 'ACTIVE', OR: [{ profile: { isPrivate: false } }, ...(currentUserId ? [{ id: currentUserId }] : [])] },
+        author: { status: 'ACTIVE' },
+        // Restaurant announcements are public even when an administrator's personal profile is private.
+        OR: [{ isOfficial: true }, { author: { OR: [{ profile: { isPrivate: false } }, ...(currentUserId ? [{ id: currentUserId }] : [])] } }],
         type: postType && postType !== PostType.FLIRT ? postType : { not: PostType.FLIRT },
       },
       include: {

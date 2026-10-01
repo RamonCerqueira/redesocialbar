@@ -13,4 +13,6 @@ Fontes: [Instagram do bar](https://www.instagram.com/pirambeira.bar/), [cardápi
 
 Posts têm botão de cardápio, contato ou página do bar conforme o assunto. Podem ser editados ou arquivados em Administração → Publicações. Atualizar horários pelo painel quando necessário. O menu e a galeria existentes não são substituídos nesta carga.
 
+Publicações oficiais são visíveis na página inicial e no feed, inclusive quando o perfil pessoal do administrador é privado. Essa exceção usa apenas `isOfficial`, definida pela API administrativa autenticada. Publicações pessoais privadas, exclusões, bloqueios e restrições do mural de paquera continuam protegidos.
+
 Credenciais não integram código, documentação ou Git. Os dados públicos do estabelecimento não alteram os dados fictícios da minuta jurídica DEMO.
