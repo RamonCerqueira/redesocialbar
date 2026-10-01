@@ -17,10 +17,12 @@ import { ModerationModule } from './moderation/moderation.module';
 import { AdminModule } from './admin/admin.module';
 import { AdsModule } from './ads/ads.module';
 import { HealthController } from './health.controller';
+import { LegalModule } from './legal/legal.module';
 
 @Module({
   controllers: [HealthController],
   imports: [
+    LegalModule,
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,

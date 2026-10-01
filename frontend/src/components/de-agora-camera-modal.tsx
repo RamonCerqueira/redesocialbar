@@ -44,7 +44,7 @@ export function DeAgoraCameraModal({ isOpen, onClose, onStoryCreated }: DeAgoraC
 
   if (!isOpen) return null;
   if (editing && source) return <PhotoEditor source={source} aspectRatio={9 / 16} onCancel={() => { setEditing(false); if (!photo) setSource(null); }} onConfirm={adjusted => { setPhoto(adjusted); setEditing(false); }} />;
-  if (!photo) return <CameraCapture title="De Agora • Piramba" onCapture={captured => { setSource(captured); setEditing(true); }} onClose={onClose} />;
+  if (!photo) return <CameraCapture title="De Agora • Piramba" onCapture={captured => { setSource(captured); setPhoto(captured); setEditing(false); }} onClose={onClose} />;
   return <FullscreenDialog title="Prévia do De Agora" onClose={() => { if (!submitting) onClose(); }}>
     <div className="camera-screen">
       <img src={photo} alt="Foto para publicar no De Agora" className="camera-video camera-preview-image" />

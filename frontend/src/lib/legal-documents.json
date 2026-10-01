@@ -1,0 +1,130 @@
+{
+  "version": "demo-2026-09-30-v1",
+  "mode": "DEMO",
+  "operator": "Conecta Comunidade Exemplo Ltda. — identidade fictícia",
+  "taxId": "CNPJ não informado — demonstração, sem identificação empresarial válida",
+  "address": "Rua de Demonstração, 100, Cidade Exemplo, Brasil — endereço fictício",
+  "contact": "privacidade@example.invalid — endereço fictício, não recebe solicitações",
+  "notice": "MINUTA DE DEMONSTRAÇÃO. Os dados do responsável são fictícios. Estes textos e o aceite de teste não substituem a identificação do controlador real, a revisão jurídica nem a implementação das medidas de proteção de dados. Não representam adequação completa à LGPD.",
+  "terms": {
+    "title": "Termos de uso",
+    "sections": [
+      {
+        "title": "1. Sobre a plataforma e esta minuta",
+        "paragraphs": [
+          "A plataforma permite criar um perfil, compartilhar fotos e momentos, acompanhar estabelecimentos e eventos e interagir com outras pessoas. Esta é uma proposta de contrato em demonstração. A identificação fictícia acima não é a identificação do responsável pelo serviço atualmente em operação.",
+          "A versão indicada nesta página identifica o texto apresentado. O aceite de demonstração é registrado apenas após uma ação expressa do usuário e não será reaproveitado como aceite de uma futura versão definitiva."
+        ]
+      },
+      {
+        "title": "2. Cadastro e público adulto",
+        "paragraphs": [
+          "O fluxo de teste destina-se a pessoas com 18 anos ou mais. A confirmação de idade é uma autodeclaração, não uma verificação documental. Não use a plataforma para cadastrar menores, se passar por outra pessoa ou fornecer informações enganosas.",
+          "Você deve proteger sua senha, usar dados de contato que possa acessar e avisar a administração por meio dos recursos disponíveis se identificar uso indevido da conta. A conta pode ser restringida por fraude, assédio ou violações das regras, com análise e possibilidade de contestação pelos canais definidos na versão definitiva."
+        ]
+      },
+      {
+        "title": "3. Fotos, conteúdo e direitos de imagem",
+        "paragraphs": [
+          "Você mantém os direitos sobre seu conteúdo. Ao publicá-lo, permite que a plataforma o armazene, redimensione e exiba na funcionalidade e ao público escolhido por você, na medida necessária ao funcionamento do serviço. Essa permissão não autoriza uso irrestrito da sua imagem em campanhas externas.",
+          "Publique apenas materiais que possa utilizar e respeite os direitos de quem aparece nas fotos, incluindo autorização quando necessária. Não publique dados pessoais de terceiros sem fundamento legítimo, imagens íntimas sem autorização, conteúdo envolvendo exploração de menores, ameaças ou materiais que violem direitos autorais.",
+          "As opções de privacidade e de enquadramento devem ser revisadas antes de publicar. Mesmo em áreas restritas, outros usuários podem copiar conteúdo por meios externos. Essa possibilidade não afasta as obrigações legais da plataforma."
+        ]
+      },
+      {
+        "title": "4. Conduta, denúncias e moderação",
+        "paragraphs": [
+          "Não são permitidos assédio, perseguição, discriminação, violência, fraude, golpes, spam ou uso da plataforma para atividades ilícitas. Interações e paquera devem respeitar o consentimento e os limites das pessoas envolvidas.",
+          "Use os recursos de denúncia disponíveis para sinalizar conteúdo ou comportamento inadequado. A moderação pode analisar denúncias, limitar recursos, remover conteúdo ou restringir contas de forma proporcional. Em caso de risco imediato, procure os serviços públicos competentes; a plataforma não é um serviço de emergência."
+        ]
+      },
+      {
+        "title": "5. Estabelecimentos, promoções e encontros",
+        "paragraphs": [
+          "Horários, preços, disponibilidade, condições de cupons e eventos devem ser confirmados com o estabelecimento responsável. Publicações de terceiros não constituem garantia de sua veracidade. Condições específicas de uma promoção precisam ser apresentadas com clareza.",
+          "Encontros presenciais são decisões dos participantes. Adote cuidados e respeite regras locais. Nenhuma disposição destes termos elimina direitos do consumidor nem afasta responsabilidade legal aplicável à plataforma ou ao estabelecimento."
+        ]
+      },
+      {
+        "title": "6. Disponibilidade e segurança",
+        "paragraphs": [
+          "A plataforma pode sofrer indisponibilidade, manutenção e falhas. A versão definitiva deverá identificar os canais de suporte e as condições efetivas do serviço. Não é prometida disponibilidade ininterrupta nem segurança absoluta.",
+          "É vedado tentar acessar contas ou dados sem autorização, contornar controles, explorar vulnerabilidades contra terceiros ou prejudicar a infraestrutura. Eventuais limitações de responsabilidade só podem operar nos limites da legislação aplicável; não há renúncia geral a direitos nem imunidade jurídica."
+        ]
+      },
+      {
+        "title": "7. Privacidade, encerramento e alterações",
+        "paragraphs": [
+          "A política de privacidade explica a proposta de tratamento de dados e as funcionalidades existentes. Ler essa política não é consentir genericamente com qualquer uso de dados. Tratamentos opcionais que dependam de consentimento devem ter finalidade específica e escolha separada.",
+          "O centro de privacidade permite solicitar acesso, correção, exclusão e outras providências. Registrar uma solicitação não equivale a executar automaticamente a exclusão. Solicitações precisam de análise, identificação e atendimento, respeitando retenções legais aplicáveis.",
+          "Mudanças relevantes na versão definitiva devem ser comunicadas. Quando um novo aceite for necessário, ele deverá ser solicitado de forma expressa; contas antigas não serão marcadas como aceitas sem manifestação. A legislação brasileira e os direitos de acesso aos órgãos competentes permanecem aplicáveis."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "title": "Política de privacidade",
+    "sections": [
+      {
+        "title": "1. Responsável e canal de contato",
+        "paragraphs": [
+          "O nome, endereço e contato desta minuta são fictícios. Antes de adotar uma política definitiva, é necessário identificar o controlador real e disponibilizar um canal de privacidade que funcione. O endereço example.invalid não deve ser usado para enviar dados pessoais.",
+          "Durante a demonstração, o centro de privacidade registra solicitações autenticadas na plataforma. Isso não significa que o responsável real já esteja identificado nem que todas as rotinas jurídicas estejam implementadas."
+        ]
+      },
+      {
+        "title": "2. Dados e funcionalidades existentes",
+        "paragraphs": [
+          "O aplicativo trata identificadores de conta, e-mail, senha protegida por hash, nome, nome de usuário, cidade, bio, fotos e interesses de perfil. Também existem registros de publicações, comentários, reações, seguidores, interações, presença/check-in, eventos, cupons, encontros, notificações, denúncias e ações administrativas.",
+          "A presença em um estabelecimento pode revelar informações sobre seus hábitos. Revise as opções de perfil privado, visibilidade e radar de paquera. Evite incluir dados sensíveis ou informações de outras pessoas na bio e nas publicações.",
+          "A câmera é solicitada pelo navegador para tirar uma foto escolhida por você. A imagem não é enviada apenas por abrir a câmera: o envio ocorre ao confirmar uma publicação ou salvar uma foto em um campo. Não existe reconhecimento facial implementado neste projeto."
+        ]
+      },
+      {
+        "title": "3. Finalidades e bases legais propostas",
+        "paragraphs": [
+          "As finalidades propostas incluem criar e manter a conta, entregar as funcionalidades solicitadas, exibir conteúdo conforme as configurações, prevenir abuso, atender solicitações e cumprir obrigações legais. A base legal de cada operação deve ser validada pelo controlador real antes da versão definitiva.",
+          "Tratamentos necessários ao serviço não devem ser confundidos com autorizações opcionais de publicidade ou uso externo de imagem. Esta versão não cria consentimento genérico para venda de dados ou envio de campanhas externas. Novos tratamentos opcionais exigem informação clara e, quando cabível, consentimento separado e revogável."
+        ]
+      },
+      {
+        "title": "4. Visibilidade e compartilhamento",
+        "paragraphs": [
+          "Conteúdo publicado pode ser exibido a usuários e visitantes conforme a área e as permissões da aplicação. Administradores autorizados acessam dados necessários à administração e moderação. Perfis, fotos e conteúdo público podem ser copiados por terceiros.",
+          "A arquitetura usa uma VPS para a aplicação e arquivos enviados, e PostgreSQL hospedado no Supabase para dados estruturados. Imagens externas e provedores de fontes podem gerar requisições a terceiros, que recebem dados técnicos da conexão. A lista definitiva de fornecedores, contratos e regiões de processamento precisa ser confirmada.",
+          "Dependendo da infraestrutura e dos fornecedores, pode haver tratamento fora do Brasil. A versão definitiva deve verificar e informar as condições e mecanismos aplicáveis; esta minuta não afirma que a transferência internacional já foi regularizada."
+        ]
+      },
+      {
+        "title": "5. Armazenamento no navegador",
+        "paragraphs": [
+          "A aplicação utiliza armazenamento local do navegador para a sessão e alguns estados da interface. O token de acesso não deve ser compartilhado. Sair da conta remove a sessão local, mas conteúdo e registros no servidor seguem as regras de conservação e exclusão.",
+          "Não foi incluído um aceite automático de cookies de publicidade. A eventual implantação de ferramentas de análise ou publicidade deve ser inventariada e avaliada antes de seu uso, com escolhas específicas quando necessárias."
+        ]
+      },
+      {
+        "title": "6. Conservação, exclusão e segurança",
+        "paragraphs": [
+          "Registros de conta e conteúdo permanecem no sistema enquanto necessários ao serviço, sujeito à política definitiva. Prazos de conservação, rotinas de exclusão, tratamento de backups e exceções por obrigação legal devem ser documentados e implementados; esta minuta não promete uma exclusão automática já existente.",
+          "O projeto possui autenticação, controle de acesso e registros de ações. Esses mecanismos não substituem gestão de acessos, backups, atualização de dependências, resposta a incidentes e revisão periódica de segurança. Nenhum sistema oferece segurança absoluta.",
+          "Incidentes devem ser avaliados pelo responsável real e comunicados quando exigido pela regulamentação aplicável. A organização precisa definir responsáveis, canal de atendimento e procedimento operacional antes da adoção definitiva."
+        ]
+      },
+      {
+        "title": "7. Seus direitos e solicitações",
+        "paragraphs": [
+          "Conforme as condições legais aplicáveis, você pode solicitar confirmação e acesso, correção, informações sobre compartilhamento, anonimização, bloqueio ou eliminação, portabilidade, revisão de decisões e revogação de consentimentos. O exercício de direitos não depende de consentir com tratamentos opcionais.",
+          "No centro de privacidade, você pode obter uma cópia dos dados de conta abrangidos pela exportação e registrar uma solicitação. A exportação automática é parcial e não substitui uma resposta completa quando necessária. Pedidos são registrados com protocolo e permanecem pendentes até análise e providência pela administração.",
+          "A verificação de identidade deve ser proporcional. Não envie documentos ou dados sensíveis no campo livre sem necessidade. Em uma versão definitiva, pedidos e reclamações também poderão ser apresentados ao canal válido do controlador, à ANPD e aos órgãos competentes."
+        ]
+      },
+      {
+        "title": "8. Aceite de demonstração e revisão",
+        "paragraphs": [
+          "O sistema registra a versão e o hash dos documentos, a conta autenticada, a data do servidor e a ação de aceite. Contas anteriores começam sem aceite desta versão. Nenhum registro é criado por mera visita ou pelo fato de a conta já existir.",
+          "O evento desta minuta é identificado como DEMO. Trocar a identificação fictícia por dados reais ou alterar o conteúdo exigirá uma nova versão e uma nova análise sobre a necessidade de aceite. Esta página é uma base de trabalho, não certificação de conformidade nem garantia de proteção contra qualquer responsabilidade."
+        ]
+      }
+    ]
+  }
+}

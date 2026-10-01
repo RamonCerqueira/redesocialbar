@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Home, Flame, Compass, Plus, Heart, UserRound, Beer, CalendarDays, Ticket, Store, Ellipsis, X, ArrowUpRight, LayoutDashboard, LogOut } from 'lucide-react';
 
 const destinations = [
+  { label: 'Privacidade e termos', href: '/central-de-privacidade', icon: UserRound },
   { label: 'Início', href: '/', icon: Home },
   { label: 'Feed do Piramba', href: '/feed', icon: Flame },
   { label: 'Quem está aqui agora?', href: '/aqui', icon: Compass },

@@ -152,7 +152,7 @@ export default function PublicarPage() {
         onChange={event => { void handleFileChange(event); }}
         className="hidden"
       />
-      {isCameraActive && <CameraCapture title="Foto do seu momento" onClose={() => setIsCameraActive(false)} onCapture={photo => { setPendingPhoto(photo); setPhotoError(''); setIsCameraActive(false); }} />}
+      {isCameraActive && <CameraCapture title="Foto do seu momento" onClose={() => setIsCameraActive(false)} onCapture={photo => { setSelectedPhoto(photo); setPhotoSource(photo); setMediaType('photo'); setPhotoError(''); setIsCameraActive(false); }} />}
       {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={4 / 5} allowOriginal onCancel={() => setPendingPhoto(null)} onConfirm={photo => { setSelectedPhoto(photo); setPhotoSource(pendingPhoto); setMediaType('photo'); setPendingPhoto(null); }} />}
       {photoError && <p role="alert" className="px-5 text-sm text-rose-300">{photoError}</p>}
 

@@ -6,6 +6,7 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcryptjs';
 import { INITIAL_PASSWORD, isInstitutionalEmail, normalizeEmail } from './institutional-policy';
 import { Prisma } from '@prisma/client';
+import { assertAcceptance, acceptanceData } from '../legal/legal-policy';
 
 type SessionUser = Prisma.UserGetPayload<{ include: { profile: true } }>;
 
@@ -34,6 +35,7 @@ export class AuthService {
     if (isInstitutionalEmail(dto.email)) {
       throw new ForbiddenException('Contas @pirambeira.com são cadastradas exclusivamente pelo superadministrador.');
     }
+    assertAcceptance(dto);
     const existingEmail = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase().trim() },
     });
@@ -55,6 +57,7 @@ export class AuthService {
       data: {
         email: dto.email.toLowerCase().trim(),
         passwordHash,
+        auditLogs: { create: acceptanceData('registration') },
         profile: {
           create: {
             name: dto.name.trim(),

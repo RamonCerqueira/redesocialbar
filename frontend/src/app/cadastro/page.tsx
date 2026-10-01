@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import documents from '@/lib/legal-documents.json';
+import { LegalCheckboxes, emptyLegalChoices } from '@/components/legal-checkboxes';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
@@ -11,6 +13,7 @@ export default function CadastroPage() {
   const router = useRouter();
   const { login } = useAuth();
 
+  const [legalChoices, setLegalChoices] = useState(emptyLegalChoices);
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -76,6 +79,8 @@ export default function CadastroPage() {
           password,
           city,
           bio,
+          ...legalChoices,
+          legalVersion: documents.version,
         }),
       });
       login(data.token, data.user);
@@ -247,6 +252,8 @@ export default function CadastroPage() {
             />
           </div>
 
+          <p className="rounded-xl border border-amber-500/30 p-3 text-xs text-amber-200">{documents.notice}</p>
+          <LegalCheckboxes value={legalChoices} onChange={setLegalChoices} />
           <button
             type="submit"
             disabled={isLoading}

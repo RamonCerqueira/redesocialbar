@@ -1,6 +1,10 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, MaxLength, Matches, IsBoolean, Equals } from 'class-validator';
 
 export class RegisterDto {
+  @IsBoolean() @Equals(true) termsAccepted!: boolean;
+  @IsBoolean() @Equals(true) privacyAcknowledged!: boolean;
+  @IsBoolean() @Equals(true) adultConfirmed!: boolean;
+  @IsString() legalVersion!: string;
   @IsEmail({}, { message: 'Formato de e-mail inválido' })
   @IsNotEmpty({ message: 'E-mail é obrigatório' })
   email!: string;
