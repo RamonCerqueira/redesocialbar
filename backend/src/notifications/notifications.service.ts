@@ -5,6 +5,10 @@ import { PrismaService } from '../prisma/prisma.service';
 export class NotificationsService {
   constructor(private prisma: PrismaService) {}
 
+  storyReplies(userId: string) {
+    return this.prisma.notification.findMany({ where: { userId, type: 'STORY_REPLY', OR: [{ link: null }, { link: { not: { startsWith: '/chat/' } } }] }, orderBy: { createdAt: 'desc' } });
+  }
+
   async getUserNotifications(userId: string) {
     const notifications = await this.prisma.notification.findMany({
       where: { userId },

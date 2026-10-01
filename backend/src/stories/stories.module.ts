@@ -45,9 +45,16 @@ export class StoriesController {
     if (!story) throw new NotFoundException('Publicação indisponível.');
     const blocked = await this.prisma.block.findFirst({ where: { OR: [{ blockerId: userId, blockedId: story.authorId }, { blockerId: story.authorId, blockedId: userId }] } });
     if (blocked) throw new BadRequestException('Interação indisponível.');
+    if (userId === story.authorId) throw new BadRequestException('Esta publicação é sua.');
     const profile = await this.prisma.profile.findUnique({ where: { userId } });
-    await this.prisma.notification.create({ data: { userId: story.authorId, type: 'STORY_REPLY', title: (profile?.name || 'Alguém') + ' respondeu ao seu De Agora', body: dto.content.trim(), link: '/perfil/' + profile?.username } });
-    return { success: true };
+    return this.prisma.$transaction(async tx => {
+      let conversation = await tx.conversation.findFirst({ where: { restaurantId: story.restaurantId, type: 'STORY:' + id, AND: [{ participants: { some: { userId } } }, { participants: { some: { userId: story.authorId } } }] } });
+      if (!conversation) conversation = await tx.conversation.create({ data: { restaurantId: story.restaurantId, type: 'STORY:' + id, participants: { create: [{ userId }, { userId: story.authorId }] } } });
+      await tx.message.create({ data: { conversationId: conversation.id, senderId: userId, content: dto.content.trim() } });
+      await tx.conversation.update({ where: { id: conversation.id }, data: { updatedAt: new Date() } });
+      await tx.notification.create({ data: { userId: story.authorId, type: 'STORY_REPLY', title: (profile?.name || 'Alguém') + ' respondeu ao seu De Agora', body: dto.content.trim(), link: '/chat/' + conversation.id } });
+      return { success: true, conversationId: conversation.id };
+    });
   }
 }
 @Module({ controllers: [StoriesController] })

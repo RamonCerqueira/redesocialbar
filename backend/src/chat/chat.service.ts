@@ -106,6 +106,7 @@ export class ChatService {
 
     return {
       conversationId: conversation.id,
+      story: conversation.type.startsWith('STORY:') ? await this.prisma.story.findUnique({ where: { id: conversation.type.slice(6) }, select: { mediaUrl: true, caption: true, expiresAt: true } }) : null,
       type: conversation.type,
       restaurant: {
         name: conversation.restaurant.name,

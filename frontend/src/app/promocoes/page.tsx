@@ -5,9 +5,17 @@ import { Promotion } from '@/lib/types';
 import { LoadError } from '@/components/load-error';
 import { apiRequest } from '@/lib/api';
 import { CouponCard } from '@/components/coupon-card';
+import { useAuth } from '@/lib/auth-context';
 import { Tag, Sparkles, Percent, Beer } from 'lucide-react';
 
 export default function PromocoesPage() {
+  const { user } = useAuth();
+  const [tab, setTab] = useState<'offers' | 'mine'>('offers');
+  const [coupons, setCoupons] = useState<Array<{id: string; code: string; status: string; claimedAt: string; usedAt?: string; promotion: Promotion}>>([]);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+  async function loadCoupons() { if (!user) return; setCouponLoading(true); try { setCoupons(await apiRequest('/promotions/mine')); setCouponError(''); } catch(e) { setCouponError(e instanceof Error ? e.message : 'Não foi possível carregar seus cupons.'); } finally { setCouponLoading(false); } }
+  useEffect(() => { if (tab === 'mine') void loadCoupons(); }, [user, tab]);
   const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -43,7 +51,8 @@ export default function PromocoesPage() {
         </p>
       </div>
 
-      {loadError ? <LoadError message={loadError} retry={() => void loadPromos()}/> : isLoading ? (
+      <div className="flex gap-3"><button onClick={() => setTab('offers')} className={'rounded-xl p-3 ' + (tab === 'offers' ? 'bg-amber-400 text-black' : 'bg-white/5')}>Promoções</button><button onClick={() => setTab('mine')} className={'rounded-xl p-3 ' + (tab === 'mine' ? 'bg-amber-400 text-black' : 'bg-white/5')}>Meus cupons</button></div>
+      {tab === 'mine' ? <div className="space-y-5">{!user ? <a href="/login" className="text-amber-300">Entre para ver seus cupons</a> : couponLoading ? <p role="status">Carregando cupons…</p> : couponError ? <LoadError message={couponError} retry={() => void loadCoupons()} /> : <>{['CLAIMED', 'USED', 'EXPIRED'].map(status => <section key={status} className="space-y-3"><h2 className="font-bold">{{CLAIMED:'Resgatados',USED:'Utilizados',EXPIRED:'Expirados'}[status]}</h2>{coupons.filter(c => c.status === status).length === 0 && <p className="text-sm text-stone-400">Nenhum cupom nesta categoria.</p>}{coupons.filter(c => c.status === status).map(c => <article key={c.id} className="rounded-2xl border border-white/10 p-4"><h3 className="font-bold">{c.promotion.title}</h3><p className="font-mono text-amber-300 break-all mt-2">{c.code}</p><p className="text-xs text-stone-400 mt-2">Resgatado em {new Date(c.claimedAt).toLocaleString('pt-BR')}</p>{c.usedAt && <p className="text-xs text-stone-400">Utilizado em {new Date(c.usedAt).toLocaleString('pt-BR')}</p>}<p className="text-xs mt-2">{c.promotion.terms}</p>{status === 'CLAIMED' && <p className="text-sm mt-2">Apresente este código à equipe. O uso é confirmado pelo estabelecimento.</p>}</article>)}</section>)}</>}</div> : loadError ? <LoadError message={loadError} retry={() => void loadPromos()}/> : isLoading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
             <div key={i} className="surface-ambient rounded-3xl h-44 animate-pulse border border-amber-500/10" />

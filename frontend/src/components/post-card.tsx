@@ -172,13 +172,13 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
 
   return (
     <article className="rounded-[22px] overflow-hidden border border-white/[0.08] hover:border-[#FFB800]/35 mb-4 transition-all duration-300 shadow-[0_12px_36px_rgba(0,0,0,0.7),0_0_20px_rgba(255,184,0,0.03),inset_0_1px_0_0_rgba(255,255,255,0.08)] bg-[#12100E]/75 backdrop-blur-2xl group relative">
-      {/* 1. Header do Momento (height: 58px, padding: 8px 12px, avatar: 38x38) */}
-      <div className="h-[58px] px-3 py-2 flex items-center justify-between">
+      {/* Altura acompanha o nome e os selos sem encostar nas bordas. */}
+      <div className="min-h-[76px] px-4 py-3 flex items-center justify-between gap-3">
         <Link
           href={isOfficial ? '/restaurante/pirambeira' : `/perfil/${post.author.username}`}
-          className="flex items-center gap-[9px] group"
+          className="flex items-center gap-[9px] group min-w-0 flex-1"
         >
-          <div className="relative">
+          <div className="relative shrink-0">
             <img
               src={
                 post.author.avatarUrl ||
@@ -191,13 +191,13 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
                   : 'border-white/10 group-hover:border-[#FFB800]/50'
               }`}
             />
-            {post.author.checkInCount && post.author.checkInCount > 3 && !isOfficial && (
+            {(post.author.checkInCount ?? 0) > 3 && !isOfficial && (
               <span className="absolute -bottom-1 -right-1 bg-[#080706] text-[#FFB800] text-[10px] font-black px-1.5 py-0.2 rounded-full border border-[#FFB800]/40">
                 🔥{post.author.checkInCount}
               </span>
             )}
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-display font-bold text-sm text-white group-hover:text-[#FFB800] transition-colors">
                 {post.author.name}
@@ -220,7 +220,7 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-[#A6A29D] flex items-center gap-1.5 mt-0.5">
+            <p className="text-[11px] text-[#A6A29D] flex flex-wrap items-center gap-1.5 mt-0.5">
               <span>@{post.author.username}</span>
               <span>•</span>
               <span>2h</span>

@@ -7,6 +7,10 @@ import { AccessService, Actor } from '../auth/access.service';
 @Injectable()
 export class PromotionsService {
   constructor(private prisma: PrismaService, private access: AccessService) {}
+  async mine(userId: string) {
+    const coupons = await this.prisma.coupon.findMany({ where: { userId }, include: { promotion: true }, orderBy: { claimedAt: 'desc' } });
+    return coupons.map(c => ({ ...c, status: c.status === 'CLAIMED' && c.promotion.validUntil <= new Date() ? 'EXPIRED' : c.status }));
+  }
   async findAll(slug: string, userId?: string) {
     const restaurant = await this.prisma.restaurant.findUnique({ where: { slug } });
     if (!restaurant) throw new NotFoundException('Restaurante não encontrado.');

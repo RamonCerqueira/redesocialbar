@@ -36,7 +36,7 @@ export function Header() {
         })
         .catch(() => { });
     }
-  }, [user]);
+  }, [user, showNotifications]);
 
   const handleMarkAllRead = async () => {
     try {
@@ -173,8 +173,9 @@ export function Header() {
                 return (
                   <Link
                     key={notif.id}
-                    href={notif.link || '#'}
+                    href={notif.type === 'STORY_REPLY' && !notif.link?.startsWith('/chat/') ? '/mensagens#' + notif.id : notif.link || '#'}
                     onClick={() => {
+                      void apiRequest(`/notifications/${notif.id}/read`, { method: 'POST' }).catch(() => {});
                       setNotifications((prev) =>
                         prev.map((n) => (n.id === notif.id ? { ...n, isRead: true } : n))
                       );
@@ -228,11 +229,11 @@ export function Header() {
             {notifications.length > 0 && (
               <div className="shrink-0 border-t border-white/[0.06] px-5 py-4">
                 <Link
-                  href="/promocoes"
+                  href="/mensagens"
                   onClick={() => setShowNotifications(false)}
                   className="flex items-center justify-between w-full py-3 px-4 rounded-2xl bg-[#F5A623]/10 hover:bg-[#F5A623]/18 border border-[#F5A623]/20 transition-all group"
                 >
-                  <span className="text-[12px] text-[#F5A623] font-bold">Ver todas as promocoes</span>
+                  <span className="text-[12px] text-[#F5A623] font-bold">Ver minhas mensagens</span>
                   <ArrowRight className="w-4 h-4 text-[#F5A623] group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>

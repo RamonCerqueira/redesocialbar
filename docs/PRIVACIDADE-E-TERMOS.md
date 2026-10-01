@@ -8,7 +8,7 @@ Esta entrega usa identidade empresarial fictícia por solicitação do responsá
 - `/privacidade`: dados tratados, visibilidade, câmera, direitos e limitações.
 - `/central-de-privacidade`: exportação parcial e solicitações autenticadas com protocolo; o superadministrador vê a fila nesta página.
 
-Cadastro exige três caixas inicialmente desmarcadas: termos DEMO, ciência da política DEMO e autodeclaração de maioridade. O registro é criado na mesma transação do usuário. Não existe preenchimento retroativo de aceite: contas anteriores podem revisar ou adiar. Nenhum registro DEMO vale como aceite definitivo.
+Cadastro exige três caixas inicialmente desmarcadas: termos DEMO, ciência da política DEMO e autodeclaração de maioridade. O registro é criado na mesma transação do usuário. Não existe preenchimento retroativo de aceite nem diálogo automático ao entrar: os documentos continuam na central de privacidade. Nenhum registro DEMO vale como aceite definitivo.
 
 Os documentos idênticos ficam em `backend/src/legal/legal-documents.json` e `frontend/src/lib/legal-documents.json`. A versão atual é `demo-2026-09-30-v2`. O backend registra versão, SHA-256 do conteúdo, data, conta e origem em AuditLog com ação `LEGAL_ACCEPTANCE_DEMO`. Não há migração de banco nesta entrega. Mudança no conteúdo invalida a correspondência do registro anterior pelo hash.
 

@@ -89,7 +89,7 @@ export function CouponCard({ promotion, onPromotionUpdate }: CouponCardProps) {
               </div>
               <div>
                 <span className="text-[10px] text-[#A89F96] uppercase font-bold tracking-wider block">
-                  Código de Mesa (Apresentar ao Garçom)
+                  {userCoupon.status === 'USED' ? 'Cupom já utilizado' : userCoupon.status === 'EXPIRED' || new Date(promotion.validUntil) <= new Date() ? 'Cupom expirado' : 'Código do cupom (apresentar à equipe)'}
                 </span>
                 <span className="font-mono font-black text-amber-400 text-base tracking-widest">
                   {userCoupon.code}
@@ -99,6 +99,7 @@ export function CouponCard({ promotion, onPromotionUpdate }: CouponCardProps) {
 
             <button
               onClick={handleCopy}
+              disabled={userCoupon.status !== 'CLAIMED' || new Date(promotion.validUntil) <= new Date()}
               className="py-2 px-3.5 rounded-xl bg-[#241B15] hover:bg-[#2C221A] text-[#FBF8F5] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               {copied ? (

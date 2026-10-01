@@ -8,6 +8,9 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 export class NotificationsController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
+  @Get('story-replies')
+  storyReplies(@CurrentUser('id') userId: string) { return this.notificationsService.storyReplies(userId); }
+
   @Get()
   async getUserNotifications(@CurrentUser('id') userId: string) {
     return this.notificationsService.getUserNotifications(userId);

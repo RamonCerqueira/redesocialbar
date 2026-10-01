@@ -13,6 +13,12 @@ import { ValidateCouponDto } from '../admin/admin.dto';
 export class PromotionsController {
   constructor(private readonly promotionsService: PromotionsService) {}
 
+  @Get('mine')
+  @UseGuards(JwtAuthGuard)
+  mine(@CurrentUser('id') userId: string) {
+    return this.promotionsService.mine(userId);
+  }
+
   @Get('restaurant/:slug')
   @UseGuards(OptionalJwtAuthGuard)
   async findAll(@Param('slug') slug: string, @CurrentUser('id') userId?: string) {

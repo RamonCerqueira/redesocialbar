@@ -4,7 +4,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Navigation } from './navigation';
 import { Header } from './header';
-import { LegalReviewPrompt } from './legal-review-prompt';
 import { SplashScreen } from './splash-screen';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -18,7 +17,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   if (pathname.startsWith('/admin') || pathname === '/primeiro-acesso') return <>{children}</>;
   return <>
     <SplashScreen />
-    <LegalReviewPrompt />
     <div className="flex min-h-screen">
       <Navigation />
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">

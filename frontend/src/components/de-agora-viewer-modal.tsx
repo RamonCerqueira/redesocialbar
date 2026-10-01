@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { Story } from '@/lib/types';
 import { apiRequest } from '@/lib/api';
 import { FullscreenDialog } from './fullscreen-dialog';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 import {
   X,
   Send,
@@ -30,6 +32,7 @@ export function DeAgoraViewerModal({
   onClose,
   onViewed,
 }: DeAgoraViewerModalProps) {
+  const { user } = useAuth();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [replyText, setReplyText] = useState('');
   const [isSendingReply, setIsSendingReply] = useState(false);
@@ -274,7 +277,7 @@ export function DeAgoraViewerModal({
           )}
 
           {/* Campo de Resposta Rápida */}
-          <form onSubmit={handleSendReply} className="flex items-center gap-2">
+          {user?.id === currentStory.author.id ? <Link href="/mensagens" onClick={onClose} className="block text-center rounded-full bg-amber-400 p-3 text-black font-bold">Ver respostas ao De Agora</Link> : <form onSubmit={handleSendReply} className="flex items-center gap-2">
             <input
               type="text"
               value={replyText}
@@ -296,7 +299,7 @@ export function DeAgoraViewerModal({
                 <Send className="w-4 h-4 fill-current stroke-none" />
               )}
             </button>
-          </form>
+          </form>}
 
           {replySent && (
             <div className="text-center">
