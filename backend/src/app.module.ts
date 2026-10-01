@@ -18,10 +18,12 @@ import { AdminModule } from './admin/admin.module';
 import { AdsModule } from './ads/ads.module';
 import { HealthController } from './health.controller';
 import { LegalModule } from './legal/legal.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   controllers: [HealthController],
   imports: [
+    ChatModule,
     LegalModule,
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
@@ -43,3 +45,4 @@ import { LegalModule } from './legal/legal.module';
   ],
 })
 export class AppModule {}
+
