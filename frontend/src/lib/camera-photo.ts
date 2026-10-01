@@ -1,3 +1,4 @@
+import { apiRequest } from './api';
 // Keep phone photos within the API's 5 MB image limit, including large native captures.
 const MAX_SIDE = 1600;
 
@@ -18,7 +19,9 @@ export function capturePhoto(video: HTMLVideoElement, mirrored: boolean): string
 }
 
 export async function photoFromFile(file: File): Promise<string> {
-  if (!file.type.startsWith('image/') || file.size > 20 * 1024 * 1024) throw new Error('Escolha uma foto de até 20 MB.');
+  // Camera providers may return an empty MIME type or application/octet-stream.
+  // Decode the actual contents instead of rejecting by the file label.
+  if (!file.size || file.size > 25 * 1024 * 1024) throw new Error('Escolha uma foto de até 25 MB.');
   const url = URL.createObjectURL(file);
   try {
     const image = new Image();
@@ -30,10 +33,16 @@ export async function photoFromFile(file: File): Promise<string> {
     canvas.height = Math.round(image.naturalHeight * scale);
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Não foi possível preparar a foto.');
+    context.fillStyle = '#ffffff';
+    context.fillRect(0, 0, canvas.width, canvas.height);
     context.drawImage(image, 0, 0, canvas.width, canvas.height);
     return canvas.toDataURL('image/jpeg', 0.85);
   } catch {
-    throw new Error('Não foi possível abrir essa foto. Tente uma imagem JPEG, PNG ou WebP.');
+    // Older browsers cannot decode HEIC/HEIF, TIFF and some phone variants.
+    // Authenticated temporary conversion returns JPEG without saving the original.
+    const body = new FormData(); body.append('photo', file);
+    const result = await apiRequest<{ dataUrl: string }>('/media/normalize', { method: 'POST', body, signal: AbortSignal.timeout(45000) });
+    return result.dataUrl;
   } finally {
     URL.revokeObjectURL(url);
   }

@@ -1,5 +1,5 @@
 {
-  "version": "demo-2026-09-30-v1",
+  "version": "demo-2026-09-30-v2",
   "mode": "DEMO",
   "operator": "Conecta Comunidade Exemplo Ltda. — identidade fictícia",
   "taxId": "CNPJ não informado — demonstração, sem identificação empresarial válida",
@@ -77,7 +77,7 @@
         "paragraphs": [
           "O aplicativo trata identificadores de conta, e-mail, senha protegida por hash, nome, nome de usuário, cidade, bio, fotos e interesses de perfil. Também existem registros de publicações, comentários, reações, seguidores, interações, presença/check-in, eventos, cupons, encontros, notificações, denúncias e ações administrativas.",
           "A presença em um estabelecimento pode revelar informações sobre seus hábitos. Revise as opções de perfil privado, visibilidade e radar de paquera. Evite incluir dados sensíveis ou informações de outras pessoas na bio e nas publicações.",
-          "A câmera é solicitada pelo navegador para tirar uma foto escolhida por você. A imagem não é enviada apenas por abrir a câmera: o envio ocorre ao confirmar uma publicação ou salvar uma foto em um campo. Não existe reconhecimento facial implementado neste projeto."
+          "A câmera é solicitada pelo navegador para tirar uma foto escolhida por você. Abrir a câmera não envia a imagem. Ao selecionar uma foto que o navegador não consegue abrir, o arquivo pode ser enviado à VPS para conversão temporária e devolvido como prévia JPEG, sem salvar o original no armazenamento da aplicação. A prévia é salva e publicada somente quando você confirma a ação correspondente. A conversão remove metadados do arquivo, inclusive localização incorporada. Não existe reconhecimento facial implementado neste projeto."
         ]
       },
       {

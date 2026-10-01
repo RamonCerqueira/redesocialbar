@@ -95,10 +95,10 @@ export function ImageField({
       {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={aspect} allowOriginal onCancel={() => { setPendingPhoto(null); setBusy(false); onBusy(false); }} onConfirm={data => { void confirmPhoto(data); }} />}
       <label>
         {label}
-        <input aria-label={label} type="file" accept="image/*" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}} />
+        <input aria-label={label} type="file" accept="image/*,.heic,.heif,.avif,.tif,.tiff,.bmp,.jpg,.jpeg,.jfif,.png,.webp,.gif" disabled={busy} onChange={e=>{void upload(e.target.files?.[0]);e.target.value='';}} />
       </label>
       <small className="admin-muted">
-        {busy ? 'Carregando imagem…' : 'Ajuste a foto antes de enviar · até 20 MB'}
+        {busy ? 'Carregando imagem…' : 'Ajuste a foto antes de enviar · até 25 MB'}
         {sizeText && <> · <span className="admin-image-size">Tamanho recomendado para {typeLabel || 'este formato'}: <strong>{sizeText}</strong></span></>}
       </small>
       {value && (

@@ -285,7 +285,7 @@ export function MenuItemModal({
           <input
             id="mi-image"
             type="file"
-            accept="image/*"
+            accept="image/*,.heic,.heif,.avif,.tif,.tiff,.bmp,.jpg,.jpeg,.jfif,.png,.webp,.gif"
             disabled={uploading}
             hidden
             onChange={e => {

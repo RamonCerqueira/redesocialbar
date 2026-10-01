@@ -122,8 +122,8 @@ export function CameraCapture({ title, onCapture, onClose }: { title: string; on
         onPlaying={() => { setReady(true); setStarting(false); }} />}
       </div>
       <div className="camera-shade" />
-      <input ref={nativeRef} type="file" accept="image/*" capture={facing} hidden onChange={event => { void selectFile(event); }} />
-      <input ref={galleryRef} type="file" accept="image/*" hidden onChange={event => { void selectFile(event); }} />
+      <input ref={nativeRef} type="file" accept="image/*,.heic,.heif,.avif,.tif,.tiff,.bmp,.jpg,.jpeg,.jfif,.png,.webp,.gif" capture={facing} hidden onChange={event => { void selectFile(event); }} />
+      <input ref={galleryRef} type="file" accept="image/*,.heic,.heif,.avif,.tif,.tiff,.bmp,.jpg,.jpeg,.jfif,.png,.webp,.gif" hidden onChange={event => { void selectFile(event); }} />
       <header className="camera-topbar">
         <button type="button" autoFocus className="camera-icon-button" aria-label="Fechar câmera" onClick={onClose}><X size={23} /></button>
         <span className="camera-title">{title}</span>

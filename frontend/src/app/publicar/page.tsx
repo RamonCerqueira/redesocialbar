@@ -55,6 +55,7 @@ export default function PublicarPage() {
 
   // Live Camera states
   const [isCameraActive, setIsCameraActive] = useState(false);
+  const [photoLoading, setPhotoLoading] = useState(false);
   const [photoError, setPhotoError] = useState('');
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [photoSource, setPhotoSource] = useState<string | null>(null);
@@ -81,12 +82,13 @@ export default function PublicarPage() {
     event.target.value = '';
     if (!file) return;
     setPhotoError('');
+    setPhotoLoading(true);
     try {
       setPendingPhoto(await photoFromFile(file));
       setMediaType('photo');
     } catch (cause) {
       setPhotoError(cause instanceof Error ? cause.message : 'Não foi possível abrir a foto.');
-    }
+    } finally { setPhotoLoading(false); }
   };
 
   const toggleQuickTag = (tagId: string) => {
@@ -102,7 +104,7 @@ export default function PublicarPage() {
   };
 
   const handlePublish = async () => {
-    if (isSubmitting) return;
+    if (isSubmitting || photoLoading) return;
 
     if (!user) {
       router.push('/login');
@@ -148,13 +150,14 @@ export default function PublicarPage() {
       <input
         type="file"
         ref={fileInputRef}
-        accept="image/*"
+        accept="image/*,.heic,.heif,.avif,.tif,.tiff,.bmp,.jpg,.jpeg,.jfif,.png,.webp,.gif"
         onChange={event => { void handleFileChange(event); }}
         className="hidden"
       />
       {isCameraActive && <CameraCapture title="Foto do seu momento" onClose={() => setIsCameraActive(false)} onCapture={photo => { setSelectedPhoto(photo); setPhotoSource(photo); setMediaType('photo'); setPhotoError(''); setIsCameraActive(false); }} />}
       {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={4 / 5} allowOriginal onCancel={() => setPendingPhoto(null)} onConfirm={photo => { setSelectedPhoto(photo); setPhotoSource(pendingPhoto); setMediaType('photo'); setPendingPhoto(null); }} />}
-      {photoError && <p role="alert" className="px-5 text-sm text-rose-300">{photoError}</p>}
+        {photoLoading && <p role="status" className="px-5 text-sm text-amber-300">Preparando sua foto…</p>}
+        {photoError && <p role="alert" className="px-5 text-sm text-rose-300">{photoError}</p>}
 
       {/* 1. HEADER (height: 60px, padding: 0 18px, display: flex, items-center, justify-between) */}
       <div className="h-[60px] px-[18px] flex items-center justify-between">
@@ -221,7 +224,7 @@ export default function PublicarPage() {
               <Camera className="w-3.5 h-3.5 text-[#F5A623]" />
               <span>Câmera</span>
             </button>
-            <button type="button" onClick={() => fileInputRef.current?.click()}
+            <button type="button" disabled={photoLoading} onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-black/65 backdrop-blur-md border border-white/10 text-white text-[11px] font-semibold active:scale-95 transition-all">
               <ImageIcon className="w-3.5 h-3.5 text-[#F5A623]" />
               <span>Galeria</span>
@@ -306,7 +309,7 @@ export default function PublicarPage() {
         <button
           type="button"
           onClick={handlePublish}
-          disabled={isSubmitting || (!selectedPhoto && !caption.trim())}
+          disabled={isSubmitting || photoLoading || (!selectedPhoto && !caption.trim())}
           className="w-full h-[52px] rounded-2xl text-[#080807] font-black text-[13px] tracking-widest uppercase flex items-center justify-center gap-2.5 transition-all active:scale-[0.98] cursor-pointer disabled:opacity-35 disabled:cursor-not-allowed"
           style={{
             background: 'linear-gradient(110deg, #FFC928 0%, #FF8200 100%)',

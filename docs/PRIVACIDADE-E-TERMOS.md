@@ -10,7 +10,7 @@ Esta entrega usa identidade empresarial fictícia por solicitação do responsá
 
 Cadastro exige três caixas inicialmente desmarcadas: termos DEMO, ciência da política DEMO e autodeclaração de maioridade. O registro é criado na mesma transação do usuário. Não existe preenchimento retroativo de aceite: contas anteriores podem revisar ou adiar. Nenhum registro DEMO vale como aceite definitivo.
 
-Os documentos idênticos ficam em `backend/src/legal/legal-documents.json` e `frontend/src/lib/legal-documents.json`. A versão atual é `demo-2026-09-30-v1`. O backend registra versão, SHA-256 do conteúdo, data, conta e origem em AuditLog com ação `LEGAL_ACCEPTANCE_DEMO`. Não há migração de banco nesta entrega. Mudança no conteúdo invalida a correspondência do registro anterior pelo hash.
+Os documentos idênticos ficam em `backend/src/legal/legal-documents.json` e `frontend/src/lib/legal-documents.json`. A versão atual é `demo-2026-09-30-v2`. O backend registra versão, SHA-256 do conteúdo, data, conta e origem em AuditLog com ação `LEGAL_ACCEPTANCE_DEMO`. Não há migração de banco nesta entrega. Mudança no conteúdo invalida a correspondência do registro anterior pelo hash.
 
 Solicitações usam `PRIVACY_REQUEST` com estado PENDING. O formulário **não exclui dados**, não envia e-mail e não conclui o pedido. Administração deve acompanhar os protocolos e implementar um processo real de verificação, resposta, execução e retenção antes de produção jurídica definitiva. A exportação não cobre todo o histórico; outros dados exigem pedido de acesso.
 

@@ -47,6 +47,7 @@ export default function EditProfilePage() {
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [interestSearch, setInterestSearch] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
+  const [photoLoading, setPhotoLoading] = useState(false);
   const [pendingPhoto, setPendingPhoto] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -110,8 +111,10 @@ export default function EditProfilePage() {
   async function selectPhoto(file?: File) {
     if (!file) return;
     setError('');
+    setPhotoLoading(true);
     try { setPendingPhoto(await photoFromFile(file)); }
     catch (cause) { setError(cause instanceof Error ? cause.message : 'Não foi possível abrir a foto.'); }
+    finally { setPhotoLoading(false); }
   }
 
   function toggleInterest(item: string) {
@@ -151,7 +154,7 @@ export default function EditProfilePage() {
 
   async function save(event: FormEvent) {
     event.preventDefault();
-    if (busy || !user) return;
+    if (busy || photoLoading || !user) return;
     setBusy(true);
     setError('');
 
@@ -210,6 +213,7 @@ export default function EditProfilePage() {
 
   return (
     <div className="profile-page edit-profile-view pb-16">
+      {photoLoading && <p role="status" className="p-3 text-sm text-amber-300">Preparando sua foto…</p>}
       {pendingPhoto && <PhotoEditor source={pendingPhoto} aspectRatio={1} circular onCancel={() => setPendingPhoto(null)} onConfirm={adjusted => { setPhoto(adjusted); setPendingPhoto(null); }} />}
       {/* Top Header */}
       <header className="profile-heading sticky top-0 z-10 bg-[#080807]/90 backdrop-blur-md py-3 -mx-4 px-4 sm:mx-0 sm:px-0 border-b border-[#302a20]/60 sm:border-0 sm:static sm:bg-transparent">
@@ -224,7 +228,7 @@ export default function EditProfilePage() {
       </header>
 
       <form className="edit-profile-form mt-4" onSubmit={save}>
-        <fieldset disabled={busy} className="edit-profile-fieldset">
+        <fieldset disabled={busy || photoLoading} className="edit-profile-fieldset">
           {/* Card 1: Avatar / Identidade Visual */}
           <section className="profile-card profile-card-hero">
             <div className="profile-avatar-wrap">
@@ -250,7 +254,7 @@ export default function EditProfilePage() {
             <input
               ref={fileInput}
               type="file"
-              accept="image/*"
+              accept="image/*,.heic,.heif,.avif,.tif,.tiff,.bmp,.jpg,.jpeg,.jfif,.png,.webp,.gif"
               hidden
               aria-label="Selecionar foto de perfil"
               onChange={(e) => {
@@ -580,7 +584,7 @@ export default function EditProfilePage() {
             <Link className="profile-btn-ghost" href={back}>
               Cancelar
             </Link>
-            <button type="submit" className="profile-btn-save" disabled={busy}>
+            <button type="submit" className="profile-btn-save" disabled={busy || photoLoading}>
               {busy ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#151006] border-t-transparent" />

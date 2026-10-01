@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { RideLinks } from './ride-links';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Home, Flame, Compass, Plus, Heart, UserRound, Beer, CalendarDays, Ticket, Store, Ellipsis, X, ArrowUpRight, LayoutDashboard, LogOut } from 'lucide-react';
@@ -99,7 +100,7 @@ export function Navigation() {
       </nav>
 
       <dialog ref={sheet} id="mobile-more-menu" aria-labelledby="more-menu-title" onClose={() => { setOpen(false); moreButton.current?.focus(); }} onClick={event => { if (event.target === sheet.current) close(); }} className="fixed inset-x-0 bottom-0 top-auto m-0 w-full max-w-none max-h-[88dvh] bg-transparent p-0 text-white border-0 backdrop:bg-black/70 backdrop:backdrop-blur-sm">
-        <div className="mx-auto max-w-lg bg-[#141512] border border-white/10 rounded-t-[28px] p-6 overflow-auto" style={{ paddingBottom: 'max(28px, env(safe-area-inset-bottom))' }}>
+        <div className="mx-auto max-w-lg bg-[#141512] border border-white/10 rounded-t-[28px] p-6 max-h-[88dvh] overflow-y-auto" style={{ paddingBottom: 'max(28px, env(safe-area-inset-bottom))' }}>
           <div className="w-9 h-1 bg-white/15 rounded-full mx-auto mb-5" aria-hidden="true" />
           <header className="flex items-start justify-between mb-6"><div><p className="text-[10px] tracking-[.2em] text-amber-400 mb-1">TÔ NO PIRAMBA</p><h2 id="more-menu-title" className="text-xl font-semibold tracking-tight">A noite continua.</h2></div><button autoFocus aria-label="Fechar menu" onClick={close} className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 text-stone-400 hover:text-white"><X size={19} /></button></header>
           <Link href={user ? '/perfil' : '/login'} onClick={close} className="flex items-center gap-3 p-4 mb-5 rounded-2xl border border-amber-300/15 bg-amber-300/5">
@@ -109,6 +110,7 @@ export function Navigation() {
           <div className="grid grid-cols-2 gap-2.5">{extras.map(item => <Link key={item.href} href={item.href} onClick={close} aria-current={pathname === item.href ? 'page' : undefined} className={'min-h-[86px] p-3.5 rounded-2xl border flex flex-col gap-3 transition-colors ' + (pathname === item.href ? 'border-amber-400/40 bg-amber-300/10' : 'border-white/[.07] bg-white/[.025] hover:bg-white/5')}><item.icon size={20} className="text-[#c3a977]" /><span className="text-xs font-medium text-stone-200">{item.label}</span></Link>)}
             {admin && <Link href="/admin" onClick={close} className="min-h-[86px] p-3.5 rounded-2xl border border-emerald-300/20 bg-emerald-300/5 flex flex-col gap-3"><LayoutDashboard size={20} className="text-emerald-300" /><span className="text-xs font-medium">Administração</span></Link>}
           </div>
+          <RideLinks />
           {user && <button onClick={() => { logout(); close(); }} className="flex items-center gap-2 text-xs text-stone-400 mt-6 py-2"><LogOut size={15} />Sair da conta</button>}
         </div>
       </dialog>
@@ -117,6 +119,7 @@ export function Navigation() {
         <Link href="/" className="flex items-center gap-3 pb-6 border-b border-white/10"><img src="/LogoPirambeiraSemFundo.png" alt="Pirambeira" className="w-12 h-12 object-contain" /><div><span className="font-bold tracking-wide">PIRAMBA</span><p className="text-xs text-stone-500 mt-1">Bar & Encontros</p></div></Link>
         <nav aria-label="Menu lateral" className="flex-1 py-5 space-y-1 overflow-y-auto">{destinations.map(item => <Link key={item.href} href={item.href} aria-current={pathname === item.href ? 'page' : undefined} className={'flex items-center gap-3 px-3.5 py-3 rounded-xl text-xs font-medium transition-colors ' + (pathname === item.href ? 'bg-amber-400/10 text-amber-400 border border-amber-400/25' : 'text-stone-400 border border-transparent hover:bg-white/5 hover:text-white')}><item.icon size={16} />{item.label}</Link>)}
           {admin && <Link href="/admin" className="flex items-center gap-3 px-3.5 py-3 mt-5 border-t border-white/10 text-xs text-amber-300"><LayoutDashboard size={16} />Administração</Link>}
+          <RideLinks />
         </nav>
         <Link href={user ? '/perfil' : '/login'} className="flex items-center gap-3 pt-5 border-t border-white/10"><UserRound size={20} className="text-amber-300" /><div><p className="text-xs font-semibold">{user?.profile.name || 'Entrar no Piramba'}</p><p className="text-[11px] text-stone-500 mt-1">{user ? 'Meu perfil' : 'Faça parte da comunidade'}</p></div></Link>
       </aside>

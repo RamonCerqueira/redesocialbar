@@ -1,4 +1,7 @@
-import { BadRequestException, Body, Controller, Get, Module, NotFoundException, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Module, NotFoundException, Param, Post, Res, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { normalizeImage } from './normalize-image';
+import { AuthRateGuard } from '../auth/auth-rate.guard';
 import { IsString, MaxLength } from 'class-validator';
 import { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
@@ -34,9 +37,24 @@ export function decodeImage(dataUrl: string) {
 @Controller('media')
 export class MediaController {
   constructor(private prisma: PrismaService) {}
+  @Post('normalize') @UseGuards(JwtAuthGuard, AuthRateGuard)
+  @UseInterceptors(FileInterceptor('photo', { limits: { fileSize: 25 * 1024 * 1024, files: 1, fields: 0 } }))
+  async normalize(@UploadedFile() file?: { buffer: Buffer }) {
+    if (!file?.buffer) throw new BadRequestException('Selecione uma foto.');
+    return { dataUrl: await normalizeImage(file.buffer) };
+  }
   @Post() @UseGuards(JwtAuthGuard)
   async upload(@CurrentUser('id') ownerId: string, @Body() dto: UploadDto) {
-    const image = decodeImage(dto.dataUrl);
+    let image: ReturnType<typeof decodeImage>;
+    try { image = decodeImage(dto.dataUrl); }
+    catch {
+      // Compatibility with older clients and image/jpg or missing MIME labels.
+      const match = /^data:[^;,]*;base64,([A-Za-z0-9+/=]+)$/.exec(dto.dataUrl);
+      if (!match) throw new BadRequestException('Selecione uma foto válida e tente novamente.');
+      const input = Buffer.from(match[1], 'base64');
+      if (input.length > 5 * 1024 * 1024) throw new BadRequestException('Selecione a foto novamente para ajustar automaticamente o tamanho.');
+      image = decodeImage(await normalizeImage(input));
+    }
     const id = randomUUID();
     await persistImage(id, image.data);
     let asset: { id: string };
@@ -64,5 +82,5 @@ export class MediaController {
     response.send(data);
   }
 }
-@Module({ controllers: [MediaController] })
+@Module({ controllers: [MediaController], providers: [AuthRateGuard] })
 export class MediaModule {}
