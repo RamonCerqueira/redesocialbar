@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { FlirtNote } from '@/lib/types';
+import { barDayKey } from '@/lib/bar-time';
 import { apiRequest } from '@/lib/api';
 import { LoadError } from '@/components/load-error';
 import { FlirtNoteCard } from '@/components/flirt-note-card';
@@ -20,6 +21,9 @@ export default function RecadosGuardanapoPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showRecadinhoModal, setShowRecadinhoModal] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => { const timer = setInterval(() => setNow(new Date()), 60000); return () => clearInterval(timer); }, []);
+  const todayCount = notes.filter(note => barDayKey(note.createdAt) === barDayKey(now)).length;
 
   const loadNotes = async () => {
     setIsLoading(true); setLoadError('');
@@ -81,7 +85,7 @@ export default function RecadosGuardanapoPage() {
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-[#00D084] indicator-pulse-emerald shrink-0" />
           <span className="text-xs text-[#C5BCB2]">
-            <strong className="text-white">{notes.length} recados</strong> postados no bar hoje
+            <strong className="text-white">{todayCount} {todayCount === 1 ? 'recado' : 'recados'}</strong> {todayCount === 1 ? 'postado' : 'postados'} hoje · {notes.length} no mural
           </span>
         </div>
         <span className="text-[10px] text-[#FF9E40] font-semibold flex items-center gap-1">

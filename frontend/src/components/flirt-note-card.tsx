@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { FlirtNote } from '@/lib/types';
+import { barDateLabel, barFullDate } from '@/lib/bar-time';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { playGlassClinkSound } from '@/lib/audio-effects';
@@ -93,16 +94,6 @@ export function FlirtNoteCard({ note, restaurantSlug = 'pirambeira' }: FlirtNote
     }
   };
 
-  // Horário legível do recado
-  const formattedTime = (() => {
-    try {
-      const date = new Date(note.createdAt);
-      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    } catch {
-      return 'Agora há pouco';
-    }
-  })();
-
   return (
     <>
       <article
@@ -144,7 +135,7 @@ export function FlirtNoteCard({ note, restaurantSlug = 'pirambeira' }: FlirtNote
           <div className="flex items-center gap-1 text-[#8E867E]">
             <span className="text-[10px] font-mono flex items-center gap-1 text-[#7A726A]">
               <Clock className="w-3 h-3 text-[#5F5750]" />
-              {formattedTime}
+              <time dateTime={note.createdAt} title={barFullDate(note.createdAt)}>{barDateLabel(note.createdAt)}</time>
             </span>
             <button
               onClick={() => setShowReport(true)}
