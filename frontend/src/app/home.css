@@ -239,3 +239,20 @@
   .home-promotion-copy{margin-left:40%;padding:28px}
   .home-people-heading h2{font-size:15px}
 }
+.piramba-home>.promotion-feature-section{margin-inline:0;padding-inline:16px}
+.promotion-feature-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:12px}
+.promotion-feature-heading>span,.promotion-feature-heading>a{display:flex;align-items:center;gap:7px;font-size:12px}
+.promotion-feature-heading>span{color:#ded3c2;font-weight:650}
+.promotion-feature-heading>a{color:#b6a995;font-size:11px}
+.promotion-feature{display:block;position:relative;isolation:isolate;overflow:hidden;min-height:310px;border-radius:24px;border:1px solid #ffffff16;background:#17120e;box-shadow:0 12px 28px #0004}
+.promotion-feature>img{position:absolute;inset:-18px 0;width:100%;height:calc(100% + 36px);object-fit:cover;object-position:66% center;transform:translate3d(0,var(--promo-offset,0px),0)}
+.promotion-feature-shade{position:absolute;inset:0;background:linear-gradient(180deg,#08060408 0%,#08060430 25%,#080604dc 66%,#080604fa 100%)}
+.promotion-feature-copy{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;min-height:310px;padding:26px 24px;box-sizing:border-box}
+.promotion-feature-badge{font-size:9px;font-weight:750;letter-spacing:1.2px;color:#ffe2a2;background:#15110dbf;border:1px solid #f8ce742b;border-radius:999px;padding:6px 10px}
+.promotion-feature h2{font-size:28px;line-height:1.1;font-weight:800;letter-spacing:-.7px;color:#fff7ec;margin:12px 0 7px;max-width:100%;overflow-wrap:break-word}
+.promotion-feature p{color:#dacbb6;font-size:13px;margin:0 0 17px;line-height:1.5}
+.promotion-feature-cta{display:inline-flex;align-items:center;gap:16px;border-radius:12px;padding:11px 15px;background:#ffc348;color:#1b1205;font-size:12px;font-weight:750;min-height:44px}
+.promotion-feature small{color:#bbae9d;font-size:10px;line-height:1.5;margin-top:12px}
+.promotion-feature:focus-visible{outline:2px solid #ffd26c;outline-offset:4px}
+@media(min-width:640px){.promotion-feature-section{margin-inline:0}.promotion-feature,.promotion-feature-copy{min-height:340px}.promotion-feature-copy{padding:32px}.promotion-feature h2{font-size:34px}}
+@media(prefers-reduced-motion:reduce){.promotion-feature>img{transform:none!important}}

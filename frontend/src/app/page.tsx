@@ -12,6 +12,7 @@ import { DeAgoraCameraModal } from '@/components/de-agora-camera-modal';
 import { DeAgoraViewerModal } from '@/components/de-agora-viewer-modal';
 import { Flame, ArrowRight, CalendarDays, Ticket, Plus, ChevronRight, Loader2, MapPin, Camera, Users } from 'lucide-react';
 import './home.css';
+import { PromotionFeature } from '@/components/promotion-feature';
 
 export default function HomePage() {
   const { user, activeCheckIn, setActiveCheckIn } = useAuth();
@@ -257,7 +258,7 @@ export default function HomePage() {
       </div>
     </section>
 
-    {promotion && <Link href="/promocoes" className="home-promotion"><img src={promotion.imageUrl || '/happy_hour_drinks.jpg'} alt="" /><div className="home-promotion-shade" /><div className="home-promotion-copy"><span className="home-promo-eyebrow">{promotion.badge || 'BOA PEDIDA DA CASA'}</span><h2>{promotion.title}</h2><p>{promotion.discountText}</p><span className="home-promo-button">Ver promoção <ArrowRight size={16} /></span></div></Link>}
+    {promotion && <PromotionFeature promotion={promotion} />}
     <SponsoredCard placement="BANNER" />
 
     <div className="home-shortcuts">
