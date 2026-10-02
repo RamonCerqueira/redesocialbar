@@ -18,6 +18,7 @@ export type Field = {
   imageSizes?: Record<string,string>;
 };
 export type ResourceConfig = {
+  help?: string;
   title: string;
   singular: string;
   route: string;
@@ -376,6 +377,7 @@ export function ResourceEditor({ slug, config }: { slug:string; config:ResourceC
       {error && <div role="alert" className="admin-message error">{error} <button onClick={() => void load()}>Tentar novamente</button></div>}
       {notice && !modalOpen && <div role="status" className="admin-message">{notice}</div>}
 
+      {config.help && <div className="admin-message" style={{marginBottom:16,lineHeight:1.6}}>{config.help}</div>}
       <div className="admin-toolbar" style={{ marginBottom: 12 }}>
         <h2 style={{ margin: 0 }}>{config.title} <span className="admin-muted">({rows.length})</span></h2>
         <div className="admin-actions" style={{ margin: 0, gap: 8 }}>

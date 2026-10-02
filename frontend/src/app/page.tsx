@@ -5,14 +5,15 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { loadAllMoments, unseenFirst } from '@/lib/de-agora';
-import { Post, Story, Patron, Promotion, CheckIn } from '@/lib/types';
-import { SponsoredCard } from '@/components/sponsored-card';
+import { Post, Story, Patron, CheckIn } from '@/lib/types';
+
 import { PostCard } from '@/components/post-card';
 import { DeAgoraCameraModal } from '@/components/de-agora-camera-modal';
 import { DeAgoraViewerModal } from '@/components/de-agora-viewer-modal';
 import { Flame, ArrowRight, CalendarDays, Ticket, Plus, ChevronRight, Loader2, MapPin, Camera, Users } from 'lucide-react';
 import './home.css';
-import { PromotionFeature } from '@/components/promotion-feature';
+import { BarNewsCarousel } from '@/components/bar-news-carousel';
+import { SponsoredCard } from '@/components/sponsored-card';
 
 export default function HomePage() {
   const { user, activeCheckIn, setActiveCheckIn } = useAuth();
@@ -20,7 +21,6 @@ export default function HomePage() {
   const [activeCount, setActiveCount] = useState(0);
   const [stories, setStories] = useState<Story[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [promotions, setPromotions] = useState<Promotion[]>([]);
   const [cover, setCover] = useState('/hero-brinde-v2.png');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -124,7 +124,6 @@ export default function HomePage() {
       loadPatrons(),
       loadAllMoments(cursor => apiRequest<Story[]>(`/stories/restaurant/pirambeira${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`)).then(setStories),
       apiRequest<Post[]>('/posts/bar/pirambeira').then(setPosts),
-      apiRequest<Promotion[]>('/promotions/restaurant/pirambeira').then(setPromotions),
       apiRequest<{ coverUrl?: string }>('/restaurants/pirambeira').then(data => { if (data.coverUrl) setCover(data.coverUrl); }),
     ]);
     if (results.some(result => result.status === 'rejected')) setError('Não foi possível atualizar parte da página.');
@@ -149,7 +148,6 @@ export default function HomePage() {
     finally { setProcessing(false); }
   }
 
-  const promotion = promotions.find(item => item.isAvailable);
   const current = slides[slide];
 
   return <div className="piramba-home">
@@ -258,8 +256,8 @@ export default function HomePage() {
       </div>
     </section>
 
-    {promotion && <PromotionFeature promotion={promotion} />}
-    <SponsoredCard placement="BANNER" />
+    <BarNewsCarousel />
+
 
     <div className="home-shortcuts">
       <Link href="/aqui"><span className="shortcut-icon people"><Users /></span><div><strong>Quem está aqui</strong><small>Encontre sua turma</small></div><ChevronRight size={15} /></Link>

@@ -19,7 +19,8 @@ export class AdsService {
         restaurantId: restaurant.id,
         isActive: true,
       },
-      take: 5,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      take: 20,
     });
 
     return ads;

@@ -32,11 +32,11 @@ const configs:Partial<Record<Section,ResourceConfig>>={
     {key:'buttonText',label:'Texto do botão de resgate',required:true,default:'Resgatar cupom',max:40},
     {key:'isActive',label:'Disponível para novos resgates',type:'checkbox',default:true},
   ]},
-  ads:{title:'Banners e anúncios',singular:'Banner',route:'ads',previewKind:'banner',fields:[
-    {key:'type',label:'Posição',type:'select',default:'BANNER',options:[{value:'BANNER',label:'Destaque na página inicial'},{value:'SPONSORED_POST',label:'Anúncio no feed'},{value:'SIDEBAR',label:'Sugestão da casa'}]},
+  ads:{title:'Novidades do bar e anúncios',singular:'Banner',route:'ads',previewKind:'banner',help:'Para aparecer no carrossel da página inicial, escolha “Novidade no carrossel inicial”. Cadastre foto, chamada curta, texto de apoio e link. Pode ser uma oferta do dia, música ao vivo, notícia ou aviso: não precisa de cupom. Ao salvar com “Exibir no aplicativo” marcado, a novidade entra no carrossel. Os itens mais recentes aparecem primeiro. Para retirar uma oferta encerrada, desative o item. Somente publique ofertas confirmadas pelo bar.',fields:[
+    {key:'type',label:'Posição',type:'select',default:'BANNER',options:[{value:'BANNER',label:'Novidade no carrossel inicial'},{value:'SPONSORED_POST',label:'Anúncio no feed'},{value:'SIDEBAR',label:'Sugestão da casa'}]},
     {key:'title',label:'Título',required:true,max:50,hint:'Chamada curta e direta. Até 50 caracteres para não quebrar.'},
     {key:'description',label:'Texto de apoio',type:'textarea',max:140,hint:'1 frase persuasiva. Até 140 caracteres.'},
-    {key:'imageUrl',label:'Imagem do banner',type:'image',required:true,imageSizes:{'BANNER':'1400 x 500 (2.8:1) · wide','SPONSORED_POST':'1080 x 1080 (1:1) · quadrado','SIDEBAR':'800 x 600 (4:3) · paisagem'}},
+    {key:'imageUrl',label:'Imagem do banner',type:'image',required:true,hint:'Prefira fotografia sem texto incorporado; mantenha o assunto principal no centro ou à direita. A chamada será exibida sobre um degradê.',imageSizes:{'BANNER':'1200 x 800 (3:2) · paisagem, adaptada ao celular','SPONSORED_POST':'1080 x 1080 (1:1) · quadrado','SIDEBAR':'800 x 600 (4:3) · paisagem'}},
     {key:'buttonText',label:'Texto do botão',required:true,default:'Saiba mais',max:18,hint:'CTA curto. Ex.: Saiba mais, Garantir, Ver cardápio.'},
     {key:'targetUrl',label:'Endereço do botão',type:'url',required:true,hint:'Link de destino quando o usuário tocar no botão.'},
     {key:'sponsorName',label:'Nome do anunciante',required:true,default:'Pirambeira',max:24,hint:'Exibido acima do título em destaque.'},
