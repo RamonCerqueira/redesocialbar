@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowUpRight, ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react';
 import { apiRequest } from '@/lib/api';
 import { Advertisement } from './sponsored-card';
+import {useAdImpression} from '@/lib/use-ad-impression';
 
 export function BarNewsCarousel() {
   const [items, setItems] = useState<Advertisement[]>([]);
@@ -14,7 +15,8 @@ export function BarNewsCarousel() {
   const root = useRef<HTMLElement>(null);
   const touch = useRef<{x:number;y:number} | null>(null);
   const visible = useRef(false);
-  useEffect(() => { let active = true; apiRequest<Advertisement[]>('/ads/restaurant/pirambeira').then(rows => { if(active) setItems(rows.filter(row => row.type === 'BANNER')); }).catch(() => {}); return () => { active = false; }; }, []);
+  useAdImpression(items[index % items.length]?.id,root);
+  useEffect(() => { let active = true; const load = () => { if(document.hidden) return; apiRequest<Advertisement[]>('/ads/restaurant/pirambeira').then(rows => { if(active) { const next = rows.filter(row => row.type === 'BANNER'); setItems(next); setIndex(i => Math.min(i,Math.max(0,next.length-1))); } }).catch(() => {}); }; load(); const timer = setInterval(load,30000); document.addEventListener('visibilitychange',load); return () => { active = false; clearInterval(timer); document.removeEventListener('visibilitychange',load); }; }, []);
   useEffect(() => {
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
     const sync = () => setReduced(motion.matches); sync(); motion.addEventListener('change', sync);

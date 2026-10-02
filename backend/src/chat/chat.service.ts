@@ -24,6 +24,7 @@ export class ChatService {
           orderBy: { createdAt: 'desc' },
           take: 1,
         },
+        _count: { select: { messages: { where: { isRead:false, senderId:{not:userId} } } } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -35,6 +36,7 @@ export class ChatService {
 
       return {
         id: c.id,
+        unreadCount: c._count.messages,
         type: c.type,
         restaurantName: c.restaurant.name,
         restaurantSlug: c.restaurant.slug,

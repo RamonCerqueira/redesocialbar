@@ -1,0 +1,9 @@
+[Unit]
+Description=Encrypted database and upload backup for Pirambeira
+After=docker.service
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/opt/pirambeira/runtime/bin/node /opt/pirambeira/current/deploy/backup-vps.cjs
+TimeoutStartSec=900

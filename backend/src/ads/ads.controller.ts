@@ -14,4 +14,6 @@ export class AdsController {
   async recordClick(@Param('id') id: string) {
     return this.adsService.recordClick(id);
   }
+  @Post(':id/impression')
+  async recordImpression(@Param('id') id: string) { return this.adsService.recordImpression(id); }
 }

@@ -14,8 +14,12 @@ release="$root/releases/$(date -u +%Y%m%d-%H%M%S)-${commit:0:8}"
 mkdir "$release"
 runuser -u pirambeira -- git archive "$commit" backend frontend package.json pnpm-lock.yaml pnpm-workspace.yaml deploy docs README.md | tar -x -C "$release"
 if ! cmp -s "$release/backend/prisma/schema.prisma" "$old/backend/prisma/schema.prisma" || ! diff -qr "$release/backend/prisma/migrations" "$old/backend/prisma/migrations"; then
-  echo 'Mudancas no banco detectadas. Prepare as migracoes antes de ativar esta versao.'
-  exit 1
+  schema_hash=$(sha256sum "$release/backend/prisma/schema.prisma" | cut -d ' ' -f1)
+  if [ ! -f "$root/shared/approved-schema" ] || [ "$(cat "$root/shared/approved-schema")" != "$commit $schema_hash" ]; then
+    echo 'Mudancas no banco detectadas. Prepare e verifique as migracoes e o backup antes de aprovar este commit.'
+    exit 1
+  fi
+  echo 'Migracao previamente verificada para este commit.' 
 fi
 ln -s "$root/shared/backend.env" "$release/backend/.env"
 ln -s "$root/shared/frontend.env" "$release/frontend/.env.production"
@@ -46,4 +50,5 @@ curl -fsS --max-time 15 https://pirambeira.genioplay.com.br/ >/dev/null
 curl -fsS --max-time 15 https://pirambeira.genioplay.com.br/api/health >/dev/null
 trap - ERR
 printf '%s\n' "$old" > "$root/shared/previous-release"
+rm -f "$root/shared/approved-schema"
 echo "ATUALIZACAO CONCLUIDA: $commit"

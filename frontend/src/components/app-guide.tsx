@@ -1,0 +1,14 @@
+'use client';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
+import { FullscreenDialog } from './fullscreen-dialog';
+import { Camera, MapPin, Heart, Ticket, X, MessageCircle } from 'lucide-react';
+export function AppGuide() {
+  const {user}=useAuth(); const [visible,setVisible]=useState(false);const [open,setOpen]=useState(false);
+  useEffect(()=>{setVisible(!!user && !localStorage.getItem('piramba-guide:'+user.id));},[user?.id]);
+  function finish(){if(user)localStorage.setItem('piramba-guide:'+user.id,'seen');setVisible(false);setOpen(false);}
+  if(!visible)return null;
+  return <><div className="mx-4 mt-3 rounded-2xl border border-amber-400/20 bg-amber-400/5 p-3 flex gap-3 items-center"><div className="flex-1"><p className="text-sm font-semibold">Sua primeira rodada no app?</p><button onClick={()=>setOpen(true)} className="text-xs text-amber-300 py-2">Conheça as funções em um minuto</button></div><button onClick={finish} aria-label="Dispensar guia de primeiro uso" className="p-3"><X size={17}/></button></div>{open && <FullscreenDialog title="Como usar o Piramba" onClose={finish}><div className="h-full overflow-y-auto px-6 pt-12 pb-8"><GuideContent/><button onClick={finish} className="mt-6 w-full rounded-xl bg-amber-400 p-3 font-bold text-black">Começar a usar</button></div></FullscreenDialog>}</>;
+}
+export function GuideContent(){return <section className="max-w-lg mx-auto space-y-5"><h1 className="text-2xl font-bold">Seu guia do Piramba</h1>{[{icon:MapPin,title:'Check-in',text:'Ao chegar ao bar, marque Estou aqui. Quem pode ver sua presença depende das preferências do seu perfil.'},{icon:Camera,title:'Publicações e De Agora',text:'Escolha uma foto ou abra a câmera. Ajuste o enquadramento antes de usar. De Agora fica disponível por 24 horas; publicações aparecem no feed. Aguarde Preparando sua foto e depois confirme o envio.'},{icon:MessageCircle,title:'Mensagens',text:'Respostas ao De Agora são privadas. Leia e responda em Mais → Mensagens; notificações levam à conversa.'},{icon:Heart,title:'Paquera',text:'Deixe um recado respeitoso, com mesa ou @ opcionais. Você pode publicar de forma anônima. Use as opções do recado para denunciar conteúdo inadequado.'},{icon:Ticket,title:'Cupons',text:'Resgate uma oferta em Promoções. Meus cupons separa resgatados, utilizados e expirados. Apresente o código à equipe; o estabelecimento confirma a utilização.'}].map(item=><article key={item.title} className="rounded-2xl border border-white/10 p-4"><item.icon size={20} className="text-amber-300 mb-2"/><h2 className="font-bold">{item.title}</h2><p className="text-sm text-stone-300 mt-2 leading-relaxed">{item.text}</p></article>)}<Link href="/central-de-privacidade" className="text-amber-300 text-sm">Consulte sua privacidade e os termos</Link></section>}

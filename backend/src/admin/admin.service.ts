@@ -47,12 +47,16 @@ export class AdminService {
       this.prisma.event.count({ where: { restaurantId: r.id, isActive: true, date: { gte: start } } }),
       this.prisma.checkIn.findMany({ where: { restaurantId: r.id, startedAt: { gte: start } }, select: { startedAt: true } }),
     ]);
+    const [news, promotions] = await Promise.all([
+      this.prisma.advertisement.findMany({where:{restaurantId:r.id},select:{id:true,title:true,clicks:true,impressions:true},orderBy:{createdAt:'desc'},take:100}),
+      this.prisma.promotion.findMany({where:{restaurantId:r.id},select:{id:true,title:true,_count:{select:{coupons:true}},coupons:{where:{status:'USED'},select:{id:true}}},orderBy:{createdAt:'desc'},take:100}),
+    ]);
     const hourlyTraffic = Array.from({ length: 24 }, (_, h) => ({ hour: String(h).padStart(2, '0') + 'h', patrons: 0 }));
     for (const v of visits) {
       const hour = Number(new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', hourCycle: 'h23' }).format(v.startedAt));
       hourlyTraffic[hour].patrons++;
     }
-    return { restaurant: { id: r.id, name: r.name, slug: r.slug }, metrics: { activePatronsCount, todayCheckInsCount, postsCount, redeemedCouponsCount, usedCouponsCount, eventsCount }, charts: { hourlyTraffic } };
+    return { restaurant: { id: r.id, name: r.name, slug: r.slug }, metrics: { activePatronsCount, todayCheckInsCount, postsCount, redeemedCouponsCount, usedCouponsCount, eventsCount }, charts: { hourlyTraffic }, insights: { news, promotions:promotions.map(p=>({id:p.id,title:p.title,claimed:p._count.coupons,used:p.coupons.length})) } };
   }
   async posts(actor: Actor, slug: string) {
     const r = await this.access.restaurant(actor, slug);
@@ -98,8 +102,10 @@ export class AdminService {
   }
   async saveAd(actor: Actor, slug: string, dto: AdvertisementDto, id?: string) {
     const r = await this.access.restaurant(actor, slug);
-    if (!id) return this.prisma.advertisement.create({ data: { ...dto, restaurantId: r.id } });
-    const result = await this.prisma.advertisement.updateMany({ where: { id, restaurantId: r.id }, data: dto });
+    const data = { ...dto, startsAt: dto.startsAt ? new Date(dto.startsAt) : null, endsAt: dto.endsAt ? new Date(dto.endsAt) : null, sortOrder: dto.sortOrder ?? 0 };
+    if(data.startsAt && data.endsAt && data.endsAt <= data.startsAt) throw new BadRequestException('O término deve ser depois do início.');
+    if (!id) return this.prisma.advertisement.create({ data: { ...data, restaurantId: r.id } });
+    const result = await this.prisma.advertisement.updateMany({ where: { id, restaurantId: r.id }, data });
     if (!result.count) throw new NotFoundException('Banner não encontrado.');
     return this.prisma.advertisement.findUnique({ where: { id } });
   }

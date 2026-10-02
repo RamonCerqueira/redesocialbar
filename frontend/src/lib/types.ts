@@ -110,6 +110,7 @@ export interface Post {
 }
 
 export interface FlirtNote {
+  hasCheered?: boolean;
   id: string;
   content: string;
   flirtContext?: string;
@@ -182,6 +183,7 @@ export interface Promotion {
 }
 
 export interface Conversation {
+  unreadCount?: number;
   id: string;
   type: string;
   restaurantName: string;

@@ -33,7 +33,7 @@ function initial(fields: Field[]): Values {
 }
 function dateInput(value: unknown) {
   const date = new Date(String(value));
-  return Number.isNaN(date.getTime()) ? '' : new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16);
+  return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('sv-SE', {timeZone:'America/Bahia',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(date).replace(' ','T');
 }
 function message(error: unknown) {
   return error instanceof Error ? error.message : 'Não foi possível concluir a operação.';
@@ -147,7 +147,7 @@ function BannerPreview({ values, typeLabel }: { values: Values; typeLabel: strin
       <div className="admin-phone-frame">
         <div className="admin-phone-notch" />
         <div className="admin-phone-screen">
-          <article className="sp-preview-card">
+          {values.type === 'BANNER' ? <div className="bar-news-window" style={{height:190,maxWidth:360}}><img src={image} alt="" /><div className="bar-news-shade" /><div className="bar-news-copy"><span>{sponsor}</span><h2>{title}</h2>{description&&<p>{description}</p>}<span className="bar-news-cta">{btn} ↗</span></div></div> : <article className="sp-preview-card">
             <div className="sp-preview-image" style={{ aspectRatio: ratio, maxHeight: maxH }}>
               {image
                 ? <img src={image} alt={title} />
@@ -159,7 +159,7 @@ function BannerPreview({ values, typeLabel }: { values: Values; typeLabel: strin
               {description && <p>{description}</p>}
               <a className="sp-preview-button" aria-disabled="true">{btn}</a>
             </div>
-          </article>
+          </article>}
         </div>
       </div>
     </div>
@@ -251,7 +251,7 @@ export function ResourceEditor({ slug, config }: { slug:string; config:ResourceC
   function buildBody(): Record<string, unknown> {
     const body: Record<string, unknown> = { ...values };
     for (const f of config.fields) {
-      if (f.type === 'datetime-local') body[f.key] = new Date(String(values[f.key])).toISOString();
+      if (f.type === 'datetime-local') body[f.key] = values[f.key] ? new Date(String(values[f.key])+':00-03:00').toISOString() : null;
       if (f.type === 'number') body[f.key] = Number(values[f.key]);
     }
     if (config.route === 'posts') { body.mediaUrls = values.imageUrl ? [values.imageUrl] : []; delete body.imageUrl; }

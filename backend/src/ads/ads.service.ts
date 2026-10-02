@@ -18,8 +18,9 @@ export class AdsService {
       where: {
         restaurantId: restaurant.id,
         isActive: true,
+        AND: [{ OR: [{startsAt:null},{startsAt:{lte:new Date()}}] }, { OR: [{endsAt:null},{endsAt:{gt:new Date()}}] }],
       },
-      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      orderBy: [{sortOrder:'asc'}, { createdAt: 'desc' }, { id: 'desc' }],
       take: 20,
     });
 
@@ -32,5 +33,11 @@ export class AdsService {
       data: { clicks: { increment: 1 } },
     });
     return { success: true };
+  }
+  async recordImpression(adId: string) {
+    const now=new Date();
+    const result=await this.prisma.advertisement.updateMany({where:{id:adId,isActive:true,AND:[{OR:[{startsAt:null},{startsAt:{lte:now}}]},{OR:[{endsAt:null},{endsAt:{gt:now}}]}]},data:{impressions:{increment:1}}});
+    if(!result.count) throw new NotFoundException('Novidade indisponível.');
+    return {success:true};
   }
 }

@@ -22,6 +22,9 @@ export class PromotionDto {
   @IsOptional() @IsBoolean() isActive?: boolean;
 }
 export class AdvertisementDto {
+  @IsOptional() @IsDateString() startsAt?: string | null;
+  @IsOptional() @IsDateString() endsAt?: string | null;
+  @IsOptional() @IsInt() @Min(0) @Max(1000) sortOrder?: number;
   @IsString() @IsNotEmpty() @MaxLength(140) title!: string;
   @IsOptional() @IsString() @MaxLength(3000) description?: string;
   @IsUrl(urlOptions) imageUrl!: string;

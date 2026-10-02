@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth-context';
 import { Home, Flame, Compass, Plus, Heart, UserRound, Beer, CalendarDays, Ticket, Store, Ellipsis, X, ArrowUpRight, LayoutDashboard, LogOut, MessageCircle } from 'lucide-react';
 
 const destinations = [
+  { label: 'Como usar o app', href: '/ajuda', icon: Compass },
   { label: 'Mensagens', href: '/mensagens', icon: MessageCircle },
   { label: 'Privacidade e termos', href: '/central-de-privacidade', icon: UserRound },
   { label: 'Início', href: '/', icon: Home },

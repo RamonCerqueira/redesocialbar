@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Post } from '@/lib/types';
+import { barDateLabel, barFullDate } from '@/lib/bar-time';
 import { useAuth } from '@/lib/auth-context';
 import { apiRequest } from '@/lib/api';
 import { ReportModal } from './report-modal';
@@ -223,7 +224,7 @@ export function PostCard({ post, onPostUpdate }: PostCardProps) {
             <p className="text-[11px] text-[#A6A29D] flex flex-wrap items-center gap-1.5 mt-0.5">
               <span>@{post.author.username}</span>
               <span>•</span>
-              <span>2h</span>
+              <time dateTime={post.createdAt} title={barFullDate(post.createdAt)}>{barDateLabel(post.createdAt)}</time>
               <span>|</span>
               <span className="flex items-center gap-0.5 text-white/70">
                 <MapPin className="w-3 h-3 text-[#FFB800]" />

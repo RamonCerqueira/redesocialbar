@@ -32,7 +32,7 @@ const configs:Partial<Record<Section,ResourceConfig>>={
     {key:'buttonText',label:'Texto do botão de resgate',required:true,default:'Resgatar cupom',max:40},
     {key:'isActive',label:'Disponível para novos resgates',type:'checkbox',default:true},
   ]},
-  ads:{title:'Novidades do bar e anúncios',singular:'Banner',route:'ads',previewKind:'banner',help:'Para aparecer no carrossel da página inicial, escolha “Novidade no carrossel inicial”. Cadastre foto, chamada curta, texto de apoio e link. Pode ser uma oferta do dia, música ao vivo, notícia ou aviso: não precisa de cupom. Ao salvar com “Exibir no aplicativo” marcado, a novidade entra no carrossel. Os itens mais recentes aparecem primeiro. Para retirar uma oferta encerrada, desative o item. Somente publique ofertas confirmadas pelo bar.',fields:[
+  ads:{title:'Novidades do bar e anúncios',singular:'Banner',route:'ads',previewKind:'banner',help:'Para aparecer no carrossel da página inicial, escolha “Novidade no carrossel inicial”. Cadastre foto, chamada curta, texto de apoio e link. Pode ser uma oferta do dia, música ao vivo, notícia ou aviso: não precisa de cupom. Ao salvar com “Exibir no aplicativo” marcado, a novidade entra no carrossel. Defina início e término no horário de Salvador para agendar. Sem datas, o item fica disponível enquanto estiver ativo. A menor ordem aparece primeiro; empates usam os mais recentes. Para retirar antes do término, desative o item. Somente publique ofertas confirmadas pelo bar.',fields:[
     {key:'type',label:'Posição',type:'select',default:'BANNER',options:[{value:'BANNER',label:'Novidade no carrossel inicial'},{value:'SPONSORED_POST',label:'Anúncio no feed'},{value:'SIDEBAR',label:'Sugestão da casa'}]},
     {key:'title',label:'Título',required:true,max:50,hint:'Chamada curta e direta. Até 50 caracteres para não quebrar.'},
     {key:'description',label:'Texto de apoio',type:'textarea',max:140,hint:'1 frase persuasiva. Até 140 caracteres.'},
@@ -41,6 +41,9 @@ const configs:Partial<Record<Section,ResourceConfig>>={
     {key:'targetUrl',label:'Endereço do botão',type:'url',required:true,hint:'Link de destino quando o usuário tocar no botão.'},
     {key:'sponsorName',label:'Nome do anunciante',required:true,default:'Pirambeira',max:24,hint:'Exibido acima do título em destaque.'},
     {key:'isActive',label:'Exibir no aplicativo',type:'checkbox',default:true},
+    {key:'startsAt',label:'Início da exibição (Salvador)',type:'datetime-local',hint:'Opcional. Sem início, aparece assim que estiver ativo.'},
+    {key:'endsAt',label:'Término da exibição (Salvador)',type:'datetime-local',hint:'Opcional. A oferta deixa de aparecer automaticamente neste horário.'},
+    {key:'sortOrder',label:'Ordem no carrossel',type:'number',default:0,hint:'Os menores números aparecem primeiro; empate usa os mais recentes.'},
   ]},
   events:{title:'Agenda cultural',singular:'Evento',route:'events',archiveLabel:'Cancelar',fields:[
     {key:'title',label:'Nome do evento',required:true,max:140},{key:'category',label:'Categoria',required:true,default:'MÚSICA AO VIVO'},
@@ -91,7 +94,7 @@ export default function AdminPage(){
   </div>;
 }
 
-type DashboardData={metrics:Record<string,number>;charts:{hourlyTraffic:{hour:string;patrons:number}[]}};
+type DashboardData={insights?:{news:{id:string;title:string;clicks:number;impressions:number}[];promotions:{id:string;title:string;claimed:number;used:number}[]};metrics:Record<string,number>;charts:{hourlyTraffic:{hour:string;patrons:number}[]}};
 function Dashboard({slug}:{slug:string}){
   const [data,setData]=useState<DashboardData|null>(null);const [error,setError]=useState('');
   async function load(){try{setData(await apiRequest<DashboardData>('/admin/dashboard/'+slug));setError('');}catch(error){setError(errorText(error));}}
@@ -104,6 +107,8 @@ function Dashboard({slug}:{slug:string}){
     <section className="admin-card"><h2>Chegadas por horário</h2><p className="admin-muted">Check-ins registrados hoje. Cada barra representa novas entradas.</p>
       <div className="admin-chart">{data.charts.hourlyTraffic.map(x=><div className="admin-bar" key={x.hour} title={x.hour+': '+x.patrons+' check-ins'}><span>{x.patrons}</span><div style={{height:Math.max(2,x.patrons/max*120)}}/><span>{x.hour}</span></div>)}</div>
     </section>
+    <section className="admin-card"><h2>Novidades e anúncios</h2><p className="admin-muted">Contagens acumuladas. Visualizações são estimativas de exibição, não pessoas únicas; começaram nesta atualização. Cliques anteriores continuam preservados.</p>{data.insights?.news.map(n=><div key={n.id} style={{padding:'12px 0',borderBottom:'1px solid #333'}}><strong>{n.title}</strong><p>{n.impressions} visualizações · {n.clicks} cliques</p></div>)}</section>
+    <section className="admin-card"><h2>Resultado dos cupons</h2><p className="admin-muted">Emitidos inclui todos os resgates. Utilizados conta os códigos efetivamente validados pelo bar.</p>{data.insights?.promotions.map(p=><div key={p.id} style={{padding:'12px 0',borderBottom:'1px solid #333'}}><strong>{p.title}</strong><p>{p.claimed} emitidos · {p.used} utilizados · {p.claimed?Math.round(p.used/p.claimed*100):0}% de utilização</p></div>)}</section>
   </>;
 }
 

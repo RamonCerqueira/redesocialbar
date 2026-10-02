@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Injectable, Module, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Injectable, Module, Post, Patch, Param, UseGuards, BadRequestException, NotFoundException } from '@nestjs/common';
 import { IsBoolean, Equals, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthModule } from '../auth/auth.module';
@@ -21,6 +21,10 @@ export class LegalAcceptanceDto {
 class PrivacyRequestDto {
   @IsIn(['ACCESS', 'CORRECTION', 'DELETION', 'CONSENT', 'OTHER']) type!: string;
   @IsString() @IsOptional() @MaxLength(1000) description?: string;
+}
+class PrivacyResponseDto {
+  @IsIn(['IN_PROGRESS','COMPLETED','REJECTED']) status!: string;
+  @IsString() @MaxLength(3000) response!: string;
 }
 
 @Injectable()
@@ -50,6 +54,18 @@ export class LegalService {
   adminRequests() {
     return this.prisma.auditLog.findMany({ where: { action: 'PRIVACY_REQUEST' }, select: { id: true, createdAt: true, details: true, user: { select: { id: true, email: true, profile: { select: { name: true, username: true } } } } }, orderBy: { createdAt: 'desc' }, take: 200 });
   }
+  async respond(id: string, actorId: string, dto: PrivacyResponseDto) {
+    if(!dto.response.trim()) throw new BadRequestException('Escreva a resposta ao solicitante.');
+    return this.prisma.$transaction(async tx => {
+      const request = await tx.auditLog.findFirst({where:{id,action:'PRIVACY_REQUEST'}});
+      if(!request?.userId) throw new NotFoundException('Solicitação não encontrada.');
+      const details = request.details && typeof request.details === 'object' && !Array.isArray(request.details) ? request.details : {};
+      const updated = await tx.auditLog.update({where:{id},data:{details:{...details,status:dto.status,response:dto.response.trim(),respondedAt:new Date().toISOString()}}});
+      await tx.auditLog.create({data:{userId:actorId,action:'PRIVACY_RESPONSE',entity:'PrivacyRequest',entityId:id,details:{status:dto.status,response:dto.response.trim()}}});
+      await tx.notification.create({data:{userId:request.userId,type:'PRIVACY',title:'Atualização da sua solicitação de privacidade',body:'Consulte a resposta ao protocolo '+id,link:'/central-de-privacidade'}});
+      return updated;
+    });
+  }
 }
 
 @Controller('legal')
@@ -68,6 +84,8 @@ export class LegalController {
   exportData(@CurrentUser('id') id: string) { return this.service.exportData(id); }
   @Get('admin/requests') @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.SUPERADMIN)
   adminRequests() { return this.service.adminRequests(); }
+  @Patch('admin/requests/:id') @UseGuards(JwtAuthGuard, RolesGuard) @Roles(Role.SUPERADMIN)
+  respond(@Param('id') id: string,@CurrentUser('id') actorId: string,@Body() dto: PrivacyResponseDto) { return this.service.respond(id,actorId,dto); }
 }
 
 @Module({ imports: [AuthModule], controllers: [LegalController], providers: [LegalService, AuthRateGuard] })

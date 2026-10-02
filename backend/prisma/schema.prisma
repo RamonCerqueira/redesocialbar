@@ -572,6 +572,9 @@ model Block {
 }
 
 model Advertisement {
+  startsAt     DateTime?
+  endsAt       DateTime?
+  sortOrder    Int        @default(0)
   id           String     @id @default(uuid())
   title        String
   description  String?

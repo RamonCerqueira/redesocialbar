@@ -24,7 +24,8 @@ interface FlirtNoteCardProps {
 export function FlirtNoteCard({ note, restaurantSlug = 'pirambeira' }: FlirtNoteCardProps) {
   const { user } = useAuth();
   const [cheersCount, setCheersCount] = useState(note.likesCount || 0);
-  const [hasCheered, setHasCheered] = useState(false);
+  const [hasCheered, setHasCheered] = useState(!!note.hasCheered);
+  const [reactionError, setReactionError] = useState('');
   const [isClinking, setIsClinking] = useState(false);
   const [showFloatBadge, setShowFloatBadge] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -37,6 +38,7 @@ export function FlirtNoteCard({ note, restaurantSlug = 'pirambeira' }: FlirtNote
   // Executa o brinde completo com microinterações sênior e integração backend
   const handleCheers = async () => {
     if (isProcessing) return;
+    setReactionError('');
 
     // Se o usuário não estiver logado, redireciona suavemente
     if (!user) {
@@ -83,12 +85,16 @@ export function FlirtNoteCard({ note, restaurantSlug = 'pirambeira' }: FlirtNote
     // 5. Integração com o backend via API
     setIsProcessing(true);
     try {
-      await apiRequest(`/posts/${note.id}/react`, {
+      const result = await apiRequest<{reacted:boolean}>(`/posts/${note.id}/react`, {
         method: 'POST',
         body: JSON.stringify({ type: 'CHEERS' }),
       });
+      setHasCheered(result.reacted);
+      setCheersCount((note.likesCount || 0) + Number(result.reacted) - Number(!!note.hasCheered));
     } catch (err) {
-      console.warn('Erro ao registrar brinde no backend:', err);
+      setHasCheered(!nextState);
+      setCheersCount(prev => nextState ? Math.max(0, prev - 1) : prev + 1);
+      setReactionError(err instanceof Error ? err.message : 'Não foi possível registrar o brinde. Tente novamente.');
     } finally {
       setIsProcessing(false);
     }
@@ -99,6 +105,7 @@ export function FlirtNoteCard({ note, restaurantSlug = 'pirambeira' }: FlirtNote
       <article
         className="relative rounded-[22px] p-4 sm:p-5 transition-all duration-300 group overflow-hidden border border-white/[0.08] hover:border-[#FFB800]/40 shadow-[0_12px_36px_rgba(0,0,0,0.7),0_0_20px_rgba(255,184,0,0.04),inset_0_1px_0_0_rgba(255,255,255,0.08)] bg-[#171310]/80 backdrop-blur-2xl"
       >
+        {reactionError && <p role="alert" className="text-xs text-rose-300 mb-3">{reactionError}</p>}
         {/* Efeito de dobradura suave de guardanapo no canto superior direito */}
         <div
           className="absolute top-0 right-0 w-8 h-8 pointer-events-none opacity-40 group-hover:opacity-70 transition-opacity"

@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Navigation } from './navigation';
 import { Header } from './header';
+import { AppGuide } from './app-guide';
 import { SplashScreen } from './splash-screen';
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -21,6 +22,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Navigation />
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         <Header />
+        {pathname === '/' && <AppGuide />}
         <main className={'flex-1 w-full max-w-[720px] mx-auto min-w-0 '+(pathname==='/'||pathname.startsWith('/restaurante/')?'lg:py-2 lg:px-4':'app-page-spacing')}>
           <div key={pathname} className="page-enter-animation">
             {children}
